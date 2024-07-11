@@ -10,6 +10,8 @@
 
 #include "Dialog.h"
 
+#include "../../../DarkMode/src/DarkModeSubclass.h"
+
 extern HINSTANCE g_hInstance;
 #ifndef _UNICODE
 extern bool g_IsNT;
@@ -34,7 +36,11 @@ DialogProcedure(HWND dialogHWND, UINT message, WPARAM wParam, LPARAM lParam)
   if (dialog == NULL)
     return FALSE;
   if (message == WM_INITDIALOG)
-    dialog->Attach(dialogHWND);
+    {
+      dialog->Attach(dialogHWND);
+      DarkMode::initDarkMode(L"7zDark");
+      DarkMode::setDarkWndNotifySafeEx(*dialog, true, true);
+    }
 
   /* MSDN: The dialog box procedure should return
        TRUE  - if it processed the message
