@@ -30,6 +30,9 @@ BEGIN
   // LTEXT     "Memory usage for Compressing:", IDT_COMPRESS_MEMORY, m, 140, xc, 8
   // COMBOBOX  IDC_SETTINGS_MEM, m , 152, g1xs, yc - 152, MY_COMBO
   // LTEXT     "/ RAM", IDT_SETTINGS_MEM_RAM, m + g1xs + m, 154, xc - g1xs - m, MY_TEXT_NOPREFIX
+
+  LTEXT "Color Mode:", IDT_COLOR_MODE, m, save_y + 34, xc, 8
+  COMBOBOX IDC_COLOR_MODE, m, spin_y + 34, spin_x_size, 60, MY_COMBO
 END
 
 #undef save_y
