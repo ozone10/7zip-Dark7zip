@@ -22,6 +22,8 @@
 #include "MenuPage.h"
 #include "MenuPageRes.h"
 
+#include "../../../../DarkMode/lib/include/DarkModeSubclass.h"
+
 
 using namespace NWindows;
 using namespace NContextMenuFlags;
@@ -282,6 +284,8 @@ bool CMenuPage::OnInit()
   _listView.SetColumnWidthAuto(0);
   _initMode = false;
 
+  DarkMode::setDarkListViewCheckboxes(_listView);
+
   return CPropertyPage::OnInit();
 }
 
@@ -290,7 +294,7 @@ bool CMenuPage::OnInit()
 
 static void ShowMenuErrorMessage(const wchar_t *m, HWND hwnd)
 {
-  MessageBoxW(hwnd, m, L"7-Zip", MB_ICONERROR);
+  DarkMode::darkMessageBoxW(hwnd, m, L"7-Zip", MB_ICONERROR);
 }
 
 #endif
