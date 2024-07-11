@@ -2546,11 +2546,9 @@ void subclassStatusBar(HWND hwnd)
 		WPARAM wParam,
 		LPARAM lParam,
 		UINT_PTR uIdSubclass,
-		DWORD_PTR dwRefData
+		DWORD_PTR /*dwRefData*/
 	)
 	{
-		UNREFERENCED_PARAMETER(dwRefData);
-
 		switch (uMsg)
 		{
 			case WM_ERASEBKGND:
@@ -2558,7 +2556,7 @@ void subclassStatusBar(HWND hwnd)
 				if (DarkMode::isEnabled())
 				{
 					RECT rect{};
-					GetClientRect(hWnd, &rect);
+					::GetClientRect(hWnd, &rect);
 					::FillRect(reinterpret_cast<HDC>(wParam), &rect, DarkMode::getDarkerBackgroundBrush());
 					return TRUE;
 				}
@@ -2644,41 +2642,15 @@ void subclassStatusBar(HWND hwnd)
 		WPARAM wParam,
 		LPARAM lParam,
 		UINT_PTR uIdSubclass,
-		DWORD_PTR dwRefData
+		DWORD_PTR /*dwRefData*/
 	)
 	{
-		UNREFERENCED_PARAMETER(dwRefData);
-
-		LRESULT result = FALSE;
-
-		if (DarkMode::isEnabled() && DarkMode::runUAHWndProc(hWnd, uMsg, wParam, lParam, &result))
-		{
-			return result;
-		}
-
 		switch (uMsg)
 		{
 			case WM_NCDESTROY:
 			{
 				::RemoveWindowSubclass(hWnd, WindowNotifySubclass, uIdSubclass);
 				break;
-			}
-
-			case WM_NCACTIVATE:
-			{
-				// Note: lParam is -1 to prevent endless loops of calls
-				result = ::DefWindowProc(hWnd, uMsg, wParam, lParam);
-				DarkMode::drawUAHMenuNCBottomLine(hWnd);
-
-				DarkMode::calculateTreeViewStyle();
-				return result;
-			}
-
-			case WM_NCPAINT:
-			{
-				result = ::DefWindowProc(hWnd, uMsg, wParam, lParam);
-				DarkMode::drawUAHMenuNCBottomLine(hWnd);
-				return result;
 			}
 
 			case WM_NOTIFY:
@@ -2716,11 +2688,15 @@ void subclassStatusBar(HWND hwnd)
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	void autoSubclassWindowNotify(HWND hwnd)
+	void autoSubclassWindowNotify(HWND hwnd, bool subclassChildren)
 	{
 		if (::GetWindowSubclass(hwnd, WindowNotifySubclass, g_windowNotifySubclassID, nullptr) == FALSE)
 		{
 			::SetWindowSubclass(hwnd, WindowNotifySubclass, g_windowNotifySubclassID, 0);
+			if (subclassChildren)
+			{
+				DarkMode::autoSubclassAndThemeChildControls(hwnd);
+			}
 		}
 	}
 
@@ -2732,11 +2708,9 @@ void subclassStatusBar(HWND hwnd)
 		WPARAM wParam,
 		LPARAM lParam,
 		UINT_PTR uIdSubclass,
-		DWORD_PTR dwRefData
+		DWORD_PTR /*dwRefData*/
 	)
 	{
-		UNREFERENCED_PARAMETER(dwRefData);
-
 		LRESULT result = FALSE;
 
 		if (DarkMode::isEnabled() && DarkMode::runUAHWndProc(hWnd, uMsg, wParam, lParam, &result))
@@ -2756,8 +2730,6 @@ void subclassStatusBar(HWND hwnd)
 			{
 				result = ::DefWindowProc(hWnd, uMsg, wParam, lParam);
 				DarkMode::drawUAHMenuNCBottomLine(hWnd);
-
-				DarkMode::calculateTreeViewStyle();
 				return result;
 			}
 

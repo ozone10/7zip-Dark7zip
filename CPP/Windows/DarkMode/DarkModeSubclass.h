@@ -142,7 +142,7 @@ namespace DarkMode
 	void autoThemeChildControls(HWND hwndParent);
 
 	void autoSubclassCtlColorWindow(HWND hwnd);
-	void autoSubclassWindowNotify(HWND hwnd);
+	void autoSubclassWindowNotify(HWND hwnd, bool subclassChildren = false);
 	void autoSubclassWindowMenuBar(HWND hwnd);
 
 	void setDarkTitleBar(HWND hwnd);
