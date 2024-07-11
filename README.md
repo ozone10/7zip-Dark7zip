@@ -8,6 +8,14 @@
 
 Dark7zip is project to experiment with dark mode using win32 API.
 
+* * *
+
+<p align="center">
+  <img src="https://i.imgur.com/cnYZPAE.png">
+</p>
+
+* * *
+
 ## License
 
 Most code related to dark mode is under license GPLv3 or later version.
