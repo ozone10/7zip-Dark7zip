@@ -29,6 +29,8 @@
 
 #include "PropertyNameRes.h"
 
+#include "../../../../DarkMode/DarkModeSubclass.h"
+
 using namespace NWindows;
 using namespace NFile;
 using namespace NDir;
@@ -285,6 +287,8 @@ HRESULT CApp::Create(HWND hwnd, const UString &mainPath, const UString &arcForma
 {
   _window.Attach(hwnd);
 
+  DarkMode::initDarkMode();
+
   #ifdef UNDER_CE
   _commandBar.Create(g_hInstance, hwnd, 1);
   #endif
@@ -350,7 +354,20 @@ HRESULT CApp::Create(HWND hwnd, const UString &mainPath, const UString &arcForma
       }
     }
   }
-  
+
+  DarkMode::setDarkTitleBar(hwnd);
+  DarkMode::autoSubclassWindowMenuBar(hwnd);
+  DarkMode::autoSubclassCtlColor(hwnd);
+  DarkMode::autoSubclassNotifyCustomDraw(hwnd, true);
+
+  for (i = 0; i < kNumPanelsMax; i++)
+  {
+    DarkMode::autoSubclassNotifyCustomDraw(Panels[i], false);
+    DarkMode::autoSubclassCtlColor(Panels[i]);
+    DarkMode::autoSubclassCtlColor(Panels[i]._headerReBar);
+    DarkMode::autoSubclassCtlColor(Panels[i]._headerComboBox);
+  }
+
   SetFocusedPanel(LastFocusedPanel);
   Panels[LastFocusedPanel].SetFocusToList();
   return S_OK;
