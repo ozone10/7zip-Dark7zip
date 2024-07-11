@@ -4,6 +4,7 @@ OBJS = \
   $(COMMON_OBJS) \
   $(WIN_OBJS) \
   $(WIN_CTRL_OBJS) \
+  $(DARK_MODE_OBJS) \
   $(7ZIP_COMMON_OBJS) \
   $(UI_COMMON_OBJS) \
   $(AGENT_OBJS) \
@@ -54,6 +55,11 @@ $(WIN_OBJS): ../../../Windows/$(*B).cpp
 
 !IFDEF WIN_CTRL_OBJS
 $(WIN_CTRL_OBJS): ../../../Windows/Control/$(*B).cpp
+	$(COMPL)
+!ENDIF
+
+!IFDEF DARK_MODE_OBJS
+$(DARK_MODE_OBJS): ../../../Windows/DarkMode/$(*B).cpp
 	$(COMPL)
 !ENDIF
 
@@ -182,6 +188,8 @@ $(C_OBJS): ../../../../C/$(*B).c
 {../../../Windows}.cpp{$O}.obj::
 	$(COMPLB)
 {../../../Windows/Control}.cpp{$O}.obj::
+	$(COMPLB)
+{../../../Windows/DarkMode}.cpp{$O}.obj::
 	$(COMPLB)
 {../../Common}.cpp{$O}.obj::
 	$(COMPLB)
