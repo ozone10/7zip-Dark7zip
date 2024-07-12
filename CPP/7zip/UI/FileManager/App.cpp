@@ -363,6 +363,7 @@ HRESULT CApp::Create(HWND hwnd, const UString &mainPath, const UString &arcForma
   for (i = 0; i < kNumPanelsMax; i++)
   {
     DarkMode::autoSubclassWindowNotify(Panels[i], false);
+    DarkMode::autoSubclassCtlColorWindow(Panels[i]);
     DarkMode::autoSubclassCtlColorWindow(Panels[i]._headerReBar);
     DarkMode::autoSubclassCtlColorWindow(Panels[i]._headerComboBox);
   }

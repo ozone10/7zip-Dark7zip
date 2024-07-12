@@ -284,6 +284,10 @@ DWORD GetWindowsBuildNumber()
 
 void InitDarkMode()
 {
+	static bool isInit = false;
+	if (isInit)
+		return;
+
 	fnRtlGetNtVersionNumbers RtlGetNtVersionNumbers = nullptr;
 	HMODULE hNtdllModule = GetModuleHandle(L"ntdll.dll");
 	if (hNtdllModule)
@@ -321,6 +325,8 @@ void InitDarkMode()
 				{
 					_SetWindowCompositionAttribute = reinterpret_cast<fnSetWindowCompositionAttribute>(GetProcAddress(hUser32Module, "SetWindowCompositionAttribute"));
 				}
+
+				isInit = true;
 
 				if (_OpenNcThemeData &&
 					_RefreshImmersiveColorPolicyState &&
