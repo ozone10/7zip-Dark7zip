@@ -137,12 +137,14 @@ namespace DarkMode
 	void themeTreeView(HWND hwnd, DarkModeParams p);
 	void themeToolbar(HWND hwnd, DarkModeParams p);
 	void themeRichEdit(HWND hwnd, DarkModeParams p);
+	void subclassTabControl(HWND hwnd, DarkModeParams p);
+	void subclassStatusBar(HWND hwnd, DarkModeParams p);
 
 	void autoSubclassAndThemeChildControls(HWND hwndParent, bool subclass = true, bool theme = true);
 	void autoThemeChildControls(HWND hwndParent);
 
-	void autoSubclassCtlColorWindow(HWND hwnd);
-	void autoSubclassWindowNotify(HWND hwnd, bool subclassChildren = false);
+	void autoSubclassCtlColor(HWND hwnd);
+	void autoSubclassNotifyCustomDraw(HWND hwnd, bool subclassChildren = false);
 	void autoSubclassWindowMenuBar(HWND hwnd);
 
 	void setDarkTitleBar(HWND hwnd);

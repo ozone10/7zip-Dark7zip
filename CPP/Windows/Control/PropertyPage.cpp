@@ -35,10 +35,10 @@ APIENTRY MyProperyPageProcedure(HWND dialogHWND, UINT message, WPARAM wParam, LP
     {
       dialog->Attach(dialogHWND);
       DarkMode::setDarkTitleBar(::GetParent(*dialog));
-      DarkMode::autoSubclassCtlColorWindow(::GetParent(*dialog));
-      DarkMode::autoSubclassWindowNotify(::GetParent(*dialog), true);
-      DarkMode::autoSubclassWindowNotify(*dialog, true);
-      DarkMode::autoSubclassCtlColorWindow(*dialog);
+      DarkMode::autoSubclassCtlColor(::GetParent(*dialog));
+      DarkMode::autoSubclassNotifyCustomDraw(::GetParent(*dialog), true);
+      DarkMode::autoSubclassNotifyCustomDraw(*dialog, true);
+      DarkMode::autoSubclassCtlColor(*dialog);
 
     }
   try { return BoolToBOOL(dialog->OnMessage(message, wParam, lParam)); }

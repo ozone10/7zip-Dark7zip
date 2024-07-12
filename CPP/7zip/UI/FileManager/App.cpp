@@ -357,15 +357,15 @@ HRESULT CApp::Create(HWND hwnd, const UString &mainPath, const UString &arcForma
 
   DarkMode::setDarkTitleBar(hwnd);
   DarkMode::autoSubclassWindowMenuBar(hwnd);
-  DarkMode::autoSubclassCtlColorWindow(hwnd);
-  DarkMode::autoSubclassWindowNotify(hwnd, true);
+  DarkMode::autoSubclassCtlColor(hwnd);
+  DarkMode::autoSubclassNotifyCustomDraw(hwnd, true);
 
   for (i = 0; i < kNumPanelsMax; i++)
   {
-    DarkMode::autoSubclassWindowNotify(Panels[i], false);
-    DarkMode::autoSubclassCtlColorWindow(Panels[i]);
-    DarkMode::autoSubclassCtlColorWindow(Panels[i]._headerReBar);
-    DarkMode::autoSubclassCtlColorWindow(Panels[i]._headerComboBox);
+    DarkMode::autoSubclassNotifyCustomDraw(Panels[i], false);
+    DarkMode::autoSubclassCtlColor(Panels[i]);
+    DarkMode::autoSubclassCtlColor(Panels[i]._headerReBar);
+    DarkMode::autoSubclassCtlColor(Panels[i]._headerComboBox);
   }
 
   SetFocusedPanel(LastFocusedPanel);
