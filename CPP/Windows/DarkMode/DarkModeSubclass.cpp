@@ -263,7 +263,7 @@ namespace DarkMode
 		return GetWindowsBuildNumber();
 	}
 
-	static TreeViewStyle g_treeViewStyle = TreeViewStyle::classic;
+	static TreeViewStyle g_treeViewStyle = TreeViewStyle::dark;
 	static COLORREF g_treeViewBg = g_bgColor;
 	static double g_lightnessTreeView = 50.0;
 
@@ -2460,29 +2460,40 @@ namespace DarkMode
 
 			case CDDS_ITEMPREPAINT:
 			{
-				auto isSelected = ListView_GetItemState(lplvcd->nmcd.hdr.hwndFrom, lplvcd->nmcd.dwItemSpec, LVIS_SELECTED) == LVIS_SELECTED;
+				const auto isSelected = ListView_GetItemState(lplvcd->nmcd.hdr.hwndFrom, lplvcd->nmcd.dwItemSpec, LVIS_SELECTED) == LVIS_SELECTED;
+				const bool isHot = (lplvcd->nmcd.uItemState & CDIS_HOT) == CDIS_HOT;
 
 				if (DarkMode::isEnabled())
 				{
+
+					HBRUSH hBrush = nullptr;
+
 					if (isSelected)
 					{
 						lplvcd->clrText = DarkMode::getTextColor();
 						lplvcd->clrTextBk = DarkMode::getSofterBackgroundColor();
-
-						::FillRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, DarkMode::getSofterBackgroundBrush());
+						hBrush = DarkMode::getSofterBackgroundBrush();
 					}
-					else if ((lplvcd->nmcd.uItemState & CDIS_HOT) == CDIS_HOT)
+					else if (isHot)
 					{
 						lplvcd->clrText = DarkMode::getTextColor();
 						lplvcd->clrTextBk = DarkMode::getHotBackgroundColor();
+						hBrush = DarkMode::getHotBackgroundBrush();
+					}
 
-						::FillRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, DarkMode::getHotBackgroundBrush());
+					if (hBrush != nullptr)
+					{
+						::FillRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, hBrush);
 					}
 				}
 
 				if (isSelected)
 				{
 					::DrawFocusRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc);
+				}
+				else if (isHot && DarkMode::isEnabled())
+				{
+					::FrameRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, DarkMode::isThemeDark() ? DarkMode::getHotEdgeBrush() : ::GetSysColorBrush(COLOR_WINDOWTEXT));
 				}
 
 				LRESULT lr = CDRF_NEWFONT;
@@ -2494,7 +2505,6 @@ namespace DarkMode
 
 				return lr;
 			}
-
 			default:
 				break;
 		}
@@ -2817,7 +2827,7 @@ namespace DarkMode
 
 	void setDarkExplorerTheme(HWND hwnd)
 	{
-		SetWindowTheme(hwnd, g_isAtLeastWindows10 && DarkMode::isExperimentalActive() ? L"DarkMode_Explorer" : nullptr, nullptr);
+		::SetWindowTheme(hwnd, g_isAtLeastWindows10 && DarkMode::isExperimentalActive() ? L"DarkMode_Explorer" : nullptr, nullptr);
 	}
 
 	void setDarkScrollBar(HWND hwnd)
@@ -2884,7 +2894,7 @@ namespace DarkMode
 	{
 		if (DarkMode::isExperimentalSupported())
 		{
-			bool useDark = DarkMode::isEnabled();
+			bool useDark = DarkMode::isExperimentalActive();
 
 			HWND hHeader = ListView_GetHeader(hwnd);
 			DarkMode::allowDarkModeForWindow(hHeader, useDark);
