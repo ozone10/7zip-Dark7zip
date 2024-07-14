@@ -4,7 +4,6 @@ OBJS = \
   $(COMMON_OBJS) \
   $(WIN_OBJS) \
   $(WIN_CTRL_OBJS) \
-  $(DARK_MODE_OBJS) \
   $(7ZIP_COMMON_OBJS) \
   $(UI_COMMON_OBJS) \
   $(AGENT_OBJS) \
@@ -29,6 +28,7 @@ OBJS = \
   $(CRYPTO_OBJS) \
   $(C_OBJS) \
   $(ASM_OBJS) \
+  $(DARK_MODE_OBJS) \
   $O\resource.res \
 
 !include "../../../Build.mak"
@@ -55,11 +55,6 @@ $(WIN_OBJS): ../../../Windows/$(*B).cpp
 
 !IFDEF WIN_CTRL_OBJS
 $(WIN_CTRL_OBJS): ../../../Windows/Control/$(*B).cpp
-	$(COMPL)
-!ENDIF
-
-!IFDEF DARK_MODE_OBJS
-$(DARK_MODE_OBJS): ../../../Windows/DarkMode/$(*B).cpp
 	$(COMPL)
 !ENDIF
 
@@ -173,6 +168,11 @@ $(GUI_OBJS): ../../UI/GUI/$(*B).cpp
 	$(COMPL)
 !ENDIF
 
+!IFDEF DARK_MODE_OBJS
+$(DARK_MODE_OBJS): ../../../../DarkMode/$(*B).cpp
+	$(COMPL)
+!ENDIF
+
 !IFDEF C_OBJS
 $(C_OBJS): ../../../../C/$(*B).c
 	$(COMPL_O2)
@@ -188,8 +188,6 @@ $(C_OBJS): ../../../../C/$(*B).c
 {../../../Windows}.cpp{$O}.obj::
 	$(COMPLB)
 {../../../Windows/Control}.cpp{$O}.obj::
-	$(COMPLB)
-{../../../Windows/DarkMode}.cpp{$O}.obj::
 	$(COMPLB)
 {../../Common}.cpp{$O}.obj::
 	$(COMPLB)
@@ -242,6 +240,9 @@ $(C_OBJS): ../../../../C/$(*B).c
 	$(COMPLB_O2)
 {../../../../C}.c{$O}.obj::
 	$(CCOMPLB)
+
+{../../../../DarkMode}.cpp{$O}.obj::
+	$(COMPLB)
 
 !ENDIF
 

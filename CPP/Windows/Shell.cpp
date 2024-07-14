@@ -10,7 +10,7 @@
 #include "MemoryGlobal.h"
 #include "Shell.h"
 
-#include "./DarkMode/DarkModeSubclass.h"
+#include "../../DarkMode/DarkModeSubclass.h"
 
 #ifndef _UNICODE
 extern bool g_IsNT;

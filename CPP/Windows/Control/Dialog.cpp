@@ -9,7 +9,8 @@
 #endif
 
 #include "Dialog.h"
-#include "../DarkMode/DarkModeSubclass.h"
+
+#include "../../../DarkMode/DarkModeSubclass.h"
 
 extern HINSTANCE g_hInstance;
 #ifndef _UNICODE

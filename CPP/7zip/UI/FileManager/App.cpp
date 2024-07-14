@@ -8,8 +8,6 @@
 #include "../../../Windows/FileName.h"
 #include "../../../Windows/PropVariantConv.h"
 
-#include "../../../Windows/DarkMode/DarkModeSubclass.h"
-
 /*
 #include "Windows/COM.h"
 #include "Windows/Error.h"
@@ -30,6 +28,8 @@
 #include "ViewSettings.h"
 
 #include "PropertyNameRes.h"
+
+#include "../../../../DarkMode/DarkModeSubclass.h"
 
 using namespace NWindows;
 using namespace NFile;

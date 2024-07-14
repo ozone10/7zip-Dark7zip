@@ -2,9 +2,9 @@
 
 #include <windows.h>
 
-#include "./DarkMode.h"
+#include "DarkMode.h"
 
-#include "./IatHook.h"
+#include "IatHook.h"
 
 #include <uxtheme.h>
 #include <vssym32.h>
@@ -79,6 +79,24 @@ struct WINDOWCOMPOSITIONATTRIBDATA
 	SIZE_T cbData;
 };
 
+template <typename P>
+bool ptrFn(HMODULE handle, P& pointer, const char* name)
+{
+	auto p = reinterpret_cast<P>(::GetProcAddress(handle, name));
+	if (p != nullptr)
+	{
+		pointer = p;
+		return true;
+	}
+	return false;
+}
+
+template <typename P>
+bool ptrFn(HMODULE handle, P& pointer, WORD index)
+{
+    return ptrFn(handle, pointer, MAKEINTRESOURCEA(index));
+}
+
 using fnRtlGetNtVersionNumbers = void (WINAPI *)(LPDWORD major, LPDWORD minor, LPDWORD build);
 using fnSetWindowCompositionAttribute = BOOL (WINAPI *)(HWND hWnd, WINDOWCOMPOSITIONATTRIBDATA*);
 // 1809 17763
@@ -89,7 +107,7 @@ using fnFlushMenuThemes = void (WINAPI *)(); // ordinal 136
 using fnRefreshImmersiveColorPolicyState = void (WINAPI *)(); // ordinal 104
 using fnIsDarkModeAllowedForWindow = bool (WINAPI *)(HWND hWnd); // ordinal 137
 using fnGetIsImmersiveColorUsingHighContrast = bool (WINAPI *)(IMMERSIVE_HC_CACHE_MODE mode); // ordinal 106
-using fnOpenNcThemeData = HTHEME(WINAPI *)(HWND hWnd, LPCWSTR pszClassList); // ordinal 49
+using fnOpenNcThemeData = HTHEME (WINAPI *)(HWND hWnd, LPCWSTR pszClassList); // ordinal 49
 // 1903 18362
 using fnShouldSystemUseDarkMode = bool (WINAPI *)(); // ordinal 138
 using fnSetPreferredAppMode = PreferredAppMode (WINAPI *)(PreferredAppMode appMode); // ordinal 135, in 1903
@@ -292,7 +310,7 @@ void InitDarkMode()
 	HMODULE hNtdllModule = GetModuleHandle(L"ntdll.dll");
 	if (hNtdllModule)
 	{
-		RtlGetNtVersionNumbers = reinterpret_cast<fnRtlGetNtVersionNumbers>(GetProcAddress(hNtdllModule, "RtlGetNtVersionNumbers"));
+		ptrFn(hNtdllModule, RtlGetNtVersionNumbers, "RtlGetNtVersionNumbers");
 	}
 
 	if (RtlGetNtVersionNumbers)
@@ -305,25 +323,24 @@ void InitDarkMode()
 			HMODULE hUxtheme = LoadLibraryEx(L"uxtheme.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
 			if (hUxtheme)
 			{
-				_OpenNcThemeData = reinterpret_cast<fnOpenNcThemeData>(GetProcAddress(hUxtheme, MAKEINTRESOURCEA(49)));
-				_RefreshImmersiveColorPolicyState = reinterpret_cast<fnRefreshImmersiveColorPolicyState>(GetProcAddress(hUxtheme, MAKEINTRESOURCEA(104)));
-				_GetIsImmersiveColorUsingHighContrast = reinterpret_cast<fnGetIsImmersiveColorUsingHighContrast>(GetProcAddress(hUxtheme, MAKEINTRESOURCEA(106)));
-				_ShouldAppsUseDarkMode = reinterpret_cast<fnShouldAppsUseDarkMode>(GetProcAddress(hUxtheme, MAKEINTRESOURCEA(132)));
-				_AllowDarkModeForWindow = reinterpret_cast<fnAllowDarkModeForWindow>(GetProcAddress(hUxtheme, MAKEINTRESOURCEA(133)));
+				ptrFn(hUxtheme, _OpenNcThemeData, 49);
+				ptrFn(hUxtheme, _RefreshImmersiveColorPolicyState, 104);
+				ptrFn(hUxtheme, _GetIsImmersiveColorUsingHighContrast, 106);
+				ptrFn(hUxtheme, _ShouldAppsUseDarkMode, 132);
+				ptrFn(hUxtheme, _AllowDarkModeForWindow, 133);
 
-				auto ord135 = GetProcAddress(hUxtheme, MAKEINTRESOURCEA(135));
 				if (g_buildNumber < 18362)
-					_AllowDarkModeForApp = reinterpret_cast<fnAllowDarkModeForApp>(ord135);
+					ptrFn(hUxtheme, _AllowDarkModeForApp, 135);
 				else
-					_SetPreferredAppMode = reinterpret_cast<fnSetPreferredAppMode>(ord135);
+					ptrFn(hUxtheme, _SetPreferredAppMode, 135);
+				
+				ptrFn(hUxtheme, _FlushMenuThemes, 136);
+				ptrFn(hUxtheme, _IsDarkModeAllowedForWindow, 137);
 
-				_FlushMenuThemes = reinterpret_cast<fnFlushMenuThemes>(GetProcAddress(hUxtheme, MAKEINTRESOURCEA(136)));
-				_IsDarkModeAllowedForWindow = reinterpret_cast<fnIsDarkModeAllowedForWindow>(GetProcAddress(hUxtheme, MAKEINTRESOURCEA(137)));
-
-				HMODULE hUser32Module = GetModuleHandleW(L"user32.dll");
-				if (hUser32Module)
+				HMODULE hUser32 = GetModuleHandleW(L"user32.dll");
+				if (hUser32)
 				{
-					_SetWindowCompositionAttribute = reinterpret_cast<fnSetWindowCompositionAttribute>(GetProcAddress(hUser32Module, "SetWindowCompositionAttribute"));
+					ptrFn(hUser32, _SetWindowCompositionAttribute, "SetWindowCompositionAttribute");
 				}
 
 				isInit = true;

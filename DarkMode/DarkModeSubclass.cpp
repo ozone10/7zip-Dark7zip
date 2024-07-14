@@ -20,10 +20,10 @@
 
 #include "StdAfx.h"
 
-#include "./DarkModeSubclass.h"
+#include "DarkModeSubclass.h"
 
-#include "./DarkMode.h"
-#include "./UAHMenuBar.h"
+#include "DarkMode.h"
+#include "UAHMenuBar.h"
 
 #include <dwmapi.h>
 #include <uxtheme.h>
@@ -75,9 +75,6 @@ static constexpr COLORREF HEXRGB(DWORD rrggbb) {
 		((rrggbb & 0x00FF00)) |
 		((rrggbb & 0x0000FF) << 16);
 }
-
-constexpr COLORREF g_fgColor = RGB(224, 226, 228);
-constexpr COLORREF g_bgColor = RGB(41, 49, 52);
 
 namespace DarkMode
 {
@@ -222,15 +219,24 @@ namespace DarkMode
 		return tDefault;
 	}
 
+	constexpr COLORREF g_fgColor = RGB(224, 226, 228);
+	constexpr COLORREF g_bgColor = RGB(41, 49, 52);
+
 	static bool g_isAtLeastWindows10 = false;
 
 	void initDarkMode()
 	{
-		initExperimentalDarkMode();
+		static bool isInit = false;
+		if (!isInit)
+		{
+			DarkMode::initExperimentalDarkMode();
+			g_isAtLeastWindows10 = DarkMode::isWindows10();
 
-		g_isAtLeastWindows10 = DarkMode::isWindows10();
+			DarkMode::calculateTreeViewStyle();
+			DarkMode::setDarkMode(true, true);
 
-		setDarkMode(true, true);
+			isInit = true;
+		}
 	}
 
 	bool isEnabled()
@@ -263,7 +269,7 @@ namespace DarkMode
 		return GetWindowsBuildNumber();
 	}
 
-	static TreeViewStyle g_treeViewStyle = TreeViewStyle::dark;
+	static TreeViewStyle g_treeViewStyle = TreeViewStyle::classic;
 	static COLORREF g_treeViewBg = g_bgColor;
 	static double g_lightnessTreeView = 50.0;
 
@@ -2137,7 +2143,10 @@ namespace DarkMode
 
 			if (wcscmp(className, WC_SCROLLBAR) == 0)
 			{
-				DarkMode::setDarkScrollBar(hwnd);
+				if (p._theme)
+				{
+					DarkMode::setDarkScrollBar(hwnd);
+				}
 				return TRUE;
 			}
 
@@ -2330,7 +2339,7 @@ namespace DarkMode
 		TreeView_SetTextColor(hwnd, g_fgColor);
 		TreeView_SetBkColor(hwnd, g_bgColor);
 
-		DarkMode::calculateTreeViewStyle();
+		//DarkMode::calculateTreeViewStyle();
 		DarkMode::setTreeViewStyle(hwnd);
 
 		if (p._theme)
@@ -2947,7 +2956,7 @@ namespace DarkMode
 	void setTreeViewStyle(HWND hwnd)
 	{
 		auto style = static_cast<long>(::GetWindowLongPtr(hwnd, GWL_STYLE));
-		bool hasHotStyle = (style & TVS_TRACKSELECT) == TVS_TRACKSELECT;
+		const bool hasHotStyle = (style & TVS_TRACKSELECT) == TVS_TRACKSELECT;
 		bool change = false;
 		switch (g_treeViewStyle)
 		{
@@ -2963,13 +2972,17 @@ namespace DarkMode
 			}
 			case TreeViewStyle::dark:
 			{
-				if (!hasHotStyle)
+				if (g_isAtLeastWindows10 && DarkMode::isExperimentalActive())
 				{
-					style |= TVS_TRACKSELECT;
-					change = true;
+					if (!hasHotStyle)
+					{
+						style |= TVS_TRACKSELECT;
+						change = true;
+					}
+					::SetWindowTheme(hwnd, L"DarkMode_Explorer", nullptr);
+					break;
 				}
-				::SetWindowTheme(hwnd, g_isAtLeastWindows10 && DarkMode::isExperimentalActive() ? L"DarkMode_Explorer" : nullptr, nullptr);
-				break;
+				[[fallthrough]];
 			}
 			case TreeViewStyle::classic:
 			{
@@ -2997,7 +3010,7 @@ namespace DarkMode
 	void setBorder(HWND hwnd, bool border)
 	{
 		auto style = static_cast<long>(::GetWindowLongPtr(hwnd, GWL_STYLE));
-		bool hasBorder = (style & WS_BORDER) == WS_BORDER;
+		const bool hasBorder = (style & WS_BORDER) == WS_BORDER;
 		bool change = false;
 
 		if (!hasBorder && border)
