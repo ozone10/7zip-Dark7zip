@@ -86,9 +86,9 @@ namespace DarkMode
 		HBRUSH pureBackground = nullptr;
 		HBRUSH errorBackground = nullptr;
 
-		HBRUSH edgeBrush = nullptr;
-		HBRUSH hotEdgeBrush = nullptr;
-		HBRUSH disabledEdgeBrush = nullptr;
+		HBRUSH edge = nullptr;
+		HBRUSH hotEdge = nullptr;
+		HBRUSH disabledEdge = nullptr;
 
 		Brushes(const Colors& colors)
 			: background(::CreateSolidBrush(colors.background))
@@ -97,22 +97,22 @@ namespace DarkMode
 			, pureBackground(::CreateSolidBrush(colors.pureBackground))
 			, errorBackground(::CreateSolidBrush(colors.errorBackground))
 
-			, edgeBrush(::CreateSolidBrush(colors.edge))
-			, hotEdgeBrush(::CreateSolidBrush(colors.hotEdge))
-			, disabledEdgeBrush(::CreateSolidBrush(colors.disabledEdge))
+			, edge(::CreateSolidBrush(colors.edge))
+			, hotEdge(::CreateSolidBrush(colors.hotEdge))
+			, disabledEdge(::CreateSolidBrush(colors.disabledEdge))
 		{}
 
 		~Brushes()
 		{
-			::DeleteObject(background);			background = nullptr;
-			::DeleteObject(softerBackground);	softerBackground = nullptr;
-			::DeleteObject(hotBackground);		hotBackground = nullptr;
-			::DeleteObject(pureBackground);		pureBackground = nullptr;
-			::DeleteObject(errorBackground);	errorBackground = nullptr;
+			::DeleteObject(background);         background = nullptr;
+			::DeleteObject(softerBackground);   softerBackground = nullptr;
+			::DeleteObject(hotBackground);      hotBackground = nullptr;
+			::DeleteObject(pureBackground);     pureBackground = nullptr;
+			::DeleteObject(errorBackground);    errorBackground = nullptr;
 
-			::DeleteObject(edgeBrush);			edgeBrush = nullptr;
-			::DeleteObject(hotEdgeBrush);		hotEdgeBrush = nullptr;
-			::DeleteObject(disabledEdgeBrush);	disabledEdgeBrush = nullptr;
+			::DeleteObject(edge);          edge = nullptr;
+			::DeleteObject(hotEdge);       hotEdge = nullptr;
+			::DeleteObject(disabledEdge);  disabledEdge = nullptr;
 		}
 
 		void change(const Colors& colors)
@@ -123,9 +123,9 @@ namespace DarkMode
 			::DeleteObject(pureBackground);
 			::DeleteObject(errorBackground);
 
-			::DeleteObject(edgeBrush);
-			::DeleteObject(hotEdgeBrush);
-			::DeleteObject(disabledEdgeBrush);
+			::DeleteObject(edge);
+			::DeleteObject(hotEdge);
+			::DeleteObject(disabledEdge);
 
 			background = ::CreateSolidBrush(colors.background);
 			softerBackground = ::CreateSolidBrush(colors.softerBackground);
@@ -133,9 +133,9 @@ namespace DarkMode
 			pureBackground = ::CreateSolidBrush(colors.pureBackground);
 			errorBackground = ::CreateSolidBrush(colors.errorBackground);
 
-			edgeBrush = ::CreateSolidBrush(colors.edge);
-			hotEdgeBrush = ::CreateSolidBrush(colors.hotEdge);
-			disabledEdgeBrush = ::CreateSolidBrush(colors.disabledEdge);
+			edge = ::CreateSolidBrush(colors.edge);
+			hotEdge = ::CreateSolidBrush(colors.hotEdge);
+			disabledEdge = ::CreateSolidBrush(colors.disabledEdge);
 		}
 	};
 
@@ -155,10 +155,10 @@ namespace DarkMode
 
 		~Pens()
 		{
-			::DeleteObject(darkerTextPen);		darkerTextPen = nullptr;
-			::DeleteObject(edgePen);			edgePen = nullptr;
-			::DeleteObject(hotEdgePen);			hotEdgePen = nullptr;
-			::DeleteObject(disabledEdgePen);	disabledEdgePen = nullptr;
+			::DeleteObject(darkerTextPen);      darkerTextPen = nullptr;
+			::DeleteObject(edgePen);            edgePen = nullptr;
+			::DeleteObject(hotEdgePen);         hotEdgePen = nullptr;
+			::DeleteObject(disabledEdgePen);    disabledEdgePen = nullptr;
 		}
 
 		void change(const Colors& colors)
@@ -234,6 +234,9 @@ namespace DarkMode
 
 			DarkMode::calculateTreeViewStyle();
 			DarkMode::setDarkMode(true, true);
+
+			DarkMode::setSysColor(COLOR_WINDOW, DarkMode::getBackgroundColor());
+			DarkMode::setSysColor(COLOR_WINDOWTEXT, DarkMode::getTextColor());
 
 			isInit = true;
 		}
@@ -313,9 +316,9 @@ namespace DarkMode
 	HBRUSH getDarkerBackgroundBrush()     { return getTheme()._brushes.pureBackground; }
 	HBRUSH getErrorBackgroundBrush()      { return getTheme()._brushes.errorBackground; }
 
-	HBRUSH getEdgeBrush()                 { return getTheme()._brushes.edgeBrush; }
-	HBRUSH getHotEdgeBrush()              { return getTheme()._brushes.hotEdgeBrush; }
-	HBRUSH getDisabledEdgeBrush()         { return getTheme()._brushes.disabledEdgeBrush; }
+	HBRUSH getEdgeBrush()                 { return getTheme()._brushes.edge; }
+	HBRUSH getHotEdgeBrush()              { return getTheme()._brushes.hotEdge; }
+	HBRUSH getDisabledEdgeBrush()         { return getTheme()._brushes.disabledEdge; }
 
 	HPEN getDarkerTextPen()               { return getTheme()._pens.darkerTextPen; }
 	HPEN getEdgePen()                     { return getTheme()._pens.edgePen; }
@@ -537,6 +540,20 @@ namespace DarkMode
 	void setTitleBarThemeColor(HWND hWnd)
 	{
 		::RefreshTitleBarThemeColor(hWnd);
+	}
+
+	void setSysColor(int nIndex, COLORREF color)
+	{
+		::SetMySysColor(nIndex, color);
+	}
+
+	bool hookSysColor()
+	{
+		return ::HookSysColor();
+	}
+	void unhookSysColor()
+	{
+		::UnhookSysColor();
 	}
 
 	void enableDarkScrollBarForWindowAndChildren(HWND hwnd)
@@ -1574,6 +1591,70 @@ namespace DarkMode
 		}
 	}
 
+	constexpr UINT_PTR g_comboboxExSubclassID = 42;
+
+	static LRESULT CALLBACK ComboboxExSubclass(
+		HWND hWnd,
+		UINT uMsg,
+		WPARAM wParam,
+		LPARAM lParam,
+		UINT_PTR uIdSubclass,
+		DWORD_PTR /*dwRefData*/
+	)
+	{
+		switch (uMsg)
+		{
+			case WM_NCDESTROY:
+			{
+				::RemoveWindowSubclass(hWnd, ComboboxExSubclass, uIdSubclass);
+				DarkMode::unhookSysColor();
+				break;
+			}
+
+			case WM_COMMAND:
+			{
+				// ComboboxEx has only one child combobox, so only control-defined notification code is checked.
+				// Hooking is done only when listbox is about to show. And unhook when listbox is closed.
+				// This process is used to avoid visual glitches in other GUI.
+				switch (HIWORD(wParam))
+				{
+					case CBN_DROPDOWN:
+					{
+						DarkMode::hookSysColor();
+						break;
+					}
+
+					case CBN_CLOSEUP:
+					{
+						DarkMode::unhookSysColor();
+						break;
+					}
+
+					default:
+						break;
+				}
+				break;
+			}
+		}
+		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+	}
+
+	static void subclassComboboxEx(HWND hwnd)
+	{
+		if (::GetWindowSubclass(hwnd, ComboboxExSubclass, g_comboboxExSubclassID, nullptr) == FALSE)
+		{
+			::SetWindowSubclass(hwnd, ComboboxExSubclass, g_comboboxExSubclassID, 0);
+		}
+	}
+
+	void subclassComboboxEx(HWND hwnd, DarkModeParams p)
+	{
+		if (p._subclass)
+		{
+			subclassComboboxEx(hwnd);
+		}
+	}
+
 	constexpr UINT_PTR g_listViewSubclassID = 42;
 
 	static LRESULT CALLBACK ListViewSubclass(
@@ -1582,11 +1663,9 @@ namespace DarkMode
 		WPARAM wParam,
 		LPARAM lParam,
 		UINT_PTR uIdSubclass,
-		DWORD_PTR dwRefData
+		DWORD_PTR /*dwRefData*/
 	)
 	{
-		UNREFERENCED_PARAMETER(dwRefData);
-
 		switch (uMsg)
 		{
 			case WM_NCDESTROY:
@@ -2150,6 +2229,12 @@ namespace DarkMode
 				return TRUE;
 			}
 
+			if (wcscmp(className, WC_COMBOBOXEX) == 0)
+			{
+				DarkMode::subclassComboboxEx(hwnd, p);
+				return TRUE;
+			}
+
 			/*
 			// for debugging 
 			if (wcscmp(className, L"#32770") == 0)
@@ -2261,7 +2346,7 @@ namespace DarkMode
 			{
 				//DarkMode::subclassComboBoxControl(hwnd);
 				::SetWindowTheme(hwnd, L"CFD", NULL);
-				AllowDarkModeForWindow(hwnd, true);
+				DarkMode::allowDarkModeForWindow(hwnd, true);
 				::SendMessage(hwnd, WM_THEMECHANGED, 0, 0);
 			}
 		}

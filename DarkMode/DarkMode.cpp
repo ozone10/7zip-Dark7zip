@@ -113,15 +113,15 @@ using fnShouldSystemUseDarkMode = bool (WINAPI *)(); // ordinal 138
 using fnSetPreferredAppMode = PreferredAppMode (WINAPI *)(PreferredAppMode appMode); // ordinal 135, in 1903
 using fnIsDarkModeAllowedForApp = bool (WINAPI *)(); // ordinal 139
 
-fnSetWindowCompositionAttribute _SetWindowCompositionAttribute = nullptr;
-fnShouldAppsUseDarkMode _ShouldAppsUseDarkMode = nullptr;
-fnAllowDarkModeForWindow _AllowDarkModeForWindow = nullptr;
-fnAllowDarkModeForApp _AllowDarkModeForApp = nullptr;
-fnFlushMenuThemes _FlushMenuThemes = nullptr;
-fnRefreshImmersiveColorPolicyState _RefreshImmersiveColorPolicyState = nullptr;
-fnIsDarkModeAllowedForWindow _IsDarkModeAllowedForWindow = nullptr;
-fnGetIsImmersiveColorUsingHighContrast _GetIsImmersiveColorUsingHighContrast = nullptr;
-fnOpenNcThemeData _OpenNcThemeData = nullptr;
+static fnSetWindowCompositionAttribute _SetWindowCompositionAttribute = nullptr;
+static fnShouldAppsUseDarkMode _ShouldAppsUseDarkMode = nullptr;
+static fnAllowDarkModeForWindow _AllowDarkModeForWindow = nullptr;
+static fnAllowDarkModeForApp _AllowDarkModeForApp = nullptr;
+static fnFlushMenuThemes _FlushMenuThemes = nullptr;
+static fnRefreshImmersiveColorPolicyState _RefreshImmersiveColorPolicyState = nullptr;
+static fnIsDarkModeAllowedForWindow _IsDarkModeAllowedForWindow = nullptr;
+static fnGetIsImmersiveColorUsingHighContrast _GetIsImmersiveColorUsingHighContrast = nullptr;
+static fnOpenNcThemeData _OpenNcThemeData = nullptr;
 // 1903 18362
 //fnShouldSystemUseDarkMode _ShouldSystemUseDarkMode = nullptr;
 fnSetPreferredAppMode _SetPreferredAppMode = nullptr;
@@ -251,7 +251,7 @@ void FixDarkScrollBar()
 		auto addr = FindDelayLoadThunkInModule(hComctl, "uxtheme.dll", 49); // OpenNcThemeData
 		if (addr)
 		{
-			DWORD oldProtect;
+			DWORD oldProtect = 0;
 			if (VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), PAGE_READWRITE, &oldProtect) && _OpenNcThemeData)
 			{
 				auto MyOpenThemeData = [](HWND hWnd, LPCWSTR classList) WINAPI_LAMBDA_RETURN(HTHEME) {
@@ -265,10 +265,11 @@ void FixDarkScrollBar()
 					return _OpenNcThemeData(hWnd, classList);
 				};
 
-				addr->u1.Function = reinterpret_cast<ULONG_PTR>(static_cast<fnOpenNcThemeData>(MyOpenThemeData));
+				addr->u1.Function = reinterpret_cast<uintptr_t>(static_cast<fnOpenNcThemeData>(MyOpenThemeData));
 				VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), oldProtect, &oldProtect);
 			}
 		}
+		FreeLibrary(hComctl);
 	}
 }
 
@@ -372,5 +373,112 @@ void SetDarkMode(bool useDark, bool fixDarkScrollbar)
 			FixDarkScrollBar();
 		}
 		g_darkModeEnabled = ShouldAppsUseDarkMode() && !IsHighContrast();
+	}
+}
+
+// Hooking GetSysColor for comboboxex listbox
+
+using fnGetSysColor = DWORD (WINAPI*)(int nIndex);
+
+static fnGetSysColor _GetSysColor = nullptr;
+
+static COLORREF _clrWindow = RGB(32, 32, 32);
+static COLORREF _clrText = RGB(224, 224, 224);
+
+static bool isGetSysColorHooked = false;
+
+void SetMySysColor(int nIndex, COLORREF clr)
+{
+	switch (nIndex)
+	{
+		case COLOR_WINDOW:
+		{
+			_clrWindow = clr;
+			break;
+		}
+
+		case COLOR_WINDOWTEXT:
+		{
+			_clrText = clr;
+			break;
+		}
+
+		default:
+			break;
+	}
+}
+
+DWORD MyGetSysColor(int nIndex)
+{
+	if( !(g_darkModeEnabled))
+			return GetSysColor(nIndex);
+
+	switch (nIndex)
+	{
+		case COLOR_WINDOW:
+			return _clrWindow;
+
+		case COLOR_WINDOWTEXT: 
+			return _clrText;
+		
+		default:
+			return GetSysColor(nIndex);
+	}
+}
+
+template <typename P>
+P ReplaceFunction(IMAGE_THUNK_DATA* addr, P newFunction)
+{
+	DWORD oldProtect = 0;
+	if (!VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), PAGE_READWRITE, &oldProtect))
+		return 0;
+	uintptr_t oldFunction = addr->u1.Function;
+	addr->u1.Function = reinterpret_cast<uintptr_t>(newFunction);
+	VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), oldProtect, &oldProtect);
+	return reinterpret_cast<P>(oldFunction);
+}
+
+bool HookSysColor()
+{
+	HMODULE hComctl = LoadLibraryEx(L"comctl32.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+	if (hComctl)
+	{
+		if (_GetSysColor == nullptr || !isGetSysColorHooked)
+		{
+			auto addr = FindIatThunkInModule(hComctl, "user32.dll", "GetSysColor");
+			if (addr)
+			{
+				_GetSysColor = ReplaceFunction(addr, static_cast<fnGetSysColor>(MyGetSysColor));
+				isGetSysColorHooked = true;
+			}
+			else
+			{
+				FreeLibrary(hComctl);
+				return false;
+			}
+		}
+
+		FreeLibrary(hComctl);
+		return true;
+	}
+	return false;
+}
+
+void UnhookSysColor()
+{
+	HMODULE hComctl = LoadLibraryEx(L"comctl32.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+	if (hComctl)
+	{
+		if (isGetSysColorHooked)
+		{
+			auto addr = FindIatThunkInModule(hComctl, "user32.dll", "GetSysColor");
+			if (addr)
+			{
+				ReplaceFunction(addr, _GetSysColor);
+				isGetSysColorHooked = false;
+			}
+		}
+
+		FreeLibrary(hComctl);
 	}
 }

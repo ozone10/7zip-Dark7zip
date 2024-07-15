@@ -1,7 +1,8 @@
-#pragma once
-#include <windows.h>
 // MIT license, see LICENSE
 // Copyright(c) 2021 adzm / Adam D. Walling
+
+#pragma once
+#include <windows.h>
 
 // processes messages related to UAH / custom menubar drawing.
 // return true if handled, false to continue with normal processing in your wndproc
@@ -71,4 +72,3 @@ typedef struct tagUAHMEASUREMENUITEM
 	UAHMENU um;
 	UAHMENUITEM umi;
 } UAHMEASUREMENUITEM;
-

@@ -65,7 +65,6 @@ namespace DarkMode
 
 	void initDarkMode();
 
-
 	bool isEnabled();
 	bool isExperimentalActive();
 	bool isExperimentalSupported();
@@ -118,6 +117,11 @@ namespace DarkMode
 	bool allowDarkModeForWindow(HWND hWnd, bool allow);
 	void setTitleBarThemeColor(HWND hWnd);
 
+	void setSysColor(int nIndex, COLORREF color);
+	bool hookSysColor();
+	void unhookSysColor();
+
+
 	// enhancements to DarkMode.h
 	void enableDarkScrollBarForWindowAndChildren(HWND hwnd);
 
@@ -139,6 +143,7 @@ namespace DarkMode
 	void themeRichEdit(HWND hwnd, DarkModeParams p);
 	void subclassTabControl(HWND hwnd, DarkModeParams p);
 	void subclassStatusBar(HWND hwnd, DarkModeParams p);
+	void subclassComboboxEx(HWND hwnd, DarkModeParams p);
 
 	void autoSubclassAndThemeChildControls(HWND hwndParent, bool subclass = true, bool theme = true);
 	void autoThemeChildControls(HWND hwndParent);

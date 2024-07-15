@@ -18,3 +18,7 @@ void SetDarkMode(bool useDarkMode, bool fixDarkScrollbar);
 bool IsWindows10();
 bool IsWindows11();
 DWORD GetWindowsBuildNumber();
+
+void SetMySysColor(int nIndex, COLORREF clr);
+bool HookSysColor();
+void UnhookSysColor();
