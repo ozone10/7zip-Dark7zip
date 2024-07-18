@@ -76,6 +76,67 @@ static constexpr COLORREF HEXRGB(DWORD rrggbb) {
 		((rrggbb & 0x0000FF) << 16);
 }
 
+std::wstring getIniPath(std::wstring iniFilename)
+{
+	wchar_t buffer[MAX_PATH]{};
+	::GetModuleFileName(nullptr, buffer, MAX_PATH);
+	
+	wchar_t* lastSlash = wcsrchr(buffer, L'\\');
+	if (lastSlash)
+	{
+		*lastSlash = L'\0';
+		std::wstring iniPath(buffer);
+
+		iniPath += L"\\";
+		iniPath += iniFilename;
+		iniPath += L".ini";
+		return iniPath;
+	}
+	return L"";
+}
+
+bool fileExists(std::wstring filePath)
+{
+    DWORD dwAttrib = ::GetFileAttributes(filePath.c_str());
+    return (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+bool setClrFromIni(std::wstring sectionName, std::wstring  keyName, std::wstring iniFilePath, COLORREF* clr)
+{
+	constexpr int maxStringLength = 7;
+	wchar_t buffer[maxStringLength + 1]{};
+	
+	::GetPrivateProfileString(sectionName.c_str(), keyName.c_str(), L"", buffer, maxStringLength, iniFilePath.c_str());
+
+	size_t length = wcslen(buffer);
+	if (length != maxStringLength - 1)
+	{
+		return false;
+	}
+
+	for (size_t i = 0; i < length; ++i)
+	{
+		if (!iswxdigit(buffer[i]))
+		{
+			return false;
+		}
+	}
+
+	COLORREF clrTmp{*clr};
+
+	try
+	{
+		clrTmp = HEXRGB(std::stoi(buffer, nullptr, 16));
+	}
+	catch (const std::exception&)
+	{
+		return false;
+	}
+
+	*clr = clrTmp;
+	return true;
+}
+
 namespace DarkMode
 {
 	struct Brushes
@@ -192,6 +253,159 @@ namespace DarkMode
 		HEXRGB(0x484848)    // disabledEdgeColor
 	};
 
+	// red tone
+	static const Colors darkRedColors{
+		HEXRGB(0x302020),   // background
+		HEXRGB(0x504040),   // softerBackground
+		HEXRGB(0x504040),   // hotBackground
+		HEXRGB(0x302020),   // pureBackground
+		HEXRGB(0xC00000),   // errorBackground
+		HEXRGB(0xE0E0E0),   // textColor
+		HEXRGB(0xC0C0C0),   // darkerTextColor
+		HEXRGB(0x808080),   // disabledTextColor
+		HEXRGB(0xFFFF00),   // linkTextColor
+		HEXRGB(0x908080),   // edgeColor
+		HEXRGB(0xBBABAB),   // hotEdgeColor
+		HEXRGB(0x584848)    // disabledEdgeColor
+	};
+
+	// green tone
+	static const Colors darkGreenColors{
+		HEXRGB(0x203020),   // background
+		HEXRGB(0x405040),   // softerBackground
+		HEXRGB(0x405040),   // hotBackground
+		HEXRGB(0x203020),   // pureBackground
+		HEXRGB(0xB01000),   // errorBackground
+		HEXRGB(0xE0E0E0),   // textColor
+		HEXRGB(0xC0C0C0),   // darkerTextColor
+		HEXRGB(0x808080),   // disabledTextColor
+		HEXRGB(0xFFFF00),   // linkTextColor
+		HEXRGB(0x809080),   // edgeColor
+		HEXRGB(0xABBBAB),   // hotEdgeColor
+		HEXRGB(0x485848)    // disabledEdgeColor
+	};
+
+	// blue tone
+	static const Colors darkBlueColors{
+		HEXRGB(0x202040),   // background
+		HEXRGB(0x404060),   // softerBackground
+		HEXRGB(0x404060),   // hotBackground
+		HEXRGB(0x202040),   // pureBackground
+		HEXRGB(0xB00020),   // errorBackground
+		HEXRGB(0xE0E0E0),   // textColor
+		HEXRGB(0xC0C0C0),   // darkerTextColor
+		HEXRGB(0x808080),   // disabledTextColor
+		HEXRGB(0xFFFF00),   // linkTextColor
+		HEXRGB(0x8080A0),   // edgeColor
+		HEXRGB(0xABABCB),   // hotEdgeColor
+		HEXRGB(0x484868)    // disabledEdgeColor
+	};
+
+	// purple tone
+	static const Colors darkPurpleColors{
+		HEXRGB(0x302040),   // background
+		HEXRGB(0x504060),   // softerBackground
+		HEXRGB(0x504060),   // hotBackground
+		HEXRGB(0x302040),   // pureBackground
+		HEXRGB(0xC00020),   // errorBackground
+		HEXRGB(0xE0E0E0),   // textColor
+		HEXRGB(0xC0C0C0),   // darkerTextColor
+		HEXRGB(0x808080),   // disabledTextColor
+		HEXRGB(0xFFFF00),   // linkTextColor
+		HEXRGB(0x9080A0),   // edgeColor
+		HEXRGB(0xBBABCB),   // hotEdgeColor
+		HEXRGB(0x584868)    // disabledEdgeColor
+	};
+
+	// cyan tone
+	static const Colors darkCyanColors{
+		HEXRGB(0x203040),   // background
+		HEXRGB(0x405060),   // softerBackground
+		HEXRGB(0x405060),   // hotBackground
+		HEXRGB(0x203040),   // pureBackground
+		HEXRGB(0xB01020),   // errorBackground
+		HEXRGB(0xE0E0E0),   // textColor
+		HEXRGB(0xC0C0C0),   // darkerTextColor
+		HEXRGB(0x808080),   // disabledTextColor
+		HEXRGB(0xFFFF00),   // linkTextColor
+		HEXRGB(0x8090A0),   // edgeColor
+		HEXRGB(0xBBBBCB),   // hotEdgeColor
+		HEXRGB(0x485868)    // disabledEdgeColor
+	};
+
+	// olive tone
+	static const Colors darkOliveColors{
+		HEXRGB(0x303020),   // background
+		HEXRGB(0x505040),   // softerBackground
+		HEXRGB(0x505040),   // hotBackground
+		HEXRGB(0x303020),   // pureBackground
+		HEXRGB(0xC01000),   // errorBackground
+		HEXRGB(0xE0E0E0),   // textColor
+		HEXRGB(0xC0C0C0),   // darkerTextColor
+		HEXRGB(0x808080),   // disabledTextColor
+		HEXRGB(0xFFFF00),   // linkTextColor
+		HEXRGB(0x909080),   // edgeColor
+		HEXRGB(0xBBBBAB),   // hotEdgeColor
+		HEXRGB(0x585848)    // disabledEdgeColor
+	};
+
+	// customized
+	static Colors darkCustomizedColors{darkColors};
+
+	static Colors lightColors{
+		::GetSysColor(COLOR_WINDOW),        // background
+		::GetSysColor(COLOR_WINDOW),        // softerBackground
+		HEXRGB(0xC0DCF3),                   // hotBackground
+		::GetSysColor(COLOR_WINDOW),        // pureBackground
+		HEXRGB(0xA01000),                   // errorBackground
+		::GetSysColor(COLOR_WINDOWTEXT),    // textColor
+		::GetSysColor(COLOR_BTNTEXT),       // darkerTextColor
+		::GetSysColor(COLOR_GRAYTEXT),      // disabledTextColor
+		::GetSysColor(COLOR_HOTLIGHT),      // linkTextColor
+		::GetSysColor(COLOR_BTNTEXT),       // edgeColor
+		::GetSysColor(COLOR_HIGHLIGHT),     // hotEdgeColor
+		::GetSysColor(COLOR_GRAYTEXT)       // disabledEdgeColor
+	};
+
+	static ColorTone g_colorToneChoice = DarkMode::ColorTone::blackTone;
+
+	void setDarkCustomColors(ColorTone colorTone)
+	{
+		switch (colorTone)
+		{
+			case DarkMode::ColorTone::redTone:
+			{
+				darkCustomizedColors = darkRedColors;
+				break;
+			}
+
+			case DarkMode::ColorTone::greenTone:
+				darkCustomizedColors = darkGreenColors;
+				break;
+
+			case DarkMode::ColorTone::blueTone:
+				darkCustomizedColors = darkBlueColors;
+				break;
+
+			case DarkMode::ColorTone::purpleTone:
+				darkCustomizedColors = darkPurpleColors;
+				break;
+
+			case DarkMode::ColorTone::cyanTone:
+				darkCustomizedColors = darkCyanColors;
+				break;
+
+			case DarkMode::ColorTone::oliveTone:
+				darkCustomizedColors = darkOliveColors;
+				break;
+
+			case DarkMode::ColorTone::customizedTone:
+			case DarkMode::ColorTone::blackTone:
+				darkCustomizedColors = darkColors;
+				break;
+		}
+	}
+
 	struct Theme
 	{
 		Colors _colors;
@@ -212,15 +426,15 @@ namespace DarkMode
 		}
 	};
 
-	Theme tDefault(darkColors);
+	Theme tDefault(darkCustomizedColors);
 
 	static Theme& getTheme()
 	{
 		return tDefault;
 	}
 
-	constexpr COLORREF g_fgColor = RGB(224, 226, 228);
-	constexpr COLORREF g_bgColor = RGB(41, 49, 52);
+	static COLORREF g_fgColor = RGB(224, 226, 228);
+	static COLORREF g_bgColor = RGB(41, 49, 52);
 
 	static bool g_isAtLeastWindows10 = false;
 
@@ -232,8 +446,54 @@ namespace DarkMode
 			DarkMode::initExperimentalDarkMode();
 			g_isAtLeastWindows10 = DarkMode::isWindows10();
 
+			bool useDarkMode = true;
+
+			std::wstring iniPath = getIniPath(L"7zDark");
+			if (fileExists(iniPath))
+			{
+				useDarkMode = (::GetPrivateProfileInt(L"main", L"mode", 1, iniPath.c_str()) == 1);
+				std::wstring sectionBase = useDarkMode ? L"dark" : L"light";
+				std::wstring sectionColorsView = sectionBase + L".colors.view";
+				std::wstring sectionColors = sectionBase + L".colors";
+
+				if (useDarkMode)
+				{
+					int tone = ::GetPrivateProfileInt(sectionBase.c_str(), L"tone", 0, iniPath.c_str());
+					if (tone > 6)
+						tone = 0;
+
+					DarkMode::setDarkCustomColors(static_cast<DarkMode::ColorTone>(tone));
+					getTheme()._colors = darkCustomizedColors;
+				}
+				else
+				{
+					getTheme()._colors = lightColors;
+				}
+
+				setClrFromIni(sectionColorsView, L"backgroundView", iniPath, &g_bgColor);
+				setClrFromIni(sectionColorsView, L"textView", iniPath, &g_fgColor);
+
+				setClrFromIni(sectionColors, L"background", iniPath, &getTheme()._colors.background);
+				setClrFromIni(sectionColors, L"backgroundInteractive", iniPath, &getTheme()._colors.softerBackground);
+				setClrFromIni(sectionColors, L"backgroundHot", iniPath, &getTheme()._colors.hotBackground);
+				setClrFromIni(sectionColors, L"backgroundDlg", iniPath, &getTheme()._colors.pureBackground);
+				//setClrFromIni(sectionColors, L"backgroundError", iniPath, getTheme()._colors.errorBackground);
+
+				setClrFromIni(sectionColors, L"text", iniPath, &getTheme()._colors.text);
+				setClrFromIni(sectionColors, L"textItem", iniPath, &getTheme()._colors.darkerText);
+				setClrFromIni(sectionColors, L"textDisabled", iniPath, &getTheme()._colors.disabledText);
+				//setClrFromIni(sectionColors, L"textLink", iniPath, getTheme()._colors.linkText);
+
+				setClrFromIni(sectionColors, L"edge", iniPath, &getTheme()._colors.edge);
+				setClrFromIni(sectionColors, L"edgeHot", iniPath, &getTheme()._colors.hotEdge);
+				setClrFromIni(sectionColors, L"edgeDisabled", iniPath, &getTheme()._colors.disabledEdge);
+
+				getTheme()._brushes.change(getTheme()._colors);
+				getTheme()._pens.change(getTheme()._colors);
+			}
+
 			DarkMode::calculateTreeViewStyle();
-			DarkMode::setDarkMode(true, true);
+			DarkMode::setDarkMode(useDarkMode, true);
 
 			DarkMode::setSysColor(COLOR_WINDOW, DarkMode::getBackgroundColor());
 			DarkMode::setSysColor(COLOR_WINDOWTEXT, DarkMode::getTextColor());
@@ -324,6 +584,11 @@ namespace DarkMode
 	HPEN getEdgePen()                     { return getTheme()._pens.edgePen; }
 	HPEN getHotEdgePen()                  { return getTheme()._pens.hotEdgePen; }
 	HPEN getDisabledEdgePen()             { return getTheme()._pens.disabledEdgePen; }
+
+	void changeCustomTheme(const Colors& colors)
+	{
+		tDefault.change(colors);
+	}
 
 	// processes messages related to UAH / custom menubar drawing.
 	// return true if handled, false to continue with normal processing in your wndproc
@@ -2427,7 +2692,7 @@ namespace DarkMode
 			if (p._subclass)
 			{
 				//DarkMode::subclassComboBoxControl(hwnd);
-				::SetWindowTheme(hwnd, L"CFD", NULL);
+				::SetWindowTheme(hwnd, L"CFD", nullptr);
 				DarkMode::allowDarkModeForWindow(hwnd, true);
 				::SendMessage(hwnd, WM_THEMECHANGED, 0, 0);
 			}
@@ -2568,7 +2833,7 @@ namespace DarkMode
 				nmtbcd->hbrMonoDither = DarkMode::getBackgroundBrush();
 				nmtbcd->hbrLines = DarkMode::getEdgeBrush();
 				nmtbcd->hpenLines = DarkMode::getEdgePen();
-				nmtbcd->clrText = DarkMode::getTextColor();
+				nmtbcd->clrText = DarkMode::getDarkerTextColor();
 				nmtbcd->clrTextHighlight = DarkMode::getTextColor();
 				nmtbcd->clrBtnFace = DarkMode::getBackgroundColor();
 				nmtbcd->clrBtnHighlight = DarkMode::getSofterBackgroundColor();
@@ -2991,12 +3256,12 @@ namespace DarkMode
 		constexpr DWORD win10Build2004 = 19041;
 		if (DarkMode::getWindowsBuildNumber() >= win10Build2004)
 		{
-			BOOL value = DarkMode::isEnabled() ? TRUE : FALSE;
+			BOOL value = DarkMode::isExperimentalActive() ? TRUE : FALSE;
 			::DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
 		}
 		else
 		{
-			DarkMode::allowDarkModeForWindow(hwnd, DarkMode::isEnabled());
+			DarkMode::allowDarkModeForWindow(hwnd, DarkMode::isExperimentalActive());
 			DarkMode::setTitleBarThemeColor(hwnd);
 		}
 	}

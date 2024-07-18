@@ -372,7 +372,7 @@ void SetDarkMode(bool useDark, bool fixDarkScrollbar)
 		{
 			FixDarkScrollBar();
 		}
-		g_darkModeEnabled = ShouldAppsUseDarkMode() && !IsHighContrast();
+		g_darkModeEnabled = useDark && ShouldAppsUseDarkMode() && !IsHighContrast();
 	}
 }
 

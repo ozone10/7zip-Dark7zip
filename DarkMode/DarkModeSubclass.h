@@ -56,6 +56,17 @@ namespace DarkMode
 		tabbar
 	};
 
+	enum ColorTone {
+		blackTone  = 0,
+		redTone    = 1,
+		greenTone  = 2,
+		blueTone   = 3,
+		purpleTone = 4,
+		cyanTone   = 5,
+		oliveTone  = 6,
+		customizedTone = 32
+	};
+
 	enum class TreeViewStyle
 	{
 		classic = 0,
@@ -74,6 +85,8 @@ namespace DarkMode
 	DWORD getWindowsBuildNumber();
 
 	double calculatePerceivedLightness(COLORREF c);
+
+	void setDarkCustomColors(ColorTone colorTone);
 
 	COLORREF getBackgroundColor();
 	COLORREF getSofterBackgroundColor();
@@ -104,6 +117,8 @@ namespace DarkMode
 	HPEN getEdgePen();
 	HPEN getHotEdgePen();
 	HPEN getDisabledEdgePen();
+
+	void changeCustomTheme(const Colors& colors);
 
 	// processes messages related to UAH / custom menubar drawing.
 	// return true if handled, false to continue with normal processing in your wndproc
