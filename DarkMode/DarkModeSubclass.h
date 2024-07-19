@@ -136,7 +136,6 @@ namespace DarkMode
 	bool hookSysColor();
 	void unhookSysColor();
 
-
 	// enhancements to DarkMode.h
 	void enableDarkScrollBarForWindowAndChildren(HWND hwnd);
 

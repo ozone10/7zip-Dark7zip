@@ -353,16 +353,16 @@ namespace DarkMode
 	static Colors darkCustomizedColors{darkColors};
 
 	static Colors lightColors{
-		::GetSysColor(COLOR_WINDOW),        // background
+		::GetSysColor(COLOR_3DFACE),        // background
 		::GetSysColor(COLOR_WINDOW),        // softerBackground
 		HEXRGB(0xC0DCF3),                   // hotBackground
-		::GetSysColor(COLOR_WINDOW),        // pureBackground
+		::GetSysColor(COLOR_3DFACE),        // pureBackground
 		HEXRGB(0xA01000),                   // errorBackground
 		::GetSysColor(COLOR_WINDOWTEXT),    // textColor
 		::GetSysColor(COLOR_BTNTEXT),       // darkerTextColor
 		::GetSysColor(COLOR_GRAYTEXT),      // disabledTextColor
 		::GetSysColor(COLOR_HOTLIGHT),      // linkTextColor
-		::GetSysColor(COLOR_BTNTEXT),       // edgeColor
+		HEXRGB(0x8D8D8D),                   // edgeColor
 		::GetSysColor(COLOR_HIGHLIGHT),     // hotEdgeColor
 		::GetSysColor(COLOR_GRAYTEXT)       // disabledEdgeColor
 	};
@@ -380,29 +380,41 @@ namespace DarkMode
 			}
 
 			case DarkMode::ColorTone::greenTone:
+			{
 				darkCustomizedColors = darkGreenColors;
 				break;
+			}
 
 			case DarkMode::ColorTone::blueTone:
+			{
 				darkCustomizedColors = darkBlueColors;
 				break;
+			}
 
 			case DarkMode::ColorTone::purpleTone:
+			{
 				darkCustomizedColors = darkPurpleColors;
 				break;
+			}
 
 			case DarkMode::ColorTone::cyanTone:
+			{
 				darkCustomizedColors = darkCyanColors;
 				break;
+			}
 
 			case DarkMode::ColorTone::oliveTone:
+			{
 				darkCustomizedColors = darkOliveColors;
 				break;
+			}
 
 			case DarkMode::ColorTone::customizedTone:
 			case DarkMode::ColorTone::blackTone:
+			{
 				darkCustomizedColors = darkColors;
 				break;
+			}
 		}
 	}
 
@@ -436,7 +448,54 @@ namespace DarkMode
 	static COLORREF g_fgColor = RGB(224, 226, 228);
 	static COLORREF g_bgColor = RGB(41, 49, 52);
 
-	static bool g_isAtLeastWindows10 = false;
+	static bool g_useDarkMode = true;
+
+	void initOptions()
+	{
+		std::wstring iniPath = getIniPath(L"7zDark");
+		if (fileExists(iniPath))
+		{
+			g_useDarkMode = (::GetPrivateProfileInt(L"main", L"mode", 1, iniPath.c_str()) == 1);
+			std::wstring sectionBase = g_useDarkMode ? L"dark" : L"light";
+			std::wstring sectionColorsView = sectionBase + L".colors.view";
+			std::wstring sectionColors = sectionBase + L".colors";
+
+			if (g_useDarkMode)
+			{
+				int tone = ::GetPrivateProfileInt(sectionBase.c_str(), L"tone", 0, iniPath.c_str());
+				if (tone > 6)
+					tone = 0;
+
+				DarkMode::setDarkCustomColors(static_cast<DarkMode::ColorTone>(tone));
+				DarkMode::getTheme()._colors = DarkMode::darkCustomizedColors;
+			}
+			else
+			{
+				DarkMode::getTheme()._colors = DarkMode::lightColors;
+			}
+
+			setClrFromIni(sectionColorsView, L"backgroundView", iniPath, &DarkMode::g_bgColor);
+			setClrFromIni(sectionColorsView, L"textView", iniPath, &DarkMode::g_fgColor);
+
+			setClrFromIni(sectionColors, L"background", iniPath, &DarkMode::getTheme()._colors.background);
+			setClrFromIni(sectionColors, L"backgroundInteractive", iniPath, &DarkMode::getTheme()._colors.softerBackground);
+			setClrFromIni(sectionColors, L"backgroundHot", iniPath, &DarkMode::getTheme()._colors.hotBackground);
+			setClrFromIni(sectionColors, L"backgroundDlg", iniPath, &DarkMode::getTheme()._colors.pureBackground);
+			//setClrFromIni(sectionColors, L"backgroundError", iniPath, getTheme()._colors.errorBackground);
+
+			setClrFromIni(sectionColors, L"text", iniPath, &DarkMode::getTheme()._colors.text);
+			setClrFromIni(sectionColors, L"textItem", iniPath, &DarkMode::getTheme()._colors.darkerText);
+			setClrFromIni(sectionColors, L"textDisabled", iniPath, &DarkMode::getTheme()._colors.disabledText);
+			//setClrFromIni(sectionColors, L"textLink", iniPath, getTheme()._colors.linkText);
+
+			setClrFromIni(sectionColors, L"edge", iniPath, &DarkMode::getTheme()._colors.edge);
+			setClrFromIni(sectionColors, L"edgeHot", iniPath, &DarkMode::getTheme()._colors.hotEdge);
+			setClrFromIni(sectionColors, L"edgeDisabled", iniPath, &DarkMode::getTheme()._colors.disabledEdge);
+
+			DarkMode::getTheme()._brushes.change(DarkMode::getTheme()._colors);
+			DarkMode::getTheme()._pens.change(DarkMode::getTheme()._colors);
+		}
+	}
 
 	void initDarkMode()
 	{
@@ -444,56 +503,11 @@ namespace DarkMode
 		if (!isInit)
 		{
 			DarkMode::initExperimentalDarkMode();
-			g_isAtLeastWindows10 = DarkMode::isWindows10();
 
-			bool useDarkMode = true;
-
-			std::wstring iniPath = getIniPath(L"7zDark");
-			if (fileExists(iniPath))
-			{
-				useDarkMode = (::GetPrivateProfileInt(L"main", L"mode", 1, iniPath.c_str()) == 1);
-				std::wstring sectionBase = useDarkMode ? L"dark" : L"light";
-				std::wstring sectionColorsView = sectionBase + L".colors.view";
-				std::wstring sectionColors = sectionBase + L".colors";
-
-				if (useDarkMode)
-				{
-					int tone = ::GetPrivateProfileInt(sectionBase.c_str(), L"tone", 0, iniPath.c_str());
-					if (tone > 6)
-						tone = 0;
-
-					DarkMode::setDarkCustomColors(static_cast<DarkMode::ColorTone>(tone));
-					getTheme()._colors = darkCustomizedColors;
-				}
-				else
-				{
-					getTheme()._colors = lightColors;
-				}
-
-				setClrFromIni(sectionColorsView, L"backgroundView", iniPath, &g_bgColor);
-				setClrFromIni(sectionColorsView, L"textView", iniPath, &g_fgColor);
-
-				setClrFromIni(sectionColors, L"background", iniPath, &getTheme()._colors.background);
-				setClrFromIni(sectionColors, L"backgroundInteractive", iniPath, &getTheme()._colors.softerBackground);
-				setClrFromIni(sectionColors, L"backgroundHot", iniPath, &getTheme()._colors.hotBackground);
-				setClrFromIni(sectionColors, L"backgroundDlg", iniPath, &getTheme()._colors.pureBackground);
-				//setClrFromIni(sectionColors, L"backgroundError", iniPath, getTheme()._colors.errorBackground);
-
-				setClrFromIni(sectionColors, L"text", iniPath, &getTheme()._colors.text);
-				setClrFromIni(sectionColors, L"textItem", iniPath, &getTheme()._colors.darkerText);
-				setClrFromIni(sectionColors, L"textDisabled", iniPath, &getTheme()._colors.disabledText);
-				//setClrFromIni(sectionColors, L"textLink", iniPath, getTheme()._colors.linkText);
-
-				setClrFromIni(sectionColors, L"edge", iniPath, &getTheme()._colors.edge);
-				setClrFromIni(sectionColors, L"edgeHot", iniPath, &getTheme()._colors.hotEdge);
-				setClrFromIni(sectionColors, L"edgeDisabled", iniPath, &getTheme()._colors.disabledEdge);
-
-				getTheme()._brushes.change(getTheme()._colors);
-				getTheme()._pens.change(getTheme()._colors);
-			}
+			initOptions();
 
 			DarkMode::calculateTreeViewStyle();
-			DarkMode::setDarkMode(useDarkMode, true);
+			DarkMode::setDarkMode(g_useDarkMode, true);
 
 			DarkMode::setSysColor(COLOR_WINDOW, DarkMode::getBackgroundColor());
 			DarkMode::setSysColor(COLOR_WINDOWTEXT, DarkMode::getTextColor());
@@ -504,7 +518,7 @@ namespace DarkMode
 
 	bool isEnabled()
 	{
-		return g_isAtLeastWindows10;
+		return DarkMode::isWindows10();
 	}
 
 	bool isExperimentalActive()
@@ -2039,7 +2053,7 @@ namespace DarkMode
 				};
 
 				RECT rcArrowRight{
-					rcArrowLeft.right - 1, rcClient.top,
+					rcArrowLeft.right, rcClient.top,
 					rcClient.right, rcClient.bottom
 				};
 
@@ -2056,7 +2070,7 @@ namespace DarkMode
 				};
 
 				RECT rcArrowBottom{
-					rcClient.left, rcArrowTop.bottom - 1,
+					rcClient.left, rcArrowTop.bottom,
 					rcClient.right, rcClient.bottom
 				};
 
@@ -2347,9 +2361,9 @@ namespace DarkMode
 				for (int i = 0; i < nParts; ++i)
 				{
 					RECT rcPart{};
-					SendMessage(hWnd, SB_GETRECT, i, (LPARAM)&rcPart);
+					SendMessage(hWnd, SB_GETRECT, i, reinterpret_cast<LPARAM>(&rcPart));
 					RECT rcIntersect{};
-					if (!IntersectRect(&rcIntersect, &rcPart, &ps.rcPaint))
+					if (!::IntersectRect(&rcIntersect, &rcPart, &ps.rcPaint))
 					{
 						continue;
 					}
@@ -2368,7 +2382,7 @@ namespace DarkMode
 					DWORD cchText = 0;
 					cchText = LOWORD(SendMessage(hWnd, SB_GETTEXTLENGTH, i, 0));
 					str.resize(cchText + 1); // technically the std::wstring might not have an internal null character at the end of the buffer, so add one
-					LRESULT lr = SendMessage(hWnd, SB_GETTEXT, i, (LPARAM)&str[0]);
+					LRESULT lr = SendMessage(hWnd, SB_GETTEXT, i, reinterpret_cast<LPARAM>(&str[0]));
 					str.resize(cchText); // remove the extra NULL character
 					bool ownerDraw = false;
 					if (cchText == 0 && (lr & ~(SBT_NOBORDERS | SBT_POPOUT | SBT_RTLREADING)) != 0)
@@ -2406,7 +2420,7 @@ namespace DarkMode
 
 					if (!isSizeGrip && i < (nParts - 1))
 					{
-						::FillRect(hdc, &rcDivider, DarkMode::getSofterBackgroundBrush());
+						::FillRect(hdc, &rcDivider, DarkMode::getEdgeBrush());
 					}
 				}
 
@@ -2486,7 +2500,7 @@ namespace DarkMode
 	void autoSubclassAndThemeChildControls(HWND hwndParent, bool subclass, bool theme)
 	{
 		DarkModeParams p{
-			g_isAtLeastWindows10 && DarkMode::isExperimentalActive() ? L"DarkMode_Explorer" : nullptr
+			DarkMode::isExperimentalActive() ? L"DarkMode_Explorer" : nullptr
 			, subclass
 			, theme
 		};
@@ -2606,7 +2620,7 @@ namespace DarkMode
 
 	void autoThemeChildControls(HWND hwndParent)
 	{
-		autoSubclassAndThemeChildControls(hwndParent, false, g_isAtLeastWindows10);
+		autoSubclassAndThemeChildControls(hwndParent, false, DarkMode::isWindows10());
 	}
 
 	void subclassAndThemeButton(HWND hwnd, DarkModeParams p)
@@ -2989,7 +3003,7 @@ namespace DarkMode
 						lptvcd->clrText = DarkMode::getTextColor();
 						lptvcd->clrTextBk = DarkMode::getHotBackgroundColor();
 
-						if (g_isAtLeastWindows10 || g_treeViewStyle == TreeViewStyle::light)
+						if (DarkMode::isWindows10() || g_treeViewStyle == TreeViewStyle::light)
 						{
 							::FillRect(lptvcd->nmcd.hdc, &lptvcd->nmcd.rc, DarkMode::getHotBackgroundBrush());
 							lr |= CDRF_NOTIFYPOSTPAINT;
@@ -3268,7 +3282,7 @@ namespace DarkMode
 
 	void setDarkExplorerTheme(HWND hwnd)
 	{
-		::SetWindowTheme(hwnd, g_isAtLeastWindows10 && DarkMode::isExperimentalActive() ? L"DarkMode_Explorer" : nullptr, nullptr);
+		::SetWindowTheme(hwnd, DarkMode::isExperimentalActive() ? L"DarkMode_Explorer" : nullptr, nullptr);
 	}
 
 	void setDarkScrollBar(HWND hwnd)
@@ -3404,7 +3418,7 @@ namespace DarkMode
 			}
 			case TreeViewStyle::dark:
 			{
-				if (g_isAtLeastWindows10 && DarkMode::isExperimentalActive())
+				if (DarkMode::isExperimentalActive())
 				{
 					if (!hasHotStyle)
 					{
