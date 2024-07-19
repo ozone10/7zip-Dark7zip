@@ -11,7 +11,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
 // Based on Notepad++ dark mode code, original by adzm / Adam D. Walling
@@ -101,7 +101,7 @@ bool fileExists(std::wstring filePath)
     return (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-bool setClrFromIni(std::wstring sectionName, std::wstring  keyName, std::wstring iniFilePath, COLORREF* clr)
+bool setClrFromIni(std::wstring sectionName, std::wstring keyName, std::wstring iniFilePath, COLORREF* clr)
 {
 	constexpr int maxStringLength = 7;
 	wchar_t buffer[maxStringLength + 1]{};
@@ -2131,7 +2131,7 @@ namespace DarkMode
 				}
 				else
 				{
-					HBRUSH hBrush = isDisabled ? DarkMode::getDarkerBackgroundBrush() :  DarkMode::getBackgroundBrush();
+					HBRUSH hBrush = isDisabled ? DarkMode::getDarkerBackgroundBrush() : DarkMode::getBackgroundBrush();
 					::FillRect(hdc, &pUpDownData->rcPrev, isHotPrev ? DarkMode::getHotBackgroundBrush() : hBrush);
 					::FillRect(hdc, &pUpDownData->rcNext, isHotNext ? DarkMode::getHotBackgroundBrush() : hBrush);
 				}
@@ -3545,7 +3545,7 @@ namespace DarkMode
 
 		const auto style = ::GetWindowLongPtr(hwnd, GWL_STYLE);
 		bool isComboBox = (style & LBS_COMBOBOX) == LBS_COMBOBOX;
-		if (!isComboBox && ::IsWindowEnabled(hwnd))
+		if ((!isComboBox || !DarkMode::isExperimentalActive()) && ::IsWindowEnabled(hwnd))
 		{
 			return static_cast<INT_PTR>(DarkMode::onCtlColorSofter(hdc));
 		}

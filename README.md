@@ -8,6 +8,98 @@
 
 Dark7zip is project to experiment with dark mode using win32 API.
 
+---
+
+## Options
+
+`7zDark.ini` is configuration file to allow mainly to set custom colors.
+`7zDark.ini` should be in same folder as `7zFM.exe` and `7zG.exe`.
+
+- [main]
+  - mode - determine which sections color "key=value" pairs will be used and theming of title bar, buttons and scrollbars
+      - 0 - use light mode 
+      - 1 - use dark mode, default value
+
+- [dark]
+  - tone - set default colors for [dark.colors] sections, there are no tones for light mode
+    - 0 - black, default value
+    - 1 - red
+    - 2 - green
+    - 3 - blue
+    - 4 - purple
+    - 5 - cyan
+    - 6 - olive
+
+Values for custom colors are in RGB hex format - RRGGBB.
+
+- [dark.colors]/[light.colors]
+  - background - for some controls (status bar, ...)
+  - backgroundInteractive - mainly for controls with some input 
+  - backgroundHot - for hot item
+  - backgroundDlg - for dialog and some controls
+  - text - for most text
+  - textItem - for some controls
+  - textDisabled - for disabled controls
+  - edge - for border
+  - edgeHot - for hot border
+  - edgeDisabled - for disabled border
+
+- [dark.colors.view]/[light.colors.view] - for listview and treeview
+  - backgroundView
+  - textView
+
+All options are optional. You can define only "[section]" and "key=value" you want to be applied.  
+Tip: renaming section will disable all "key=value" pairs of that section and default values will be used.
+
+Examples:
+- full config
+```ini
+[main]
+mode = 1
+
+[dark]
+tone = 0
+
+[dark.colors]
+background =            "202020"
+backgroundInteractive = "404040"
+backgroundHot =         "404040"
+backgroundDlg =         "202020"
+text =                  "E0E0E0"
+textItem =              "C0C0C0"
+textDisabled =          "808080"
+edge =                  "646464"
+edgeHot =               "9B9B9B"
+edgeDisabled =          "484848"
+
+[dark.colors.view]
+backgroundView =        "293134"
+textView =              "E0E2E4"
+
+[light.colors]
+background =            "F0F0F0"
+backgroundInteractive = "FFFFFF"
+backgroundHot =         "C0DCF3"
+backgroundDlg =         "F0F0F0"
+text =                  "000000"
+textItem =              "000000"
+textDisabled =          "6D6D6D"
+edge =                  "8D8D8D"
+edgeHot =               "0078D4"
+edgeDisabled =          "6D6D6D"
+
+[light.colors.view]
+backgroundView =        "FFFFFF"
+textView =              "000000"
+```
+
+- only views, with defaults: `[main]` `mode=1`, and `[dark]` `tone=0`
+```ini
+[dark.colors.view]
+backgroundView =        "112435"
+textView =              "C3BE98"
+```
+
 * * *
 
 <p align="center">
@@ -18,7 +110,7 @@ Dark7zip is project to experiment with dark mode using win32 API.
 
 ## License
 
-Most code related to dark mode is under license GPLv3 or later version.
+Most code related to dark mode is under license MIT, or GPLv3 or later version.
   
 For 7-Zip below is information for used license.
 <details>
