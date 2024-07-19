@@ -8,6 +8,14 @@
 
 Dark7zip is project to experiment with dark mode using win32 API.
 
+* * *
+
+<p align="center">
+  <img src="https://i.imgur.com/cnYZPAE.png">
+</p>
+
+* * *
+
 ---
 
 ## Options
@@ -16,7 +24,7 @@ Dark7zip is project to experiment with dark mode using win32 API.
 `7zDark.ini` should be in same folder as `7zFM.exe` and `7zG.exe`.
 
 - [main]
-  - mode - determine which sections color "key=value" pairs will be used and theming of title bar, buttons and scrollbars
+  - mode - determine which sections color "key=value" pairs will be used and theming of title bar, buttons, scrollbars, and tooltips
       - 0 - use light mode 
       - 1 - use dark mode, default value
 
@@ -100,13 +108,7 @@ backgroundView =        "112435"
 textView =              "C3BE98"
 ```
 
-* * *
-
-<p align="center">
-  <img src="https://i.imgur.com/cnYZPAE.png">
-</p>
-
-* * *
+---
 
 ## License
 
