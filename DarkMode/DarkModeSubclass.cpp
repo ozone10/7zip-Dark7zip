@@ -606,11 +606,11 @@ namespace DarkMode
 
 	// processes messages related to UAH / custom menubar drawing.
 	// return true if handled, false to continue with normal processing in your wndproc
-	bool runUAHWndProc(HWND hWnd, UINT message, WPARAM /*wParam*/, LPARAM lParam, LRESULT* lr)
+	bool runUAHWndProc(HWND hWnd, UINT uMsg, WPARAM /*wParam*/, LPARAM lParam, LRESULT* lr)
 	{
 		static HTHEME g_menuTheme = nullptr;
 
-		switch (message)
+		switch (uMsg)
 		{
 			case WM_UAHDRAWMENU:
 			{
@@ -835,9 +835,9 @@ namespace DarkMode
 		::UnhookSysColor();
 	}
 
-	void enableDarkScrollBarForWindowAndChildren(HWND hwnd)
+	void enableDarkScrollBarForWindowAndChildren(HWND hWnd)
 	{
-		::EnableDarkScrollBarForWindowAndChildren(hwnd);
+		::EnableDarkScrollBarForWindowAndChildren(hWnd);
 	}
 
 	void paintRoundFrameRect(HDC hdc, const RECT rect, const HPEN hpen, int width, int height)
@@ -892,11 +892,11 @@ namespace DarkMode
 			closeTheme();
 		}
 
-		bool ensureTheme(HWND hwnd)
+		bool ensureTheme(HWND hWnd)
 		{
 			if (!hTheme)
 			{
-				hTheme = ::OpenThemeData(hwnd, VSCLASS_BUTTON);
+				hTheme = ::OpenThemeData(hWnd, VSCLASS_BUTTON);
 			}
 			return hTheme != nullptr;
 		}
@@ -911,13 +911,13 @@ namespace DarkMode
 		}
 	};
 
-	static void renderButton(HWND hwnd, HDC hdc, HTHEME hTheme, int iPartID, int iStateID)
+	static void renderButton(HWND hWnd, HDC hdc, HTHEME hTheme, int iPartID, int iStateID)
 	{
 		RECT rcClient{};
 		WCHAR szText[256] = { '\0' };
-		DWORD nState = static_cast<DWORD>(SendMessage(hwnd, BM_GETSTATE, 0, 0));
-		DWORD uiState = static_cast<DWORD>(SendMessage(hwnd, WM_QUERYUISTATE, 0, 0));
-		auto nStyle = ::GetWindowLongPtr(hwnd, GWL_STYLE);
+		DWORD nState = static_cast<DWORD>(SendMessage(hWnd, BM_GETSTATE, 0, 0));
+		DWORD uiState = static_cast<DWORD>(SendMessage(hWnd, WM_QUERYUISTATE, 0, 0));
+		auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 
 		HFONT hFont = nullptr;
 		HFONT hOldFont = nullptr;
@@ -930,7 +930,7 @@ namespace DarkMode
 		}
 
 		if (!hFont) {
-			hFont = reinterpret_cast<HFONT>(SendMessage(hwnd, WM_GETFONT, 0, 0));
+			hFont = reinterpret_cast<HFONT>(SendMessage(hWnd, WM_GETFONT, 0, 0));
 		}
 
 		hOldFont = static_cast<HFONT>(::SelectObject(hdc, hFont));
@@ -946,8 +946,8 @@ namespace DarkMode
 			dtFlags |= DT_VCENTER;
 		}
 
-		::GetClientRect(hwnd, &rcClient);
-		::GetWindowText(hwnd, szText, _countof(szText));
+		::GetClientRect(hWnd, &rcClient);
+		::GetWindowText(hWnd, szText, _countof(szText));
 
 		SIZE szBox = { 13, 13 };
 		::GetThemePartSize(hTheme, hdc, iPartID, iStateID, NULL, TS_DRAW, &szBox);
@@ -964,7 +964,7 @@ namespace DarkMode
 		rcBackground.right = rcBackground.left + szBox.cx;
 		rcText.left = rcBackground.right + 3;
 
-		::DrawThemeParentBackground(hwnd, hdc, &rcClient);
+		::DrawThemeParentBackground(hWnd, hdc, &rcClient);
 		::DrawThemeBackground(hTheme, hdc, iPartID, iStateID, &rcBackground, nullptr);
 
 		DTTOPTS dtto{};
@@ -995,10 +995,10 @@ namespace DarkMode
 		::SelectObject(hdc, hOldFont);
 	}
 
-	static void paintButton(HWND hwnd, HDC hdc, ButtonData& buttonData)
+	static void paintButton(HWND hWnd, HDC hdc, ButtonData& buttonData)
 	{
-		DWORD nState = static_cast<DWORD>(SendMessage(hwnd, BM_GETSTATE, 0, 0));
-		const auto nStyle = ::GetWindowLongPtr(hwnd, GWL_STYLE);
+		DWORD nState = static_cast<DWORD>(SendMessage(hWnd, BM_GETSTATE, 0, 0));
+		const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 		const auto nButtonStyle = nStyle & BS_TYPEMASK;
 
 		int iPartID = BP_CHECKBOX;
@@ -1026,7 +1026,7 @@ namespace DarkMode
 
 		if (nState & BST_CHECKED)		iStateID += 4;
 
-		if (::BufferedPaintRenderAnimation(hwnd, hdc))
+		if (::BufferedPaintRenderAnimation(hWnd, hdc))
 		{
 			return;
 		}
@@ -1040,20 +1040,20 @@ namespace DarkMode
 		}
 
 		RECT rcClient{};
-		::GetClientRect(hwnd, &rcClient);
+		::GetClientRect(hWnd, &rcClient);
 
 		HDC hdcFrom = nullptr;
 		HDC hdcTo = nullptr;
-		HANIMATIONBUFFER hbpAnimation = ::BeginBufferedAnimation(hwnd, hdc, &rcClient, BPBF_COMPATIBLEBITMAP, nullptr, &animParams, &hdcFrom, &hdcTo);
+		HANIMATIONBUFFER hbpAnimation = ::BeginBufferedAnimation(hWnd, hdc, &rcClient, BPBF_COMPATIBLEBITMAP, nullptr, &animParams, &hdcFrom, &hdcTo);
 		if (hbpAnimation)
 		{
 			if (hdcFrom)
 			{
-				renderButton(hwnd, hdcFrom, buttonData.hTheme, iPartID, buttonData.iStateID);
+				renderButton(hWnd, hdcFrom, buttonData.hTheme, iPartID, buttonData.iStateID);
 			}
 			if (hdcTo)
 			{
-				renderButton(hwnd, hdcTo, buttonData.hTheme, iPartID, iStateID);
+				renderButton(hWnd, hdcTo, buttonData.hTheme, iPartID, iStateID);
 			}
 
 			buttonData.iStateID = iStateID;
@@ -1062,7 +1062,7 @@ namespace DarkMode
 		}
 		else
 		{
-			renderButton(hwnd, hdc, buttonData.hTheme, iPartID, iStateID);
+			renderButton(hWnd, hdc, buttonData.hTheme, iPartID, iStateID);
 
 			buttonData.iStateID = iStateID;
 		}
@@ -1168,24 +1168,24 @@ namespace DarkMode
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	void subclassButtonControl(HWND hwnd)
+	void subclassButtonControl(HWND hWnd)
 	{
-		if (::GetWindowSubclass(hwnd, ButtonSubclass, g_buttonSubclassID, nullptr) == FALSE)
+		if (::GetWindowSubclass(hWnd, ButtonSubclass, g_buttonSubclassID, nullptr) == FALSE)
 		{
-			DWORD_PTR pButtonData = reinterpret_cast<DWORD_PTR>(new ButtonData(hwnd));
-			::SetWindowSubclass(hwnd, ButtonSubclass, g_buttonSubclassID, pButtonData);
+			DWORD_PTR pButtonData = reinterpret_cast<DWORD_PTR>(new ButtonData(hWnd));
+			::SetWindowSubclass(hWnd, ButtonSubclass, g_buttonSubclassID, pButtonData);
 		}
 	}
 
-	static void paintGroupbox(HWND hwnd, HDC hdc, ButtonData& buttonData)
+	static void paintGroupbox(HWND hWnd, HDC hdc, ButtonData& buttonData)
 	{
-		const auto nStyle = ::GetWindowLongPtr(hwnd, GWL_STYLE);
+		const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 		bool isDisabled = (nStyle & WS_DISABLED) == WS_DISABLED;
 		int iPartID = BP_GROUPBOX;
 		int iStateID = isDisabled ? GBS_DISABLED : GBS_NORMAL;
 
 		RECT rcClient{};
-		::GetClientRect(hwnd, &rcClient);
+		::GetClientRect(hWnd, &rcClient);
 
 		RECT rcText = rcClient;
 		RECT rcBackground = rcClient;
@@ -1202,15 +1202,15 @@ namespace DarkMode
 
 		if (!hFont)
 		{
-			hFont = reinterpret_cast<HFONT>(SendMessage(hwnd, WM_GETFONT, 0, 0));
+			hFont = reinterpret_cast<HFONT>(SendMessage(hWnd, WM_GETFONT, 0, 0));
 		}
 
 		hOldFont = static_cast<HFONT>(::SelectObject(hdc, hFont));
 
 		wchar_t szText[256] = { '\0' };
-		::GetWindowText(hwnd, szText, _countof(szText));
+		::GetWindowText(hWnd, szText, _countof(szText));
 
-		const auto style = ::GetWindowLongPtr(hwnd, GWL_STYLE);
+		const auto style = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 		bool isCenter = (style & BS_CENTER) == BS_CENTER;
 
 		if (szText[0])
@@ -1238,7 +1238,7 @@ namespace DarkMode
 		::GetThemeBackgroundContentRect(buttonData.hTheme, hdc, BP_GROUPBOX, iStateID, &rcBackground, &rcContent);
 		::ExcludeClipRect(hdc, rcContent.left, rcContent.top, rcContent.right, rcContent.bottom);
 
-		//DrawThemeParentBackground(hwnd, hdc, &rcClient);
+		//DrawThemeParentBackground(hWnd, hdc, &rcClient);
 		//DrawThemeBackground(buttonData.hTheme, hdc, BP_GROUPBOX, iStateID, &rcBackground, nullptr);
 		DarkMode::paintRoundFrameRect(hdc, rcBackground, DarkMode::getEdgePen());
 
@@ -1256,7 +1256,7 @@ namespace DarkMode
 
 			DWORD textFlags = isCenter ? DT_CENTER : DT_LEFT;
 
-			if(::SendMessage(hwnd, WM_QUERYUISTATE, 0, 0) != static_cast<LRESULT>(NULL))
+			if(::SendMessage(hWnd, WM_QUERYUISTATE, 0, 0) != static_cast<LRESULT>(NULL))
 			{
 				textFlags |= DT_HIDEPREFIX;
 			}
@@ -1338,12 +1338,12 @@ namespace DarkMode
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	void subclassGroupboxControl(HWND hwnd)
+	void subclassGroupboxControl(HWND hWnd)
 	{
-		if (::GetWindowSubclass(hwnd, GroupboxSubclass, g_groupboxSubclassID, nullptr) == FALSE)
+		if (::GetWindowSubclass(hWnd, GroupboxSubclass, g_groupboxSubclassID, nullptr) == FALSE)
 		{
 			DWORD_PTR pButtonData = reinterpret_cast<DWORD_PTR>(new ButtonData());
-			::SetWindowSubclass(hwnd, GroupboxSubclass, g_groupboxSubclassID, pButtonData);
+			::SetWindowSubclass(hWnd, GroupboxSubclass, g_groupboxSubclassID, pButtonData);
 		}
 	}
 
@@ -1506,19 +1506,19 @@ namespace DarkMode
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	void subclassTabControl(HWND hwnd)
+	void subclassTabControl(HWND hWnd)
 	{
-		if (::GetWindowSubclass(hwnd, TabSubclass, g_tabSubclassID, nullptr) == FALSE)
+		if (::GetWindowSubclass(hWnd, TabSubclass, g_tabSubclassID, nullptr) == FALSE)
 		{
-			::SetWindowSubclass(hwnd, TabSubclass, g_tabSubclassID, 0);
+			::SetWindowSubclass(hWnd, TabSubclass, g_tabSubclassID, 0);
 		}
 	}
 
-	void subclassTabControl(HWND hwnd, DarkModeParams p)
+	void subclassTabControl(HWND hWnd, DarkModeParams p)
 	{
 		if (p._subclass)
 		{
-			subclassTabControl(hwnd);
+			subclassTabControl(hWnd);
 		}
 	}
 
@@ -1694,12 +1694,12 @@ namespace DarkMode
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	static void subclassCustomBorderForListBoxAndEditControls(HWND hwnd)
+	static void subclassCustomBorderForListBoxAndEditControls(HWND hWnd)
 	{
-		if (::GetWindowSubclass(hwnd, CustomBorderSubclass, g_customBorderSubclassID, nullptr) == FALSE)
+		if (::GetWindowSubclass(hWnd, CustomBorderSubclass, g_customBorderSubclassID, nullptr) == FALSE)
 		{
 			auto pBorderMetricsData = reinterpret_cast<DWORD_PTR>(new BorderMetricsData());
-			::SetWindowSubclass(hwnd, CustomBorderSubclass, g_customBorderSubclassID, pBorderMetricsData);
+			::SetWindowSubclass(hWnd, CustomBorderSubclass, g_customBorderSubclassID, pBorderMetricsData);
 		}
 	}
 
@@ -1855,18 +1855,18 @@ namespace DarkMode
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	void subclassComboBoxControl(HWND hwnd)
+	void subclassComboBoxControl(HWND hWnd)
 	{
-		if (::GetWindowSubclass(hwnd, ComboBoxSubclass, g_comboBoxSubclassID, nullptr) == FALSE)
+		if (::GetWindowSubclass(hWnd, ComboBoxSubclass, g_comboBoxSubclassID, nullptr) == FALSE)
 		{
 			DWORD_PTR hwndEditData = 0;
-			auto style = ::GetWindowLongPtr(hwnd, GWL_STYLE);
+			auto style = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 			if ((style & CBS_DROPDOWN) == CBS_DROPDOWN)
 			{
 				POINT pt = { 5, 5 };
-				hwndEditData = reinterpret_cast<DWORD_PTR>(::ChildWindowFromPoint(hwnd, pt));
+				hwndEditData = reinterpret_cast<DWORD_PTR>(::ChildWindowFromPoint(hWnd, pt));
 			}
-			::SetWindowSubclass(hwnd, ComboBoxSubclass, g_comboBoxSubclassID, hwndEditData);
+			::SetWindowSubclass(hWnd, ComboBoxSubclass, g_comboBoxSubclassID, hwndEditData);
 		}
 	}
 
@@ -1918,19 +1918,19 @@ namespace DarkMode
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	static void subclassComboboxEx(HWND hwnd)
+	static void subclassComboboxEx(HWND hWnd)
 	{
-		if (::GetWindowSubclass(hwnd, ComboboxExSubclass, g_comboboxExSubclassID, nullptr) == FALSE)
+		if (::GetWindowSubclass(hWnd, ComboboxExSubclass, g_comboboxExSubclassID, nullptr) == FALSE)
 		{
-			::SetWindowSubclass(hwnd, ComboboxExSubclass, g_comboboxExSubclassID, 0);
+			::SetWindowSubclass(hWnd, ComboboxExSubclass, g_comboboxExSubclassID, 0);
 		}
 	}
 
-	void subclassComboboxEx(HWND hwnd, DarkModeParams p)
+	void subclassComboboxEx(HWND hWnd, DarkModeParams p)
 	{
 		if (p._subclass)
 		{
-			subclassComboboxEx(hwnd);
+			subclassComboboxEx(hWnd);
 		}
 	}
 
@@ -1991,11 +1991,11 @@ namespace DarkMode
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	static void subclassListViewControl(HWND hwnd)
+	static void subclassListViewControl(HWND hWnd)
 	{
-		if (::GetWindowSubclass(hwnd, ListViewSubclass, g_listViewSubclassID, nullptr) == FALSE)
+		if (::GetWindowSubclass(hWnd, ListViewSubclass, g_listViewSubclassID, nullptr) == FALSE)
 		{
-			::SetWindowSubclass(hwnd, ListViewSubclass, g_listViewSubclassID, 0);
+			::SetWindowSubclass(hWnd, ListViewSubclass, g_listViewSubclassID, 0);
 		}
 	}
 
@@ -2023,11 +2023,11 @@ namespace DarkMode
 			closeTheme();
 		}
 
-		bool ensureTheme(HWND hwnd)
+		bool ensureTheme(HWND hWnd)
 		{
 			if (!hTheme)
 			{
-				hTheme = ::OpenThemeData(hwnd, VSCLASS_BUTTON);
+				hTheme = ::OpenThemeData(hWnd, VSCLASS_BUTTON);
 			}
 			return hTheme != nullptr;
 		}
@@ -2223,32 +2223,32 @@ namespace DarkMode
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	static void subclassAndThemeUpDownControl(HWND hwnd, DarkModeParams p)
+	static void subclassAndThemeUpDownControl(HWND hWnd, DarkModeParams p)
 	{
-		if (p._subclass && ::GetWindowSubclass(hwnd, UpDownSubclass, g_upDownSubclassID, nullptr) == FALSE)
+		if (p._subclass && ::GetWindowSubclass(hWnd, UpDownSubclass, g_upDownSubclassID, nullptr) == FALSE)
 		{
-			auto pUpDownData = reinterpret_cast<DWORD_PTR>(new UpDownData(hwnd));
-			::SetWindowSubclass(hwnd, UpDownSubclass, g_upDownSubclassID, pUpDownData);
+			auto pUpDownData = reinterpret_cast<DWORD_PTR>(new UpDownData(hWnd));
+			::SetWindowSubclass(hWnd, UpDownSubclass, g_upDownSubclassID, pUpDownData);
 		}
 
 		if (p._theme)
 		{
-			::SetWindowTheme(hwnd, p._themeClassName, nullptr);
+			::SetWindowTheme(hWnd, p._themeClassName, nullptr);
 		}
 	}
 
-	bool subclassTabUpDownControl(HWND hwnd)
+	bool subclassTabUpDownControl(HWND hWnd)
 	{
-		if (::GetWindowSubclass(hwnd, UpDownSubclass, g_upDownSubclassID, nullptr) == FALSE)
+		if (::GetWindowSubclass(hWnd, UpDownSubclass, g_upDownSubclassID, nullptr) == FALSE)
 		{
 			constexpr size_t classNameLen = 16;
 			wchar_t className[classNameLen]{};
-			GetClassName(hwnd, className, classNameLen);
+			GetClassName(hWnd, className, classNameLen);
 			if (wcscmp(className, UPDOWN_CLASS) == 0)
 			{
-				auto pUpDownData = reinterpret_cast<DWORD_PTR>(new UpDownData(hwnd));
-				::SetWindowSubclass(hwnd, UpDownSubclass, g_upDownSubclassID, pUpDownData);
-				DarkMode::setDarkExplorerTheme(hwnd);
+				auto pUpDownData = reinterpret_cast<DWORD_PTR>(new UpDownData(hWnd));
+				::SetWindowSubclass(hWnd, UpDownSubclass, g_upDownSubclassID, pUpDownData);
+				DarkMode::setDarkExplorerTheme(hWnd);
 				return true;
 			}
 		}
@@ -2270,11 +2270,11 @@ namespace DarkMode
 			destroyFont();
 		}
 
-		bool ensureTheme(HWND hwnd)
+		bool ensureTheme(HWND hWnd)
 		{
 			if (!hTheme)
 			{
-				hTheme = ::OpenThemeData(hwnd, VSCLASS_STATUS);
+				hTheme = ::OpenThemeData(hWnd, VSCLASS_STATUS);
 			}
 			return hTheme != nullptr;
 		}
@@ -2473,9 +2473,9 @@ namespace DarkMode
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	void subclassStatusBar(HWND hwnd)
+	void subclassStatusBar(HWND hWnd)
 	{
-		if (::GetWindowSubclass(hwnd, StatusBarSubclass, g_statusBarSubclassID, nullptr) == FALSE)
+		if (::GetWindowSubclass(hWnd, StatusBarSubclass, g_statusBarSubclassID, nullptr) == FALSE)
 		{
 			LOGFONT lf{};
 			NONCLIENTMETRICS ncm{};
@@ -2485,15 +2485,15 @@ namespace DarkMode
 				lf = ncm.lfStatusFont;
 			}
 			auto pStatusBarInfo = reinterpret_cast<DWORD_PTR>(new StatusBarSubclassInfo(::CreateFontIndirect(&lf)));
-			::SetWindowSubclass(hwnd, StatusBarSubclass, g_statusBarSubclassID, pStatusBarInfo);
+			::SetWindowSubclass(hWnd, StatusBarSubclass, g_statusBarSubclassID, pStatusBarInfo);
 		}
 	}
 
-	void subclassStatusBar(HWND hwnd, DarkModeParams p)
+	void subclassStatusBar(HWND hWnd, DarkModeParams p)
 	{
 		if (p._subclass)
 		{
-			subclassStatusBar(hwnd);
+			subclassStatusBar(hWnd);
 		}
 	}
 
@@ -2507,77 +2507,77 @@ namespace DarkMode
 
 		::EnableThemeDialogTexture(hwndParent, theme && !DarkMode::isEnabled() ? ETDT_ENABLETAB : ETDT_DISABLE);
 
-		::EnumChildWindows(hwndParent, [](HWND hwnd, LPARAM lParam) WINAPI_LAMBDA {
+		::EnumChildWindows(hwndParent, [](HWND hWnd, LPARAM lParam) WINAPI_LAMBDA {
 			auto& p = *reinterpret_cast<DarkModeParams*>(lParam);
 			constexpr size_t classNameLen = 32;
 			wchar_t className[classNameLen]{};
-			GetClassName(hwnd, className, classNameLen);
+			GetClassName(hWnd, className, classNameLen);
 
 			if (wcscmp(className, WC_BUTTON) == 0)
 			{
-				DarkMode::subclassAndThemeButton(hwnd, p);
+				DarkMode::subclassAndThemeButton(hWnd, p);
 				return TRUE;
 			}
 
 			if (wcscmp(className, WC_COMBOBOX) == 0)
 			{
-				DarkMode::subclassAndThemeComboBox(hwnd, p);
+				DarkMode::subclassAndThemeComboBox(hWnd, p);
 				return TRUE;
 			}
 
 			if (wcscmp(className, WC_EDIT) == 0)
 			{
-				DarkMode::subclassAndThemeListBoxOrEditControl(hwnd, p, false);
+				DarkMode::subclassAndThemeListBoxOrEditControl(hWnd, p, false);
 				return TRUE;
 			}
 
 			if (wcscmp(className, WC_LISTBOX) == 0)
 			{
-				DarkMode::subclassAndThemeListBoxOrEditControl(hwnd, p, true);
+				DarkMode::subclassAndThemeListBoxOrEditControl(hWnd, p, true);
 				return TRUE;
 			}
 
 			if (wcscmp(className, WC_LISTVIEW) == 0)
 			{
-				DarkMode::subclassAndThemeListView(hwnd, p);
+				DarkMode::subclassAndThemeListView(hWnd, p);
 				return TRUE;
 			}
 
 			if (wcscmp(className, WC_TREEVIEW) == 0)
 			{
-				DarkMode::themeTreeView(hwnd, p);
+				DarkMode::themeTreeView(hWnd, p);
 				return TRUE;
 			}
 
 			if (wcscmp(className, TOOLBARCLASSNAME) == 0)
 			{
-				DarkMode::themeToolbar(hwnd, p);
+				DarkMode::themeToolbar(hWnd, p);
 				return TRUE;
 			}
 
 			// Plugin might use rich edit control version 2.0 and later
 			if (wcscmp(className, L"RichEdit20W") == 0 || wcscmp(className, L"RICHEDIT50W") == 0)
 			{
-				DarkMode::themeRichEdit(hwnd, p);
+				DarkMode::themeRichEdit(hWnd, p);
 				return TRUE;
 			}
 
 			// For plugins
 			if (wcscmp(className, UPDOWN_CLASS) == 0)
 			{
-				DarkMode::subclassAndThemeUpDownControl(hwnd, p);
+				DarkMode::subclassAndThemeUpDownControl(hWnd, p);
 				return TRUE;
 			}
 
 			if (wcscmp(className, WC_TABCONTROL) == 0)
 			{
-				DarkMode::subclassTabControl(hwnd, p);
+				DarkMode::subclassTabControl(hWnd, p);
 				return TRUE;
 			}
 
 			if (wcscmp(className, STATUSCLASSNAME) == 0)
 			{
-				DarkMode::subclassStatusBar(hwnd, p);
+				DarkMode::subclassStatusBar(hWnd, p);
 				return TRUE;
 			}
 
@@ -2585,14 +2585,20 @@ namespace DarkMode
 			{
 				if (p._theme)
 				{
-					DarkMode::setDarkScrollBar(hwnd);
+					DarkMode::setDarkScrollBar(hWnd);
 				}
 				return TRUE;
 			}
 
 			if (wcscmp(className, WC_COMBOBOXEX) == 0)
 			{
-				DarkMode::subclassComboboxEx(hwnd, p);
+				DarkMode::subclassComboboxEx(hWnd, p);
+				return TRUE;
+			}
+
+			if (wcscmp(className, PROGRESS_CLASS) == 0)
+			{
+				DarkMode::themeProgressBar(hWnd, p);
 				return TRUE;
 			}
 
@@ -2623,9 +2629,9 @@ namespace DarkMode
 		autoSubclassAndThemeChildControls(hwndParent, false, DarkMode::isWindows10());
 	}
 
-	void subclassAndThemeButton(HWND hwnd, DarkModeParams p)
+	void subclassAndThemeButton(HWND hWnd, DarkModeParams p)
 	{
-		auto nButtonStyle = ::GetWindowLongPtr(hwnd, GWL_STYLE);
+		auto nButtonStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 		switch (nButtonStyle & BS_TYPEMASK)
 		{
 			// Plugin might use BS_3STATE, BS_AUTO3STATE and BS_PUSHLIKE button style
@@ -2640,19 +2646,19 @@ namespace DarkMode
 				{
 					if (p._theme)
 					{
-						::SetWindowTheme(hwnd, p._themeClassName, nullptr);
+						::SetWindowTheme(hWnd, p._themeClassName, nullptr);
 					}
 					break;
 				}
 
 				if (DarkMode::isWindows11() && p._theme)
 				{
-					::SetWindowTheme(hwnd, p._themeClassName, nullptr);
+					::SetWindowTheme(hWnd, p._themeClassName, nullptr);
 				}
 
 				if (p._subclass)
 				{
-					DarkMode::subclassButtonControl(hwnd);
+					DarkMode::subclassButtonControl(hWnd);
 				}
 				break;
 			}
@@ -2661,7 +2667,7 @@ namespace DarkMode
 			{
 				if (p._subclass)
 				{
-					DarkMode::subclassGroupboxControl(hwnd);
+					DarkMode::subclassGroupboxControl(hWnd);
 				}
 				break;
 			}
@@ -2673,7 +2679,7 @@ namespace DarkMode
 			{
 				if (p._theme)
 				{
-					::SetWindowTheme(hwnd, p._themeClassName, nullptr);
+					::SetWindowTheme(hWnd, p._themeClassName, nullptr);
 				}
 				break;
 			}
@@ -2685,15 +2691,15 @@ namespace DarkMode
 		}
 	}
 
-	void subclassAndThemeComboBox(HWND hwnd, DarkModeParams p)
+	void subclassAndThemeComboBox(HWND hWnd, DarkModeParams p)
 	{
-		auto style = ::GetWindowLongPtr(hwnd, GWL_STYLE);
+		auto style = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 
 		if ((style & CBS_DROPDOWNLIST) == CBS_DROPDOWNLIST || (style & CBS_DROPDOWN) == CBS_DROPDOWN)
 		{
 			COMBOBOXINFO cbi{};
 			cbi.cbSize = sizeof(COMBOBOXINFO);
-			BOOL result = ::GetComboBoxInfo(hwnd, &cbi);
+			BOOL result = ::GetComboBoxInfo(hWnd, &cbi);
 			if (result == TRUE)
 			{
 				if (p._theme && cbi.hwndList)
@@ -2705,111 +2711,125 @@ namespace DarkMode
 
 			if (p._subclass)
 			{
-				//DarkMode::subclassComboBoxControl(hwnd);
-				::SetWindowTheme(hwnd, L"CFD", nullptr);
-				DarkMode::allowDarkModeForWindow(hwnd, true);
-				::SendMessage(hwnd, WM_THEMECHANGED, 0, 0);
+				//DarkMode::subclassComboBoxControl(hWnd);
+				::SetWindowTheme(hWnd, L"CFD", nullptr);
+				DarkMode::allowDarkModeForWindow(hWnd, true);
+				::SendMessage(hWnd, WM_THEMECHANGED, 0, 0);
 			}
 		}
 	}
 
-	void subclassAndThemeListBoxOrEditControl(HWND hwnd, DarkModeParams p, bool isListBox)
+	void subclassAndThemeListBoxOrEditControl(HWND hWnd, DarkModeParams p, bool isListBox)
 	{
-		const auto style = ::GetWindowLongPtr(hwnd, GWL_STYLE);
+		const auto style = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 		bool hasScrollBar = ((style & WS_HSCROLL) == WS_HSCROLL) || ((style & WS_VSCROLL) == WS_VSCROLL);
 		if (p._theme && (isListBox || hasScrollBar))
 		{
 			//dark scrollbar for listbox or edit control
-			::SetWindowTheme(hwnd, p._themeClassName, nullptr);
+			::SetWindowTheme(hWnd, p._themeClassName, nullptr);
 		}
 
-		const auto exStyle = ::GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+		const auto exStyle = ::GetWindowLongPtr(hWnd, GWL_EXSTYLE);
 		bool hasClientEdge = (exStyle & WS_EX_CLIENTEDGE) == WS_EX_CLIENTEDGE;
 		bool isCBoxListBox = isListBox && (style & LBS_COMBOBOX) == LBS_COMBOBOX;
 
 		if (p._subclass && hasClientEdge && !isCBoxListBox)
 		{
-			DarkMode::subclassCustomBorderForListBoxAndEditControls(hwnd);
+			DarkMode::subclassCustomBorderForListBoxAndEditControls(hWnd);
 		}
 
 #ifndef __MINGW64__ // mingw build for 64 bit has issue with GetWindowSubclass, it is undefined
 
 		bool changed = false;
-		if (::GetWindowSubclass(hwnd, CustomBorderSubclass, g_customBorderSubclassID, nullptr) == TRUE)
+		if (::GetWindowSubclass(hWnd, CustomBorderSubclass, g_customBorderSubclassID, nullptr) == TRUE)
 		{
 			if (DarkMode::isEnabled())
 			{
 				if (hasClientEdge)
 				{
-					::SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle & ~WS_EX_CLIENTEDGE);
+					::SetWindowLongPtr(hWnd, GWL_EXSTYLE, exStyle & ~WS_EX_CLIENTEDGE);
 					changed = true;
 				}
 			}
 			else if (!hasClientEdge)
 			{
-				::SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle | WS_EX_CLIENTEDGE);
+				::SetWindowLongPtr(hWnd, GWL_EXSTYLE, exStyle | WS_EX_CLIENTEDGE);
 				changed = true;
 			}
 		}
 
 		if (changed)
 		{
-			::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+			::SetWindowPos(hWnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 		}
 
 #endif // !__MINGW64__
 	}
 
-	void subclassAndThemeListView(HWND hwnd, DarkModeParams p)
+	void subclassAndThemeListView(HWND hWnd, DarkModeParams p)
 	{
 		if (p._theme)
 		{
-			DarkMode::setDarkListView(hwnd);
-			DarkMode::setDarkTooltips(hwnd, DarkMode::ToolTipsType::listview);
+			DarkMode::setDarkListView(hWnd);
+			DarkMode::setDarkTooltips(hWnd, DarkMode::ToolTipsType::listview);
 		}
 
-		ListView_SetTextColor(hwnd, g_fgColor);
-		ListView_SetTextBkColor(hwnd, g_bgColor);
-		ListView_SetBkColor(hwnd, g_bgColor);
+		ListView_SetTextColor(hWnd, g_fgColor);
+		ListView_SetTextBkColor(hWnd, g_bgColor);
+		ListView_SetBkColor(hWnd, g_bgColor);
 
 		if (p._subclass)
 		{
-			auto exStyle = ListView_GetExtendedListViewStyle(hwnd);
-			ListView_SetExtendedListViewStyle(hwnd, exStyle | LVS_EX_DOUBLEBUFFER);
-			DarkMode::subclassListViewControl(hwnd);
+			auto exStyle = ListView_GetExtendedListViewStyle(hWnd);
+			ListView_SetExtendedListViewStyle(hWnd, exStyle | LVS_EX_DOUBLEBUFFER);
+			DarkMode::subclassListViewControl(hWnd);
 		}
 	}
 
-	void themeTreeView(HWND hwnd, DarkModeParams p)
+	void themeTreeView(HWND hWnd, DarkModeParams p)
 	{
-		TreeView_SetTextColor(hwnd, g_fgColor);
-		TreeView_SetBkColor(hwnd, g_bgColor);
+		TreeView_SetTextColor(hWnd, g_fgColor);
+		TreeView_SetBkColor(hWnd, g_bgColor);
 
 		//DarkMode::calculateTreeViewStyle();
-		DarkMode::setTreeViewStyle(hwnd);
+		DarkMode::setTreeViewStyle(hWnd);
 
 		if (p._theme)
 		{
-			DarkMode::setDarkTooltips(hwnd, DarkMode::ToolTipsType::treeview);
+			DarkMode::setDarkTooltips(hWnd, DarkMode::ToolTipsType::treeview);
 		}
 	}
 
-	void themeToolbar(HWND hwnd, DarkModeParams p)
+	void themeToolbar(HWND hWnd, DarkModeParams p)
 	{
-		DarkMode::setDarkLineAbovePanelToolbar(hwnd);
+		DarkMode::setDarkLineAbovePanelToolbar(hWnd);
 
 		if (p._theme)
 		{
-			DarkMode::setDarkTooltips(hwnd, DarkMode::ToolTipsType::toolbar);
+			DarkMode::setDarkTooltips(hWnd, DarkMode::ToolTipsType::toolbar);
 		}
 	}
 
-	void themeRichEdit(HWND hwnd, DarkModeParams p)
+	void themeRichEdit(HWND hWnd, DarkModeParams p)
 	{
 		if (p._theme)
 		{
 			//dark scrollbar for rich edit control
-			::SetWindowTheme(hwnd, p._themeClassName, nullptr);
+			::SetWindowTheme(hWnd, p._themeClassName, nullptr);
+		}
+	}
+
+	void themeProgressBar(HWND hWnd, DarkModeParams p)
+	{
+		if (p._theme)
+		{
+			DarkMode::setBorder(hWnd, DarkMode::isEnabled(), WS_DLGFRAME);
+			DarkMode::disableVisualStyle(hWnd, DarkMode::isEnabled());
+			if (DarkMode::isEnabled())
+			{
+				SendMessage(hWnd, PBM_SETBKCOLOR, 0, static_cast<LPARAM>(DarkMode::getBackgroundColor()));
+				SendMessage(hWnd, PBM_SETBARCOLOR, 0, static_cast<LPARAM>(HEXRGB(0x06B025)));
+			}
 		}
 	}
 
@@ -3140,11 +3160,11 @@ namespace DarkMode
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	void autoSubclassCtlColor(HWND hwnd)
+	void autoSubclassCtlColor(HWND hWnd)
 	{
-		if (::GetWindowSubclass(hwnd, WindowCtlColorSubclass, g_WindowCtlColorSubclassID, nullptr) == FALSE)
+		if (::GetWindowSubclass(hWnd, WindowCtlColorSubclass, g_WindowCtlColorSubclassID, nullptr) == FALSE)
 		{
-			::SetWindowSubclass(hwnd, WindowCtlColorSubclass, g_WindowCtlColorSubclassID, 0);
+			::SetWindowSubclass(hWnd, WindowCtlColorSubclass, g_WindowCtlColorSubclassID, 0);
 		}
 	}
 
@@ -3202,14 +3222,14 @@ namespace DarkMode
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	void autoSubclassNotifyCustomDraw(HWND hwnd, bool subclassChildren)
+	void autoSubclassNotifyCustomDraw(HWND hWnd, bool subclassChildren)
 	{
-		if (::GetWindowSubclass(hwnd, WindowNotifySubclass, g_windowNotifySubclassID, nullptr) == FALSE)
+		if (::GetWindowSubclass(hWnd, WindowNotifySubclass, g_windowNotifySubclassID, nullptr) == FALSE)
 		{
-			::SetWindowSubclass(hwnd, WindowNotifySubclass, g_windowNotifySubclassID, 0);
+			::SetWindowSubclass(hWnd, WindowNotifySubclass, g_windowNotifySubclassID, 0);
 			if (subclassChildren)
 			{
-				DarkMode::autoSubclassAndThemeChildControls(hwnd);
+				DarkMode::autoSubclassAndThemeChildControls(hWnd);
 			}
 		}
 	}
@@ -3257,40 +3277,40 @@ namespace DarkMode
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	void autoSubclassWindowMenuBar(HWND hwnd)
+	void autoSubclassWindowMenuBar(HWND hWnd)
 	{
-		if (::GetWindowSubclass(hwnd, WindowMenuBarSubclass, g_windowMenuBarSubclassID, nullptr) == FALSE)
+		if (::GetWindowSubclass(hWnd, WindowMenuBarSubclass, g_windowMenuBarSubclassID, nullptr) == FALSE)
 		{
-			::SetWindowSubclass(hwnd, WindowMenuBarSubclass, g_windowMenuBarSubclassID, 0);
+			::SetWindowSubclass(hWnd, WindowMenuBarSubclass, g_windowMenuBarSubclassID, 0);
 		}
 	}
 
-	void setDarkTitleBar(HWND hwnd)
+	void setDarkTitleBar(HWND hWnd)
 	{
 		constexpr DWORD win10Build2004 = 19041;
 		if (DarkMode::getWindowsBuildNumber() >= win10Build2004)
 		{
 			BOOL value = DarkMode::isExperimentalActive() ? TRUE : FALSE;
-			::DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
+			::DwmSetWindowAttribute(hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
 		}
 		else
 		{
-			DarkMode::allowDarkModeForWindow(hwnd, DarkMode::isExperimentalActive());
-			DarkMode::setTitleBarThemeColor(hwnd);
+			DarkMode::allowDarkModeForWindow(hWnd, DarkMode::isExperimentalActive());
+			DarkMode::setTitleBarThemeColor(hWnd);
 		}
 	}
 
-	void setDarkExplorerTheme(HWND hwnd)
+	void setDarkExplorerTheme(HWND hWnd)
 	{
-		::SetWindowTheme(hwnd, DarkMode::isExperimentalActive() ? L"DarkMode_Explorer" : nullptr, nullptr);
+		::SetWindowTheme(hWnd, DarkMode::isExperimentalActive() ? L"DarkMode_Explorer" : nullptr, nullptr);
 	}
 
-	void setDarkScrollBar(HWND hwnd)
+	void setDarkScrollBar(HWND hWnd)
 	{
-		DarkMode::setDarkExplorerTheme(hwnd);
+		DarkMode::setDarkExplorerTheme(hWnd);
 	}
 
-	void setDarkTooltips(HWND hwnd, ToolTipsType type)
+	void setDarkTooltips(HWND hWnd, ToolTipsType type)
 	{
 		UINT msg = 0;
 		switch (type)
@@ -3314,11 +3334,11 @@ namespace DarkMode
 
 		if (msg == 0)
 		{
-			DarkMode::setDarkExplorerTheme(hwnd);
+			DarkMode::setDarkExplorerTheme(hWnd);
 		}
 		else
 		{
-			auto hTips = reinterpret_cast<HWND>(::SendMessage(hwnd, msg, 0, 0));
+			auto hTips = reinterpret_cast<HWND>(::SendMessage(hWnd, msg, 0, 0));
 			if (hTips != nullptr)
 			{
 				DarkMode::setDarkExplorerTheme(hTips);
@@ -3326,7 +3346,7 @@ namespace DarkMode
 		}
 	}
 
-	void setDarkLineAbovePanelToolbar(HWND hwnd)
+	void setDarkLineAbovePanelToolbar(HWND hWnd)
 	{
 		COLORSCHEME scheme{};
 		scheme.dwSize = sizeof(COLORSCHEME);
@@ -3342,33 +3362,33 @@ namespace DarkMode
 			scheme.clrBtnShadow = CLR_DEFAULT;
 		}
 
-		::SendMessage(hwnd, TB_SETCOLORSCHEME, 0, reinterpret_cast<LPARAM>(&scheme));
+		::SendMessage(hWnd, TB_SETCOLORSCHEME, 0, reinterpret_cast<LPARAM>(&scheme));
 	}
 
-	void setDarkListView(HWND hwnd)
+	void setDarkListView(HWND hWnd)
 	{
 		if (DarkMode::isExperimentalSupported())
 		{
 			bool useDark = DarkMode::isExperimentalActive();
 
-			HWND hHeader = ListView_GetHeader(hwnd);
+			HWND hHeader = ListView_GetHeader(hWnd);
 			DarkMode::allowDarkModeForWindow(hHeader, useDark);
 			::SetWindowTheme(hHeader, useDark ? L"ItemsView" : nullptr, nullptr);
 
-			DarkMode::allowDarkModeForWindow(hwnd, useDark);
-			::SetWindowTheme(hwnd, L"Explorer", nullptr);
+			DarkMode::allowDarkModeForWindow(hWnd, useDark);
+			::SetWindowTheme(hWnd, L"Explorer", nullptr);
 		}
 	}
 
-	void disableVisualStyle(HWND hwnd, bool doDisable)
+	void disableVisualStyle(HWND hWnd, bool doDisable)
 	{
 		if (doDisable)
 		{
-			::SetWindowTheme(hwnd, L"", L"");
+			::SetWindowTheme(hWnd, L"", L"");
 		}
 		else
 		{
-			::SetWindowTheme(hwnd, nullptr, nullptr);
+			::SetWindowTheme(hWnd, nullptr, nullptr);
 		}
 	}
 
@@ -3399,9 +3419,9 @@ namespace DarkMode
 		}
 	}
 
-	void setTreeViewStyle(HWND hwnd)
+	void setTreeViewStyle(HWND hWnd)
 	{
-		auto style = static_cast<long>(::GetWindowLongPtr(hwnd, GWL_STYLE));
+		auto style = static_cast<long>(::GetWindowLongPtr(hWnd, GWL_STYLE));
 		const bool hasHotStyle = (style & TVS_TRACKSELECT) == TVS_TRACKSELECT;
 		bool change = false;
 		switch (g_treeViewStyle)
@@ -3413,7 +3433,7 @@ namespace DarkMode
 					style |= TVS_TRACKSELECT;
 					change = true;
 				}
-				::SetWindowTheme(hwnd, L"Explorer", nullptr);
+				::SetWindowTheme(hWnd, L"Explorer", nullptr);
 				break;
 			}
 			case TreeViewStyle::dark:
@@ -3425,7 +3445,7 @@ namespace DarkMode
 						style |= TVS_TRACKSELECT;
 						change = true;
 					}
-					::SetWindowTheme(hwnd, L"DarkMode_Explorer", nullptr);
+					::SetWindowTheme(hWnd, L"DarkMode_Explorer", nullptr);
 					break;
 				}
 				[[fallthrough]];
@@ -3437,14 +3457,14 @@ namespace DarkMode
 					style &= ~TVS_TRACKSELECT;
 					change = true;
 				}
-				::SetWindowTheme(hwnd, nullptr, nullptr);
+				::SetWindowTheme(hWnd, nullptr, nullptr);
 				break;
 			}
 		}
 
 		if (change)
 		{
-			::SetWindowLongPtr(hwnd, GWL_STYLE, style);
+			::SetWindowLongPtr(hWnd, GWL_STYLE, style);
 		}
 	}
 
@@ -3453,27 +3473,27 @@ namespace DarkMode
 		return g_treeViewStyle == TreeViewStyle::dark;
 	}
 
-	void setBorder(HWND hwnd, bool border)
+	void setBorder(HWND hWnd, bool border, long borderStyle)
 	{
-		auto style = static_cast<long>(::GetWindowLongPtr(hwnd, GWL_STYLE));
-		const bool hasBorder = (style & WS_BORDER) == WS_BORDER;
+		auto style = static_cast<long>(::GetWindowLongPtr(hWnd, GWL_STYLE));
+		const bool hasBorder = (style & borderStyle) == borderStyle;
 		bool change = false;
 
 		if (!hasBorder && border)
 		{
-			style |= WS_BORDER;
+			style |= borderStyle;
 			change = true;
 		}
 		else if (hasBorder && !border)
 		{
-			style &= ~WS_BORDER;
+			style &= ~borderStyle;
 			change = true;
 		}
 
 		if (change)
 		{
-			::SetWindowLongPtr(hwnd, GWL_STYLE, style);
-			::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+			::SetWindowLongPtr(hWnd, GWL_STYLE, style);
+			::SetWindowPos(hWnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 		}
 	}
 
@@ -3541,11 +3561,11 @@ namespace DarkMode
 	INT_PTR onCtlColorListbox(WPARAM wParam, LPARAM lParam)
 	{
 		auto hdc = reinterpret_cast<HDC>(wParam);
-		auto hwnd = reinterpret_cast<HWND>(lParam);
+		auto hWnd = reinterpret_cast<HWND>(lParam);
 
-		const auto style = ::GetWindowLongPtr(hwnd, GWL_STYLE);
+		const auto style = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 		bool isComboBox = (style & LBS_COMBOBOX) == LBS_COMBOBOX;
-		if ((!isComboBox || !DarkMode::isExperimentalActive()) && ::IsWindowEnabled(hwnd))
+		if ((!isComboBox || !DarkMode::isExperimentalActive()) && ::IsWindowEnabled(hWnd))
 		{
 			return static_cast<INT_PTR>(DarkMode::onCtlColorSofter(hdc));
 		}

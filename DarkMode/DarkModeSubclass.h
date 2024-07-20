@@ -122,7 +122,7 @@ namespace DarkMode
 
 	// processes messages related to UAH / custom menubar drawing.
 	// return true if handled, false to continue with normal processing in your wndproc
-	bool runUAHWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT* lr);
+	bool runUAHWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* lr);
 	void drawUAHMenuNCBottomLine(HWND hWnd);
 
 	// from DarkMode.h
@@ -137,47 +137,48 @@ namespace DarkMode
 	void unhookSysColor();
 
 	// enhancements to DarkMode.h
-	void enableDarkScrollBarForWindowAndChildren(HWND hwnd);
+	void enableDarkScrollBarForWindowAndChildren(HWND hWnd);
 
 	inline void paintRoundFrameRect(HDC hdc, const RECT rect, const HPEN hpen, int width = 0, int height = 0);
 
-	void subclassButtonControl(HWND hwnd);
-	void subclassGroupboxControl(HWND hwnd);
-	void subclassTabControl(HWND hwnd);
-	void subclassComboBoxControl(HWND hwnd);
-	void subclassStatusBar(HWND hwnd);
-	bool subclassTabUpDownControl(HWND hwnd);
+	void subclassButtonControl(HWND hWnd);
+	void subclassGroupboxControl(HWND hWnd);
+	void subclassTabControl(HWND hWnd);
+	void subclassComboBoxControl(HWND hWnd);
+	void subclassStatusBar(HWND hWnd);
+	bool subclassTabUpDownControl(HWND hWnd);
 
-	void subclassAndThemeButton(HWND hwnd, DarkModeParams p);
-	void subclassAndThemeComboBox(HWND hwnd, DarkModeParams p);
-	void subclassAndThemeListBoxOrEditControl(HWND hwnd, DarkModeParams p, bool isListBox);
-	void subclassAndThemeListView(HWND hwnd, DarkModeParams p);
-	void themeTreeView(HWND hwnd, DarkModeParams p);
-	void themeToolbar(HWND hwnd, DarkModeParams p);
-	void themeRichEdit(HWND hwnd, DarkModeParams p);
-	void subclassTabControl(HWND hwnd, DarkModeParams p);
-	void subclassStatusBar(HWND hwnd, DarkModeParams p);
-	void subclassComboboxEx(HWND hwnd, DarkModeParams p);
+	void subclassAndThemeButton(HWND hWnd, DarkModeParams p);
+	void subclassAndThemeComboBox(HWND hWnd, DarkModeParams p);
+	void subclassAndThemeListBoxOrEditControl(HWND hWnd, DarkModeParams p, bool isListBox);
+	void subclassAndThemeListView(HWND hWnd, DarkModeParams p);
+	void themeTreeView(HWND hWnd, DarkModeParams p);
+	void themeToolbar(HWND hWnd, DarkModeParams p);
+	void themeRichEdit(HWND hWnd, DarkModeParams p);
+	void themeProgressBar(HWND hWnd, DarkModeParams p);
+	void subclassTabControl(HWND hWnd, DarkModeParams p);
+	void subclassStatusBar(HWND hWnd, DarkModeParams p);
+	void subclassComboboxEx(HWND hWnd, DarkModeParams p);
 
-	void autoSubclassAndThemeChildControls(HWND hwndParent, bool subclass = true, bool theme = true);
-	void autoThemeChildControls(HWND hwndParent);
+	void autoSubclassAndThemeChildControls(HWND hWndParent, bool subclass = true, bool theme = true);
+	void autoThemeChildControls(HWND hWndParent);
 
-	void autoSubclassCtlColor(HWND hwnd);
-	void autoSubclassNotifyCustomDraw(HWND hwnd, bool subclassChildren = false);
-	void autoSubclassWindowMenuBar(HWND hwnd);
+	void autoSubclassCtlColor(HWND hWnd);
+	void autoSubclassNotifyCustomDraw(HWND hWnd, bool subclassChildren = false);
+	void autoSubclassWindowMenuBar(HWND hWnd);
 
-	void setDarkTitleBar(HWND hwnd);
-	void setDarkExplorerTheme(HWND hwnd);
-	void setDarkScrollBar(HWND hwnd);
-	void setDarkTooltips(HWND hwnd, ToolTipsType type);
-	void setDarkLineAbovePanelToolbar(HWND hwnd);
-	void setDarkListView(HWND hwnd);
+	void setDarkTitleBar(HWND hWnd);
+	void setDarkExplorerTheme(HWND hWnd);
+	void setDarkScrollBar(HWND hWnd);
+	void setDarkTooltips(HWND hWnd, ToolTipsType type);
+	void setDarkLineAbovePanelToolbar(HWND hWnd);
+	void setDarkListView(HWND hWnd);
 
-	void disableVisualStyle(HWND hwnd, bool doDisable);
+	void disableVisualStyle(HWND hWnd, bool doDisable);
 	void calculateTreeViewStyle();
-	void setTreeViewStyle(HWND hwnd);
+	void setTreeViewStyle(HWND hWnd);
 	bool isThemeDark();
-	void setBorder(HWND hwnd, bool border = true);
+	void setBorder(HWND hWnd, bool border = true, long borderStyle = WS_BORDER);
 
 	LRESULT onCtlColor(HDC hdc);
 	LRESULT onCtlColorSofter(HDC hdc);
