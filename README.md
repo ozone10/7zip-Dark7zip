@@ -1,7 +1,7 @@
 # Dark7zip
 
 [![7z](https://img.shields.io/badge/7z-DarkMode-black.svg?&logo=7zip)](https://github.com/ozone10/7zip-Dark7zip)
-[![Latest release](https://img.shields.io/github/v/release/ozone10/7zip-Dark7zip?include_prereleases)](https://github.com/ozone10/7zip-Dark7zip/latest)
+[![Latest release](https://img.shields.io/github/v/release/ozone10/7zip-Dark7zip?include_prereleases)](https://github.com/ozone10/7zip-Dark7zip/releases/latest)
 [![Total downloads](https://img.shields.io/github/downloads/ozone10/7zip-Dark7zip/total.svg)](https://github.com/ozone10/7zip-Dark7zip/releases)
 [![License](https://img.shields.io/github/license/ozone10/7zip-Dark7zip?color=9cf)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 ---
@@ -16,7 +16,14 @@ Dark7zip is project to experiment with dark mode using win32 API.
 
 * * *
 
----
+## Installation
+
+Replace 7z original files with files from downloaded zip file.
+
+- `7zFM.exe` - file manager, "main exe"
+- `7zG.exe` - mainly extraction, compression dialogs
+- `7z.sfx`- optional, file needed for creating self-extracting archives
+- `7zDark.ini` - optional, more information below
 
 ## Options
 
@@ -27,6 +34,7 @@ Dark7zip is project to experiment with dark mode using win32 API.
   - mode - determine which sections color "key=value" pairs will be used and theming of title bar, buttons, scrollbars, and tooltips
       - 0 - use light mode 
       - 1 - use dark mode, default value
+      - 2 - follow system settings
 
 - [dark]
   - tone - set default colors for [dark.colors] sections, there are no tones for light mode

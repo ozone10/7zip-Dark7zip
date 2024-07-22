@@ -80,6 +80,8 @@ namespace DarkMode
 	bool isExperimentalActive();
 	bool isExperimentalSupported();
 
+	bool isWindowsModeEnabled();
+
 	bool isWindows10();
 	bool isWindows11();
 	DWORD getWindowsBuildNumber();
@@ -119,6 +121,10 @@ namespace DarkMode
 	HPEN getDisabledEdgePen();
 
 	void changeCustomTheme(const Colors& colors);
+
+	// handle events
+	bool handleSettingChange(LPARAM lParam);
+	bool isDarkModeReg();
 
 	// processes messages related to UAH / custom menubar drawing.
 	// return true if handled, false to continue with normal processing in your wndproc
@@ -166,6 +172,7 @@ namespace DarkMode
 	void autoSubclassCtlColor(HWND hWnd);
 	void autoSubclassNotifyCustomDraw(HWND hWnd, bool subclassChildren = false);
 	void autoSubclassWindowMenuBar(HWND hWnd);
+	void autoSubclassWindowSettingChange(HWND hWnd);
 
 	void setDarkTitleBar(HWND hWnd);
 	void setDarkExplorerTheme(HWND hWnd);

@@ -445,17 +445,42 @@ namespace DarkMode
 		return tDefault;
 	}
 
-	static COLORREF g_fgColor = RGB(224, 226, 228);
 	static COLORREF g_bgColor = RGB(41, 49, 52);
+	static COLORREF g_fgColor = RGB(224, 226, 228);
 
 	static bool g_useDarkMode = true;
+	static bool g_enableWindowsMode = false;
 
 	void initOptions()
 	{
 		std::wstring iniPath = getIniPath(L"7zDark");
 		if (fileExists(iniPath))
 		{
-			g_useDarkMode = (::GetPrivateProfileInt(L"main", L"mode", 1, iniPath.c_str()) == 1);
+			switch (::GetPrivateProfileInt(L"main", L"mode", 1, iniPath.c_str()))
+			{
+				case 0:
+				{
+					g_useDarkMode = false;
+					g_enableWindowsMode = false;
+					break;
+				}
+
+				case 2:
+				{
+					g_useDarkMode = DarkMode::isDarkModeReg();
+					g_enableWindowsMode = true;
+					break;
+				}
+
+				case 1:
+				default:
+				{
+					g_useDarkMode = true;
+					g_enableWindowsMode = false;
+					break;
+				}
+			}
+
 			std::wstring sectionBase = g_useDarkMode ? L"dark" : L"light";
 			std::wstring sectionColorsView = sectionBase + L".colors.view";
 			std::wstring sectionColors = sectionBase + L".colors";
@@ -468,10 +493,14 @@ namespace DarkMode
 
 				DarkMode::setDarkCustomColors(static_cast<DarkMode::ColorTone>(tone));
 				DarkMode::getTheme()._colors = DarkMode::darkCustomizedColors;
+				g_bgColor = RGB(41, 49, 52);
+				g_fgColor = RGB(224, 226, 228);
 			}
 			else
 			{
 				DarkMode::getTheme()._colors = DarkMode::lightColors;
+				g_bgColor = RGB(255, 255, 255);
+				g_fgColor = RGB(0, 0, 0);
 			}
 
 			setClrFromIni(sectionColorsView, L"backgroundView", iniPath, &DarkMode::g_bgColor);
@@ -497,12 +526,18 @@ namespace DarkMode
 		}
 	}
 
+	static bool g_isInit = false;
+	static bool g_isInitExperimental = false;
+
 	void initDarkMode()
 	{
-		static bool isInit = false;
-		if (!isInit)
+		if (!g_isInit)
 		{
-			DarkMode::initExperimentalDarkMode();
+			if (!g_isInitExperimental)
+			{
+				DarkMode::initExperimentalDarkMode();
+				g_isInitExperimental = true;
+			}
 
 			initOptions();
 
@@ -512,7 +547,7 @@ namespace DarkMode
 			DarkMode::setSysColor(COLOR_WINDOW, DarkMode::getBackgroundColor());
 			DarkMode::setSysColor(COLOR_WINDOWTEXT, DarkMode::getTextColor());
 
-			isInit = true;
+			g_isInit = true;
 		}
 	}
 
@@ -530,6 +565,11 @@ namespace DarkMode
 	{
 		return g_darkModeSupported;
 	}
+
+	bool isWindowsModeEnabled()
+{
+	return g_enableWindowsMode;
+}
 
 	bool isWindows10()
 	{
@@ -602,6 +642,43 @@ namespace DarkMode
 	void changeCustomTheme(const Colors& colors)
 	{
 		tDefault.change(colors);
+	}
+
+	bool handleSettingChange(LPARAM lParam)
+	{
+		if (DarkMode::isExperimentalSupported() && IsColorSchemeChangeMessage(lParam))
+		{
+			// ShouldAppsUseDarkMode() is not reliable from 1903+, use NppDarkMode::isDarkModeReg() instead
+			bool isDarkModeUsed = DarkMode::isDarkModeReg() && !IsHighContrast();
+			if (DarkMode::isExperimentalActive() != isDarkModeUsed)
+			{
+				g_darkModeEnabled = isDarkModeUsed;
+				if (g_isInit)
+				{
+					g_isInit = false;
+					DarkMode::initDarkMode();
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
+	bool isDarkModeReg()
+	{
+		DWORD data{};
+		DWORD dwBufSize = sizeof(data);
+		LPCTSTR lpSubKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
+		LPCTSTR lpValue = L"AppsUseLightTheme";
+
+		auto result = RegGetValue(HKEY_CURRENT_USER, lpSubKey, lpValue, RRF_RT_REG_DWORD, nullptr, &data, &dwBufSize);
+		if (result != ERROR_SUCCESS)
+		{
+			return false;
+		}
+
+		// dark mode is 0, light mode is 1
+		return data == 0UL;
 	}
 
 	// processes messages related to UAH / custom menubar drawing.
@@ -2712,6 +2789,10 @@ namespace DarkMode
 			if (p._subclass)
 			{
 				//DarkMode::subclassComboBoxControl(hWnd);
+			}
+
+			if (p._theme && DarkMode::isExperimentalSupported())
+			{
 				::SetWindowTheme(hWnd, L"CFD", nullptr);
 				DarkMode::allowDarkModeForWindow(hWnd, true);
 				::SendMessage(hWnd, WM_THEMECHANGED, 0, 0);
@@ -3230,6 +3311,8 @@ namespace DarkMode
 			if (subclassChildren)
 			{
 				DarkMode::autoSubclassAndThemeChildControls(hWnd);
+				if (g_enableWindowsMode)
+					DarkMode::autoSubclassWindowSettingChange(hWnd);
 			}
 		}
 	}
@@ -3282,6 +3365,47 @@ namespace DarkMode
 		if (::GetWindowSubclass(hWnd, WindowMenuBarSubclass, g_windowMenuBarSubclassID, nullptr) == FALSE)
 		{
 			::SetWindowSubclass(hWnd, WindowMenuBarSubclass, g_windowMenuBarSubclassID, 0);
+		}
+	}
+
+	constexpr UINT_PTR g_windowSettingChangeSubclassID = 42;
+
+	static LRESULT CALLBACK WindowSettingChangeSubclass(
+		HWND hWnd,
+		UINT uMsg,
+		WPARAM wParam,
+		LPARAM lParam,
+		UINT_PTR uIdSubclass,
+		DWORD_PTR /*dwRefData*/
+	)
+	{
+		switch (uMsg)
+		{
+			case WM_NCDESTROY:
+			{
+				::RemoveWindowSubclass(hWnd, WindowSettingChangeSubclass, uIdSubclass);
+				break;
+			}
+
+			case WM_SETTINGCHANGE:
+			{
+				if (DarkMode::handleSettingChange(lParam))
+				{
+					DarkMode::setDarkTitleBar(hWnd);
+					DarkMode::autoThemeChildControls(hWnd);
+					::RedrawWindow(hWnd, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN | RDW_UPDATENOW);
+				}
+				break;
+			}
+		}
+		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+	}
+
+	void autoSubclassWindowSettingChange(HWND hWnd)
+	{
+		if (::GetWindowSubclass(hWnd, WindowSettingChangeSubclass, g_windowSettingChangeSubclassID, nullptr) == FALSE)
+		{
+			::SetWindowSubclass(hWnd, WindowSettingChangeSubclass, g_windowSettingChangeSubclassID, 0);
 		}
 	}
 
