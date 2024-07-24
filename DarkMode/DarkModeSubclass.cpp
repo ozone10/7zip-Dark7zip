@@ -1264,6 +1264,8 @@ namespace DarkMode
 		RECT rcClient{};
 		::GetClientRect(hWnd, &rcClient);
 
+		rcClient.bottom -= 1;
+
 		RECT rcText = rcClient;
 		RECT rcBackground = rcClient;
 
@@ -1360,57 +1362,63 @@ namespace DarkMode
 
 		switch (uMsg)
 		{
-		case WM_NCDESTROY:
-		{
-			::RemoveWindowSubclass(hWnd, GroupboxSubclass, uIdSubclass);
-			delete pButtonData;
-			break;
-		}
-
-		case WM_ERASEBKGND:
-		{
-			if (DarkMode::isEnabled() && pButtonData->ensureTheme(hWnd))
+			case WM_NCDESTROY:
 			{
-				return TRUE;
+				::RemoveWindowSubclass(hWnd, GroupboxSubclass, uIdSubclass);
+				delete pButtonData;
+				break;
 			}
-			break;
-		}
 
-		case WM_DPICHANGED:
-		{
-			pButtonData->closeTheme();
-			return 0;
-		}
-
-		case WM_THEMECHANGED:
-		{
-			pButtonData->closeTheme();
-			break;
-		}
-
-		case WM_PRINTCLIENT:
-		case WM_PAINT:
-		{
-			if (DarkMode::isEnabled() && pButtonData->ensureTheme(hWnd))
+			case WM_ERASEBKGND:
 			{
-				PAINTSTRUCT ps{};
-				HDC hdc = reinterpret_cast<HDC>(wParam);
-				if (!hdc)
+				if (DarkMode::isEnabled() && pButtonData->ensureTheme(hWnd))
 				{
-					hdc = ::BeginPaint(hWnd, &ps);
+					return TRUE;
 				}
+				break;
+			}
 
-				paintGroupbox(hWnd, hdc, *pButtonData);
-
-				if (ps.hdc)
-				{
-					::EndPaint(hWnd, &ps);
-				}
-
+			case WM_DPICHANGED:
+			{
+				pButtonData->closeTheme();
 				return 0;
 			}
-			break;
-		}
+
+			case WM_THEMECHANGED:
+			{
+				pButtonData->closeTheme();
+				break;
+			}
+
+			case WM_PRINTCLIENT:
+			case WM_PAINT:
+			{
+				if (DarkMode::isEnabled() && pButtonData->ensureTheme(hWnd))
+				{
+					PAINTSTRUCT ps{};
+					HDC hdc = reinterpret_cast<HDC>(wParam);
+					if (!hdc)
+					{
+						hdc = ::BeginPaint(hWnd, &ps);
+					}
+
+					paintGroupbox(hWnd, hdc, *pButtonData);
+
+					if (ps.hdc)
+					{
+						::EndPaint(hWnd, &ps);
+					}
+
+					return 0;
+				}
+				break;
+			}
+
+			case WM_ENABLE:
+			{
+				::RedrawWindow(hWnd, nullptr, nullptr, RDW_INVALIDATE);
+				break;
+			}
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -2381,7 +2389,6 @@ namespace DarkMode
 		}
 	};
 
-
 	constexpr UINT_PTR g_statusBarSubclassID = 42;
 
 	static LRESULT CALLBACK StatusBarSubclass(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
@@ -2475,7 +2482,7 @@ namespace DarkMode
 
 					if (ownerDraw)
 					{
-						UINT id = GetDlgCtrlID(hWnd);
+						UINT id = ::GetDlgCtrlID(hWnd);
 						DRAWITEMSTRUCT dis = {
 							0
 							, 0
@@ -2570,7 +2577,82 @@ namespace DarkMode
 	{
 		if (p._subclass)
 		{
-			subclassStatusBar(hWnd);
+			DarkMode::subclassStatusBar(hWnd);
+		}
+	}
+
+	struct StaticTextSubclassInfo
+	{
+		bool isEnabled = true;
+
+		StaticTextSubclassInfo() {};
+		StaticTextSubclassInfo(HWND hWnd)
+		{
+			auto style = ::GetWindowLongPtr(hWnd, GWL_STYLE);
+			isEnabled = (style & WS_DISABLED) != WS_DISABLED;
+		}
+
+		~StaticTextSubclassInfo() = default;
+	};
+
+	constexpr UINT_PTR g_staticTextSubclassID = 42;
+
+	static LRESULT CALLBACK StaticTextSubclass(
+		HWND hWnd,
+		UINT uMsg,
+		WPARAM wParam,
+		LPARAM lParam,
+		UINT_PTR uIdSubclass,
+		DWORD_PTR dwRefData
+	)
+	{
+		auto pStaticTextInfo = reinterpret_cast<StaticTextSubclassInfo*>(dwRefData);
+
+		switch (uMsg)
+		{
+			case WM_NCDESTROY:
+			{
+				::RemoveWindowSubclass(hWnd, StaticTextSubclass, uIdSubclass);
+				delete pStaticTextInfo;
+				break;
+			}
+
+			case WM_ENABLE:
+			{
+				pStaticTextInfo->isEnabled = (wParam == TRUE);
+
+				const auto style = ::GetWindowLongPtr(hWnd, GWL_STYLE);
+				if (!pStaticTextInfo->isEnabled)
+					::SetWindowLongPtr(hWnd, GWL_STYLE, style & ~WS_DISABLED);
+
+				RECT rcClient{};
+				::GetClientRect(hWnd, &rcClient);
+				::MapWindowPoints(hWnd, ::GetParent(hWnd), reinterpret_cast<LPPOINT>(&rcClient), 2);
+				::RedrawWindow(::GetParent(hWnd), &rcClient, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
+				
+				if (!pStaticTextInfo->isEnabled)
+					::SetWindowLongPtr(hWnd, GWL_STYLE, style | WS_DISABLED);
+
+				return 0;
+			}
+		}
+		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+	}
+
+	void subclassStaticText(HWND hWnd)
+	{
+		if (::GetWindowSubclass(hWnd, StaticTextSubclass, g_staticTextSubclassID, nullptr) == FALSE)
+		{
+			auto pStaticTextInfo = reinterpret_cast<DWORD_PTR>(new StaticTextSubclassInfo(hWnd));
+			::SetWindowSubclass(hWnd, StaticTextSubclass, g_staticTextSubclassID, pStaticTextInfo);
+		}
+	}
+
+	void subclassStaticText(HWND hWnd, DarkModeParams p)
+	{
+		if (p._subclass)
+		{
+			DarkMode::subclassStaticText(hWnd);
 		}
 	}
 
@@ -2679,14 +2761,15 @@ namespace DarkMode
 				return TRUE;
 			}
 
-			/*
-			// for debugging 
-			if (wcscmp(className, L"#32770") == 0)
+			if (wcscmp(className, WC_STATIC) == 0)
 			{
+				DarkMode::subclassStaticText(hWnd, p);
 				return TRUE;
 			}
 
-			if (wcscmp(className, WC_STATIC) == 0)
+			/*
+			// for debugging 
+			if (wcscmp(className, L"#32770") == 0)
 			{
 				return TRUE;
 			}
@@ -3218,13 +3301,21 @@ namespace DarkMode
 				{
 					constexpr size_t classNameLen = 16;
 					wchar_t className[classNameLen]{};
-					auto hwndEdit = reinterpret_cast<HWND>(lParam);
-					GetClassName(hwndEdit, className, classNameLen);
+					auto hWndChild = reinterpret_cast<HWND>(lParam);
+					GetClassName(hWndChild, className, classNameLen);
+					auto hdc = reinterpret_cast<HDC>(wParam);
 					if (wcscmp(className, WC_EDIT) == 0)
 					{
-						return DarkMode::onCtlColor(reinterpret_cast<HDC>(wParam));
+						return DarkMode::onCtlColor(hdc);
 					}
-					return DarkMode::onCtlColorDarker(reinterpret_cast<HDC>(wParam));
+
+					DWORD_PTR dwRefData = 0;
+					if (::GetWindowSubclass(hWndChild, StaticTextSubclass, g_staticTextSubclassID, &dwRefData) == TRUE)
+					{
+						auto pStaticTextInfo = reinterpret_cast<StaticTextSubclassInfo*>(dwRefData);
+						return DarkMode::onCtlColorDarkerBGStaticText(hdc, pStaticTextInfo->isEnabled);
+					}
+					return DarkMode::onCtlColorDarker(hdc);
 				}
 				break;
 			}
