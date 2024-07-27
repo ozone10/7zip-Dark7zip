@@ -76,7 +76,20 @@ static constexpr COLORREF HEXRGB(DWORD rrggbb) {
 		((rrggbb & 0x0000FF) << 16);
 }
 
-std::wstring getIniPath(std::wstring iniFilename)
+static std::wstring getWndClassName(HWND hWnd)
+{
+	constexpr int strLen = 32;
+	std::wstring className(strLen, 0);
+	className.resize(::GetClassName(hWnd, &className[0], strLen));
+	return className;
+}
+
+static bool cmpWndClassName(HWND hWnd, std::wstring classNameToCmp)
+{
+	return getWndClassName(hWnd) == classNameToCmp;
+}
+
+static std::wstring getIniPath(std::wstring iniFilename)
 {
 	wchar_t buffer[MAX_PATH]{};
 	::GetModuleFileName(nullptr, buffer, MAX_PATH);
@@ -95,13 +108,13 @@ std::wstring getIniPath(std::wstring iniFilename)
 	return L"";
 }
 
-bool fileExists(std::wstring filePath)
+static bool fileExists(std::wstring filePath)
 {
-    DWORD dwAttrib = ::GetFileAttributes(filePath.c_str());
-    return (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+	DWORD dwAttrib = ::GetFileAttributes(filePath.c_str());
+	return (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-bool setClrFromIni(std::wstring sectionName, std::wstring keyName, std::wstring iniFilePath, COLORREF* clr)
+static bool setClrFromIni(std::wstring sectionName, std::wstring keyName, std::wstring iniFilePath, COLORREF* clr)
 {
 	constexpr int maxStringLength = 7;
 	wchar_t buffer[maxStringLength + 1]{};
@@ -2049,7 +2062,7 @@ namespace DarkMode
 						{
 							case CDDS_PREPAINT:
 							{
-								if (DarkMode::isExperimentalSupported() && DarkMode::isEnabled())
+								if (DarkMode::isExperimentalActive())
 								{
 									return CDRF_NOTIFYITEMDRAW;
 								}
@@ -2326,10 +2339,7 @@ namespace DarkMode
 	{
 		if (::GetWindowSubclass(hWnd, UpDownSubclass, g_upDownSubclassID, nullptr) == FALSE)
 		{
-			constexpr size_t classNameLen = 16;
-			wchar_t className[classNameLen]{};
-			GetClassName(hWnd, className, classNameLen);
-			if (wcscmp(className, UPDOWN_CLASS) == 0)
+			if (cmpWndClassName(hWnd, UPDOWN_CLASS))
 			{
 				auto pUpDownData = reinterpret_cast<DWORD_PTR>(new UpDownData(hWnd));
 				::SetWindowSubclass(hWnd, UpDownSubclass, g_upDownSubclassID, pUpDownData);
@@ -2668,79 +2678,83 @@ namespace DarkMode
 
 		::EnumChildWindows(hwndParent, [](HWND hWnd, LPARAM lParam) WINAPI_LAMBDA {
 			auto& p = *reinterpret_cast<DarkModeParams*>(lParam);
-			constexpr size_t classNameLen = 32;
-			wchar_t className[classNameLen]{};
-			GetClassName(hWnd, className, classNameLen);
+			std::wstring className = getWndClassName(hWnd);
 
-			if (wcscmp(className, WC_BUTTON) == 0)
+			if (className == WC_BUTTON)
 			{
 				DarkMode::subclassAndThemeButton(hWnd, p);
 				return TRUE;
 			}
 
-			if (wcscmp(className, WC_COMBOBOX) == 0)
+			if (className == WC_STATIC)
+			{
+				DarkMode::subclassStaticText(hWnd, p);
+				return TRUE;
+			}
+
+			if (className == WC_COMBOBOX)
 			{
 				DarkMode::subclassAndThemeComboBox(hWnd, p);
 				return TRUE;
 			}
 
-			if (wcscmp(className, WC_EDIT) == 0)
+			if (className == WC_EDIT)
 			{
 				DarkMode::subclassAndThemeListBoxOrEditControl(hWnd, p, false);
 				return TRUE;
 			}
 
-			if (wcscmp(className, WC_LISTBOX) == 0)
+			if (className == WC_LISTBOX)
 			{
 				DarkMode::subclassAndThemeListBoxOrEditControl(hWnd, p, true);
 				return TRUE;
 			}
 
-			if (wcscmp(className, WC_LISTVIEW) == 0)
+			if (className == WC_LISTVIEW)
 			{
 				DarkMode::subclassAndThemeListView(hWnd, p);
 				return TRUE;
 			}
 
-			if (wcscmp(className, WC_TREEVIEW) == 0)
+			if (className == WC_TREEVIEW)
 			{
 				DarkMode::themeTreeView(hWnd, p);
 				return TRUE;
 			}
 
-			if (wcscmp(className, TOOLBARCLASSNAME) == 0)
+			if (className == TOOLBARCLASSNAME)
 			{
 				DarkMode::themeToolbar(hWnd, p);
 				return TRUE;
 			}
 
 			// Plugin might use rich edit control version 2.0 and later
-			if (wcscmp(className, L"RichEdit20W") == 0 || wcscmp(className, L"RICHEDIT50W") == 0)
+			if (className == L"RichEdit20W" || className == L"RICHEDIT50W")
 			{
 				DarkMode::themeRichEdit(hWnd, p);
 				return TRUE;
 			}
 
 			// For plugins
-			if (wcscmp(className, UPDOWN_CLASS) == 0)
+			if (className == UPDOWN_CLASS)
 			{
 				DarkMode::subclassAndThemeUpDownControl(hWnd, p);
 				return TRUE;
 			}
 
-			if (wcscmp(className, WC_TABCONTROL) == 0)
+			if (className == WC_TABCONTROL)
 			{
 				DarkMode::subclassTabControl(hWnd, p);
 				return TRUE;
 			}
 
-			if (wcscmp(className, STATUSCLASSNAME) == 0)
+			if (className == STATUSCLASSNAME)
 			{
 				DarkMode::subclassStatusBar(hWnd, p);
 				return TRUE;
 			}
 
-			if (wcscmp(className, WC_SCROLLBAR) == 0)
+			if (className == WC_SCROLLBAR)
 			{
 				if (p._theme)
 				{
@@ -2749,32 +2763,26 @@ namespace DarkMode
 				return TRUE;
 			}
 
-			if (wcscmp(className, WC_COMBOBOXEX) == 0)
+			if (className == WC_COMBOBOXEX)
 			{
 				DarkMode::subclassComboboxEx(hWnd, p);
 				return TRUE;
 			}
 
-			if (wcscmp(className, PROGRESS_CLASS) == 0)
+			if (className == PROGRESS_CLASS)
 			{
 				DarkMode::themeProgressBar(hWnd, p);
 				return TRUE;
 			}
 
-			if (wcscmp(className, WC_STATIC) == 0)
-			{
-				DarkMode::subclassStaticText(hWnd, p);
-				return TRUE;
-			}
-
 			/*
 			// for debugging 
-			if (wcscmp(className, L"#32770") == 0)
+			if (className == L"#32770")
 			{
 				return TRUE;
 			}
 
-			if (wcscmp(className, TRACKBAR_CLASS) == 0)
+			if (className == TRACKBAR_CLASS)
 			{
 				return TRUE;
 			}
@@ -3099,12 +3107,12 @@ namespace DarkMode
 
 			case CDDS_ITEMPREPAINT:
 			{
+				const bool isThemeDark = DarkMode::isThemeDark();
 				const auto isSelected = ListView_GetItemState(lplvcd->nmcd.hdr.hwndFrom, lplvcd->nmcd.dwItemSpec, LVIS_SELECTED) == LVIS_SELECTED;
 				const bool isHot = (lplvcd->nmcd.uItemState & CDIS_HOT) == CDIS_HOT;
 
 				if (DarkMode::isEnabled())
 				{
-
 					HBRUSH hBrush = nullptr;
 
 					if (isSelected)
@@ -3132,7 +3140,7 @@ namespace DarkMode
 				}
 				else if (isHot && DarkMode::isEnabled())
 				{
-					::FrameRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, DarkMode::isThemeDark() ? DarkMode::getHotEdgeBrush() : ::GetSysColorBrush(COLOR_WINDOWTEXT));
+					::FrameRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, isThemeDark ? DarkMode::getHotEdgeBrush() : ::GetSysColorBrush(COLOR_WINDOWTEXT));
 				}
 
 				LRESULT lr = CDRF_NEWFONT;
@@ -3144,6 +3152,7 @@ namespace DarkMode
 
 				return lr;
 			}
+
 			default:
 				break;
 		}
@@ -3299,12 +3308,9 @@ namespace DarkMode
 			{
 				if (DarkMode::isEnabled())
 				{
-					constexpr size_t classNameLen = 16;
-					wchar_t className[classNameLen]{};
 					auto hWndChild = reinterpret_cast<HWND>(lParam);
-					GetClassName(hWndChild, className, classNameLen);
 					auto hdc = reinterpret_cast<HDC>(wParam);
-					if (wcscmp(className, WC_EDIT) == 0)
+					if (cmpWndClassName(hWndChild, WC_EDIT))
 					{
 						return DarkMode::onCtlColor(hdc);
 					}
@@ -3362,26 +3368,23 @@ namespace DarkMode
 			case WM_NOTIFY:
 			{
 				auto nmhdr = reinterpret_cast<LPNMHDR>(lParam);
-
-				constexpr size_t classNameLen = 16;
-				wchar_t className[classNameLen]{};
-				GetClassName(nmhdr->hwndFrom, className, classNameLen);
+				std::wstring className = getWndClassName(nmhdr->hwndFrom);
 
 				switch (nmhdr->code)
 				{
 					case NM_CUSTOMDRAW:
 					{
-						if (wcscmp(className, TOOLBARCLASSNAME) == 0)
+						if (className == TOOLBARCLASSNAME)
 						{
 							return DarkMode::darkToolBarNotifyCustomDraw(hWnd, uMsg, wParam, lParam, false);
 						}
 
-						if (wcscmp(className, WC_LISTVIEW) == 0)
+						if (className == WC_LISTVIEW)
 						{
 							return DarkMode::darkListViewNotifyCustomDraw(hWnd, uMsg, wParam, lParam, false);
 						}
 
-						if (wcscmp(className, WC_TREEVIEW) == 0)
+						if (className == WC_TREEVIEW)
 						{
 							return DarkMode::darkTreeViewNotifyCustomDraw(hWnd, uMsg, wParam, lParam, false);
 						}
