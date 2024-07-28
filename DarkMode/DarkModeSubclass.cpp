@@ -135,7 +135,7 @@ static bool setClrFromIni(std::wstring sectionName, std::wstring keyName, std::w
 		}
 	}
 
-	COLORREF clrTmp{*clr};
+	COLORREF clrTmp{ *clr };
 
 	try
 	{
@@ -363,7 +363,7 @@ namespace DarkMode
 	};
 
 	// customized
-	static Colors darkCustomizedColors{darkColors};
+	static Colors darkCustomizedColors{ darkColors };
 
 	static Colors lightColors{
 		::GetSysColor(COLOR_3DFACE),        // background
@@ -606,13 +606,12 @@ namespace DarkMode
 	// adapted from https://stackoverflow.com/a/56678483
 	double calculatePerceivedLightness(COLORREF c)
 	{
-		auto linearValue = [](double colorChannel) -> double
-		{
+		auto linearValue = [](double colorChannel) -> double {
 			colorChannel /= 255.0;
 			if (colorChannel <= 0.04045)
 				return colorChannel / 12.92;
 			return std::pow(((colorChannel + 0.055) / 1.055), 2.4);
-		};
+			};
 
 		double r = linearValue(static_cast<double>(GetRValue(c)));
 		double g = linearValue(static_cast<double>(GetGValue(c)));
@@ -866,7 +865,7 @@ namespace DarkMode
 
 		RECT rcClient{};
 		::GetClientRect(hWnd, &rcClient);
-		::MapWindowPoints(hWnd, nullptr, (POINT*)&rcClient, 2);
+		::MapWindowPoints(hWnd, nullptr, reinterpret_cast<POINT*>(&rcClient), 2);
 
 		RECT rcWindow{};
 		::GetWindowRect(hWnd, &rcWindow);
@@ -1015,7 +1014,7 @@ namespace DarkMode
 		LOGFONT lf{};
 		if (SUCCEEDED(::GetThemeFont(hTheme, hdc, iPartID, iStateID, TMT_FONT, &lf)))
 		{
-			hCreatedFont = CreateFontIndirect(&lf);
+			hCreatedFont = ::CreateFontIndirect(&lf);
 			hFont = hCreatedFont;
 		}
 
@@ -1039,7 +1038,7 @@ namespace DarkMode
 		::GetClientRect(hWnd, &rcClient);
 		::GetWindowText(hWnd, szText, _countof(szText));
 
-		SIZE szBox = { 13, 13 };
+		SIZE szBox{ 13, 13 };
 		::GetThemePartSize(hTheme, hdc, iPartID, iStateID, NULL, TS_DRAW, &szBox);
 
 		RECT rcText = rcClient;
@@ -1847,8 +1846,8 @@ namespace DarkMode
 				else
 				{
 					rcArrow = {
-					rc.right - 17, rc.top + 1,
-					rc.right - 1, rc.bottom - 1
+						rc.right - 17, rc.top + 1,
+						rc.right - 1, rc.bottom - 1
 					};
 				}
 
@@ -1961,7 +1960,7 @@ namespace DarkMode
 			auto style = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 			if ((style & CBS_DROPDOWN) == CBS_DROPDOWN)
 			{
-				POINT pt = { 5, 5 };
+				POINT pt{ 5, 5 };
 				hwndEditData = reinterpret_cast<DWORD_PTR>(::ChildWindowFromPoint(hWnd, pt));
 			}
 			::SetWindowSubclass(hWnd, ComboBoxSubclass, g_comboBoxSubclassID, hwndEditData);
@@ -2464,7 +2463,7 @@ namespace DarkMode
 
 					if (nParts > 2) //to not apply on status bar in find dialog
 					{
-						POINT edges[] = {
+						POINT edges[]{
 							{rcPart.right - 2, rcPart.top + 1},
 							{rcPart.right - 2, rcPart.bottom - 3}
 						};
@@ -2493,7 +2492,7 @@ namespace DarkMode
 					if (ownerDraw)
 					{
 						UINT id = ::GetDlgCtrlID(hWnd);
-						DRAWITEMSTRUCT dis = {
+						DRAWITEMSTRUCT dis{
 							0
 							, 0
 							, static_cast<UINT>(i)
@@ -3107,8 +3106,8 @@ namespace DarkMode
 
 			case CDDS_ITEMPREPAINT:
 			{
-				const bool isThemeDark = DarkMode::isThemeDark();
-				const auto isSelected = ListView_GetItemState(lplvcd->nmcd.hdr.hwndFrom, lplvcd->nmcd.dwItemSpec, LVIS_SELECTED) == LVIS_SELECTED;
+				HWND& hList = lplvcd->nmcd.hdr.hwndFrom;
+				const auto isSelected = ListView_GetItemState(hList, lplvcd->nmcd.dwItemSpec, LVIS_SELECTED) == LVIS_SELECTED;
 				const bool isHot = (lplvcd->nmcd.uItemState & CDIS_HOT) == CDIS_HOT;
 
 				if (DarkMode::isEnabled())
@@ -3130,7 +3129,36 @@ namespace DarkMode
 
 					if (hBrush != nullptr)
 					{
-						::FillRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, hBrush);
+						const auto lvStyle = ::GetWindowLongPtr(hList, GWL_STYLE) & LVS_TYPEMASK;
+						if (lvStyle != LVS_REPORT)
+						{
+							::FillRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, hBrush);
+						}
+						else
+						{
+							const bool& isThemeDark = DarkMode::isThemeDark();
+							const auto hHeader = ListView_GetHeader(hList);
+							const auto nCol = Header_GetItemCount(hHeader);
+							const LONG paddingLeft = isThemeDark ? 1 : 0;
+							const LONG paddingRight = isThemeDark ? 2 : 1;
+
+							LVITEMINDEX lvii{ static_cast<int>(lplvcd->nmcd.dwItemSpec), 0 };
+							RECT rcSubitem{
+								lplvcd->nmcd.rc.left
+								, lplvcd->nmcd.rc.top
+								, lplvcd->nmcd.rc.left + ListView_GetColumnWidth(hList, 0) - paddingRight
+								, lplvcd->nmcd.rc.bottom
+							};
+							::FillRect(lplvcd->nmcd.hdc, &rcSubitem, hBrush);
+
+							for (int i = 1; i < nCol; ++i)
+							{
+								ListView_GetItemIndexRect(hList, &lvii, i, LVIR_BOUNDS, &rcSubitem);
+								rcSubitem.left -= paddingLeft;
+								rcSubitem.right -= paddingRight;
+								::FillRect(lplvcd->nmcd.hdc, &rcSubitem, hBrush);
+							}
+						}
 					}
 				}
 
@@ -3138,9 +3166,9 @@ namespace DarkMode
 				{
 					::DrawFocusRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc);
 				}
-				else if (isHot && DarkMode::isEnabled())
+				else if (isHot)
 				{
-					::FrameRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, isThemeDark ? DarkMode::getHotEdgeBrush() : ::GetSysColorBrush(COLOR_WINDOWTEXT));
+					::FrameRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, DarkMode::isEnabled() ? DarkMode::getHotEdgeBrush() : ::GetSysColorBrush(COLOR_WINDOWTEXT));
 				}
 
 				LRESULT lr = CDRF_NEWFONT;
