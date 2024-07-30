@@ -3087,15 +3087,179 @@ namespace DarkMode
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
+	static void drawListviewItem(LPNMLVCUSTOMDRAW& lplvcd, bool isReport, bool hasGridlines)
+	{
+		HWND& hList = lplvcd->nmcd.hdr.hwndFrom;
+		const auto isSelected = ListView_GetItemState(hList, lplvcd->nmcd.dwItemSpec, LVIS_SELECTED) == LVIS_SELECTED;
+		const bool isHot = (lplvcd->nmcd.uItemState & CDIS_HOT) == CDIS_HOT;
+
+		if (DarkMode::isEnabled())
+		{
+			HBRUSH hBrush = nullptr;
+
+			if (isSelected)
+			{
+				lplvcd->clrText = DarkMode::getTextColor();
+				lplvcd->clrTextBk = DarkMode::getSofterBackgroundColor();
+				hBrush = DarkMode::getSofterBackgroundBrush();
+			}
+			else if (isHot)
+			{
+				lplvcd->clrText = DarkMode::getTextColor();
+				lplvcd->clrTextBk = DarkMode::getHotBackgroundColor();
+				hBrush = DarkMode::getHotBackgroundBrush();
+			}
+
+			if (hBrush != nullptr)
+			{
+				if (!isReport || (isReport && hasGridlines))
+				{
+					::FillRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, hBrush);
+				}
+				else
+				{
+					const auto hHeader = ListView_GetHeader(hList);
+					const auto nCol = Header_GetItemCount(hHeader);
+					const LONG paddingLeft = DarkMode::isThemeDark() ? 1 : 0;
+					const LONG paddingRight = DarkMode::isThemeDark() ? 2 : 1;
+
+					LVITEMINDEX lvii{ static_cast<int>(lplvcd->nmcd.dwItemSpec), 0 };
+					RECT rcSubitem{
+						lplvcd->nmcd.rc.left
+						, lplvcd->nmcd.rc.top
+						, lplvcd->nmcd.rc.left + ListView_GetColumnWidth(hList, 0) - paddingRight
+						, lplvcd->nmcd.rc.bottom
+					};
+					::FillRect(lplvcd->nmcd.hdc, &rcSubitem, hBrush);
+
+					for (int i = 1; i < nCol; ++i)
+					{
+						ListView_GetItemIndexRect(hList, &lvii, i, LVIR_BOUNDS, &rcSubitem);
+						rcSubitem.left -= paddingLeft;
+						rcSubitem.right -= paddingRight;
+						::FillRect(lplvcd->nmcd.hdc, &rcSubitem, hBrush);
+					}
+				}
+			}
+			else if (DarkMode::isThemeDark() && hasGridlines)
+			{
+				HBRUSH hbrDarkTheme = ::CreateSolidBrush(g_bgColor);
+				::FillRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, hbrDarkTheme);
+				::DeleteObject(hbrDarkTheme);
+			}
+		}
+
+		if (isSelected)
+		{
+			::DrawFocusRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc);
+		}
+		else if (isHot && !hasGridlines)
+		{
+			::FrameRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, DarkMode::isEnabled() ? DarkMode::getHotEdgeBrush() : ::GetSysColorBrush(COLOR_WINDOWTEXT));
+		}
+	}
+
+	static void drawGridlines(LPNMLVCUSTOMDRAW& lplvcd)
+	{
+		HWND& hList = lplvcd->nmcd.hdr.hwndFrom;
+		const HBRUSH& hBrush = DarkMode::getEdgeBrush();
+
+		HWND hHeader = ListView_GetHeader(hList);
+		RECT rcHeader{};
+		::GetClientRect(hHeader, &rcHeader);
+		const int nCol = Header_GetItemCount(hHeader);
+
+		const int wGrid = ::GetSystemMetrics(SM_CXBORDER);
+
+		RECT rcGridline{
+			0
+			, rcHeader.bottom
+			, wGrid
+			, lplvcd->nmcd.rc.bottom
+		};
+
+		HBRUSH hbrDarkTheme = nullptr;
+		if (DarkMode::isThemeDark())
+			hbrDarkTheme = ::CreateSolidBrush(g_bgColor);
+
+		const int iLastItem = ListView_GetItemCount(hList);
+
+		LVITEMINDEX lvii{ iLastItem, 0 };
+		RECT rcGridlineTmp{};
+		for (int i = 1; i < nCol; ++i)
+		{
+			ListView_GetItemIndexRect(hList, &lvii, i, LVIR_BOUNDS, &rcGridlineTmp);
+
+			rcGridline.left = rcGridlineTmp.left;
+			rcGridline.right = rcGridline.left + wGrid;
+
+			::FillRect(lplvcd->nmcd.hdc, &rcGridline, hBrush);
+
+			if (hbrDarkTheme != nullptr)
+			{
+				rcGridline.top = rcGridlineTmp.top;
+				::OffsetRect(&rcGridline, -2, 0);
+				::FillRect(lplvcd->nmcd.hdc, &rcGridline, hbrDarkTheme);
+				rcGridline.top = rcHeader.bottom;
+			}
+		}
+
+		rcGridline.left = rcGridlineTmp.right;
+		rcGridline.right = rcGridline.left + wGrid;
+		::FillRect(lplvcd->nmcd.hdc, &rcGridline, hBrush);
+
+		if (hbrDarkTheme != nullptr)
+		{
+			rcGridline.top = rcGridlineTmp.top;
+			::OffsetRect(&rcGridline, -2, 0);
+			::FillRect(lplvcd->nmcd.hdc, &rcGridline, hbrDarkTheme);
+		}
+
+		if (hbrDarkTheme != nullptr)
+		{
+			::DeleteObject(hbrDarkTheme);
+			hbrDarkTheme= nullptr;
+		}
+
+		rcGridline = lplvcd->nmcd.rc;
+		RECT rcItem{};
+		ListView_GetItemIndexRect(hList, &lvii, 1, LVIR_BOUNDS, &rcItem);
+		const int hItem = rcItem.bottom - rcItem.top;
+
+		int iGridline = rcHeader.bottom + hItem - wGrid;
+
+		while (iGridline < lplvcd->nmcd.rc.bottom)
+		{
+			rcGridline.top = iGridline;
+			rcGridline.bottom = iGridline + wGrid;
+			::FillRect(lplvcd->nmcd.hdc, &rcGridline, hBrush);
+			iGridline += hItem;
+		}
+	}
+
 	static LRESULT darkListViewNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool isPlugin)
 	{
 		auto lplvcd = reinterpret_cast<LPNMLVCUSTOMDRAW>(lParam);
+		HWND& hList = lplvcd->nmcd.hdr.hwndFrom;
+		const auto lvStyle = ::GetWindowLongPtr(hList, GWL_STYLE) & LVS_TYPEMASK;
+		const bool isReport = (lvStyle == LVS_REPORT);
+		bool hasGridlines = false;
+		if (isReport)
+		{
+			const auto lvExStyle = ListView_GetExtendedListViewStyle(hList);
+			hasGridlines = (lvExStyle & LVS_EX_GRIDLINES) == LVS_EX_GRIDLINES;
+		}
 
 		switch (lplvcd->nmcd.dwDrawStage)
 		{
 			case CDDS_PREPAINT:
 			{
 				LRESULT lr = CDRF_NOTIFYITEMDRAW;
+				if (isReport && hasGridlines)
+				{
+					lr |= CDRF_NOTIFYPOSTPAINT;
+				}
+
 				if (isPlugin)
 				{
 					lr |= ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
@@ -3106,70 +3270,7 @@ namespace DarkMode
 
 			case CDDS_ITEMPREPAINT:
 			{
-				HWND& hList = lplvcd->nmcd.hdr.hwndFrom;
-				const auto isSelected = ListView_GetItemState(hList, lplvcd->nmcd.dwItemSpec, LVIS_SELECTED) == LVIS_SELECTED;
-				const bool isHot = (lplvcd->nmcd.uItemState & CDIS_HOT) == CDIS_HOT;
-
-				if (DarkMode::isEnabled())
-				{
-					HBRUSH hBrush = nullptr;
-
-					if (isSelected)
-					{
-						lplvcd->clrText = DarkMode::getTextColor();
-						lplvcd->clrTextBk = DarkMode::getSofterBackgroundColor();
-						hBrush = DarkMode::getSofterBackgroundBrush();
-					}
-					else if (isHot)
-					{
-						lplvcd->clrText = DarkMode::getTextColor();
-						lplvcd->clrTextBk = DarkMode::getHotBackgroundColor();
-						hBrush = DarkMode::getHotBackgroundBrush();
-					}
-
-					if (hBrush != nullptr)
-					{
-						const auto lvStyle = ::GetWindowLongPtr(hList, GWL_STYLE) & LVS_TYPEMASK;
-						if (lvStyle != LVS_REPORT)
-						{
-							::FillRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, hBrush);
-						}
-						else
-						{
-							const bool& isThemeDark = DarkMode::isThemeDark();
-							const auto hHeader = ListView_GetHeader(hList);
-							const auto nCol = Header_GetItemCount(hHeader);
-							const LONG paddingLeft = isThemeDark ? 1 : 0;
-							const LONG paddingRight = isThemeDark ? 2 : 1;
-
-							LVITEMINDEX lvii{ static_cast<int>(lplvcd->nmcd.dwItemSpec), 0 };
-							RECT rcSubitem{
-								lplvcd->nmcd.rc.left
-								, lplvcd->nmcd.rc.top
-								, lplvcd->nmcd.rc.left + ListView_GetColumnWidth(hList, 0) - paddingRight
-								, lplvcd->nmcd.rc.bottom
-							};
-							::FillRect(lplvcd->nmcd.hdc, &rcSubitem, hBrush);
-
-							for (int i = 1; i < nCol; ++i)
-							{
-								ListView_GetItemIndexRect(hList, &lvii, i, LVIR_BOUNDS, &rcSubitem);
-								rcSubitem.left -= paddingLeft;
-								rcSubitem.right -= paddingRight;
-								::FillRect(lplvcd->nmcd.hdc, &rcSubitem, hBrush);
-							}
-						}
-					}
-				}
-
-				if (isSelected)
-				{
-					::DrawFocusRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc);
-				}
-				else if (isHot)
-				{
-					::FrameRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, DarkMode::isEnabled() ? DarkMode::getHotEdgeBrush() : ::GetSysColorBrush(COLOR_WINDOWTEXT));
-				}
+				DarkMode::drawListviewItem(lplvcd, isReport, hasGridlines);
 
 				LRESULT lr = CDRF_NEWFONT;
 
@@ -3179,6 +3280,12 @@ namespace DarkMode
 				}
 
 				return lr;
+			}
+
+			case CDDS_POSTPAINT:
+			{
+				DarkMode::drawGridlines(lplvcd);
+				return CDRF_SKIPDEFAULT;
 			}
 
 			default:
