@@ -18,7 +18,7 @@ Dark7zip is project to experiment with dark mode using win32 API.
 
 ## Installation
 
-Replace 7z original files with files from downloaded zip file.
+Replace 7z original files with files from downloaded zip file (currently only for x64 platform).
 
 - `7zFM.exe` - file manager, "main exe"
 - `7zG.exe` - mainly extraction, compression dialogs
@@ -63,6 +63,7 @@ Values for custom colors are in RGB hex format - RRGGBB.
 - [dark.colors.view]/[light.colors.view] - for listview and treeview
   - backgroundView
   - textView
+  - gridlines - color for listview grid lines, when View -> Details is used and Tools -> Options... -> Settings tab -> Show grid lines is checked
 
 All options are optional. You can define only "[section]" and "key=value" you want to be applied.  
 Tip: renaming section will disable all "key=value" pairs of that section and default values will be used.
@@ -91,6 +92,7 @@ edgeDisabled =          "484848"
 [dark.colors.view]
 backgroundView =        "293134"
 textView =              "E0E2E4"
+gridlines =             "646464"
 
 [light.colors]
 background =            "F0F0F0"
@@ -107,6 +109,7 @@ edgeDisabled =          "6D6D6D"
 [light.colors.view]
 backgroundView =        "FFFFFF"
 textView =              "000000"
+gridlines =             "F0F0F0"
 ```
 
 - only views, with defaults: `[main]` `mode=1`, and `[dark]` `tone=0`
@@ -114,9 +117,9 @@ textView =              "000000"
 [dark.colors.view]
 backgroundView =        "112435"
 textView =              "C3BE98"
+gridlines =             "4F5F5F"
 ```
 
----
 
 ## License
 
@@ -504,7 +507,6 @@ http://www.7-zip.org
 
 </details>
 
----
 
-# 7-Zip on GitHub
+## 7-Zip on GitHub
 7-Zip website: [7-zip.org](https://7-zip.org)

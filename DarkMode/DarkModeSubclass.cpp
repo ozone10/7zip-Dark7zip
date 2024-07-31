@@ -453,13 +453,82 @@ namespace DarkMode
 
 	Theme tDefault(darkCustomizedColors);
 
+	static ColorsView darkColorsView{
+		RGB(41, 49, 52),      // background
+		RGB(224, 226, 228),   // text
+		RGB(100, 100, 100)    // gridlines
+	};
+
+	static ColorsView lightColorsView{
+		RGB(255, 255, 255),   // background
+		RGB(0, 0, 0),         // text
+		RGB(240, 240, 240)    // gridlines
+	};
+
 	static Theme& getTheme()
 	{
 		return tDefault;
 	}
 
-	static COLORREF g_bgColor = RGB(41, 49, 52);
-	static COLORREF g_fgColor = RGB(224, 226, 228);
+	struct BrushesView
+	{
+		HBRUSH background = nullptr;
+		HBRUSH gridlines = nullptr;
+
+		BrushesView(const ColorsView& colors)
+			: background(::CreateSolidBrush(colors.background))
+			, gridlines(::CreateSolidBrush(colors.gridlines))
+		{}
+
+		~BrushesView()
+		{
+			::DeleteObject(background);         background = nullptr;
+			::DeleteObject(gridlines);          gridlines = nullptr;
+		}
+
+		void change(const ColorsView& colors)
+		{
+			::DeleteObject(background);
+			::DeleteObject(gridlines);
+
+			background = ::CreateSolidBrush(colors.background);
+			gridlines = ::CreateSolidBrush(colors.gridlines);
+		}
+	};
+
+	struct ThemeView
+	{
+		ColorsView _clrView;
+		BrushesView _hbrView;
+
+		ThemeView()
+			: _clrView({ RGB(41, 49, 52), RGB(224, 226, 228), RGB(100, 100, 100) })
+			, _hbrView(_clrView)
+		{}
+
+		ThemeView(const ColorsView& colorsView)
+			: _clrView(colorsView)
+			, _hbrView(_clrView)
+		{}
+
+		void updateBrushes()
+		{
+			_hbrView.change(_clrView);
+		}
+
+		void change(ColorsView colors)
+		{
+			_clrView = colors;
+			updateBrushes();
+		}
+	};
+
+	static ThemeView tView{darkColorsView};
+
+	static ThemeView& getThemeView()
+	{
+		return tView;
+	}
 
 	static bool g_useDarkMode = true;
 	static bool g_enableWindowsMode = false;
@@ -506,18 +575,17 @@ namespace DarkMode
 
 				DarkMode::setDarkCustomColors(static_cast<DarkMode::ColorTone>(tone));
 				DarkMode::getTheme()._colors = DarkMode::darkCustomizedColors;
-				g_bgColor = RGB(41, 49, 52);
-				g_fgColor = RGB(224, 226, 228);
+				DarkMode::getThemeView()._clrView = DarkMode::darkColorsView;
 			}
 			else
 			{
 				DarkMode::getTheme()._colors = DarkMode::lightColors;
-				g_bgColor = RGB(255, 255, 255);
-				g_fgColor = RGB(0, 0, 0);
+				DarkMode::getThemeView()._clrView = DarkMode::lightColorsView;
 			}
 
-			setClrFromIni(sectionColorsView, L"backgroundView", iniPath, &DarkMode::g_bgColor);
-			setClrFromIni(sectionColorsView, L"textView", iniPath, &DarkMode::g_fgColor);
+			setClrFromIni(sectionColorsView, L"backgroundView", iniPath, &DarkMode::getThemeView()._clrView.background);
+			setClrFromIni(sectionColorsView, L"textView", iniPath, &DarkMode::getThemeView()._clrView.text);
+			setClrFromIni(sectionColorsView, L"gridlines", iniPath, &DarkMode::getThemeView()._clrView.gridlines);
 
 			setClrFromIni(sectionColors, L"background", iniPath, &DarkMode::getTheme()._colors.background);
 			setClrFromIni(sectionColors, L"backgroundInteractive", iniPath, &DarkMode::getTheme()._colors.softerBackground);
@@ -536,6 +604,8 @@ namespace DarkMode
 
 			DarkMode::getTheme()._brushes.change(DarkMode::getTheme()._colors);
 			DarkMode::getTheme()._pens.change(DarkMode::getTheme()._colors);
+
+			DarkMode::getThemeView().updateBrushes();
 		}
 	}
 
@@ -600,7 +670,7 @@ namespace DarkMode
 	}
 
 	static TreeViewStyle g_treeViewStyle = TreeViewStyle::classic;
-	static COLORREF g_treeViewBg = g_bgColor;
+	static COLORREF g_treeViewBg = RGB(41, 49, 52);
 	static double g_lightnessTreeView = 50.0;
 
 	// adapted from https://stackoverflow.com/a/56678483
@@ -655,6 +725,12 @@ namespace DarkMode
 	{
 		tDefault.change(colors);
 	}
+
+	COLORREF getViewBackgroundColor()       { return DarkMode::getThemeView()._clrView.background; }
+	COLORREF getViewTextColor()             { return DarkMode::getThemeView()._clrView.text; }
+	COLORREF getViewGridlinesColor()        { return DarkMode::getThemeView()._clrView.gridlines; }
+	HBRUSH getViewBackgroundBrush()         { return DarkMode::getThemeView()._hbrView.background; }
+	HBRUSH getViewGridlinesBrush()          { return DarkMode::getThemeView()._hbrView.gridlines; }
 
 	bool handleSettingChange(LPARAM lParam)
 	{
@@ -1138,11 +1214,11 @@ namespace DarkMode
 		{
 			if (hdcFrom)
 			{
-				renderButton(hWnd, hdcFrom, buttonData.hTheme, iPartID, buttonData.iStateID);
+				DarkMode::renderButton(hWnd, hdcFrom, buttonData.hTheme, iPartID, buttonData.iStateID);
 			}
 			if (hdcTo)
 			{
-				renderButton(hWnd, hdcTo, buttonData.hTheme, iPartID, iStateID);
+				DarkMode::renderButton(hWnd, hdcTo, buttonData.hTheme, iPartID, iStateID);
 			}
 
 			buttonData.iStateID = iStateID;
@@ -1151,7 +1227,7 @@ namespace DarkMode
 		}
 		else
 		{
-			renderButton(hWnd, hdc, buttonData.hTheme, iPartID, iStateID);
+			DarkMode::renderButton(hWnd, hdc, buttonData.hTheme, iPartID, iStateID);
 
 			buttonData.iStateID = iStateID;
 		}
@@ -1168,8 +1244,6 @@ namespace DarkMode
 		DWORD_PTR dwRefData
 	)
 	{
-		UNREFERENCED_PARAMETER(uIdSubclass);
-
 		auto pButtonData = reinterpret_cast<ButtonData*>(dwRefData);
 
 		switch (uMsg)
@@ -1185,7 +1259,7 @@ namespace DarkMode
 
 			case WM_NCDESTROY:
 			{
-				::RemoveWindowSubclass(hWnd, ButtonSubclass, g_buttonSubclassID);
+				::RemoveWindowSubclass(hWnd, ButtonSubclass, uIdSubclass);
 				delete pButtonData;
 				break;
 			}
@@ -1223,7 +1297,7 @@ namespace DarkMode
 						hdc = ::BeginPaint(hWnd, &ps);
 					}
 
-					paintButton(hWnd, hdc, *pButtonData);
+					DarkMode::paintButton(hWnd, hdc, *pButtonData);
 
 					if (ps.hdc)
 					{
@@ -1248,7 +1322,7 @@ namespace DarkMode
 				{
 					// skip the button's normal wndproc so it won't redraw out of wm_paint
 					LRESULT lr = DefWindowProc(hWnd, uMsg, wParam, lParam);
-					InvalidateRect(hWnd, nullptr, FALSE);
+					::InvalidateRect(hWnd, nullptr, FALSE);
 					return lr;
 				}
 				break;
@@ -1414,7 +1488,7 @@ namespace DarkMode
 						hdc = ::BeginPaint(hWnd, &ps);
 					}
 
-					paintGroupbox(hWnd, hdc, *pButtonData);
+					DarkMode::paintGroupbox(hWnd, hdc, *pButtonData);
 
 					if (ps.hdc)
 					{
@@ -1553,7 +1627,7 @@ namespace DarkMode
 
 					::FrameRect(hdc, &rcFrame, DarkMode::getEdgeBrush());
 
-					DrawText(hdc, label, -1, &rcText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+					::DrawText(hdc, label, -1, &rcText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
 					::DeleteObject(hClip);
 
@@ -2415,7 +2489,7 @@ namespace DarkMode
 
 				RECT rc{};
 				::GetClientRect(hWnd, &rc);
-				::FillRect((HDC)wParam, &rc, DarkMode::getBackgroundBrush());
+				::FillRect(reinterpret_cast<HDC>(wParam), &rc, DarkMode::getBackgroundBrush());
 				return TRUE;
 			}
 
@@ -2456,7 +2530,7 @@ namespace DarkMode
 					RECT rcPart{};
 					SendMessage(hWnd, SB_GETRECT, i, reinterpret_cast<LPARAM>(&rcPart));
 					RECT rcIntersect{};
-					if (!::IntersectRect(&rcIntersect, &rcPart, &ps.rcPaint))
+					if (::IntersectRect(&rcIntersect, &rcPart, &ps.rcPaint) == 0)
 					{
 						continue;
 					}
@@ -2504,7 +2578,7 @@ namespace DarkMode
 							, static_cast<ULONG_PTR>(lr)
 						};
 
-						SendMessage(::GetParent(hWnd), WM_DRAWITEM, id, (LPARAM)&dis);
+						SendMessage(::GetParent(hWnd), WM_DRAWITEM, id, reinterpret_cast<LPARAM>(&dis));
 					}
 					else
 					{
@@ -2945,9 +3019,9 @@ namespace DarkMode
 			DarkMode::setDarkTooltips(hWnd, DarkMode::ToolTipsType::listview);
 		}
 
-		ListView_SetTextColor(hWnd, g_fgColor);
-		ListView_SetTextBkColor(hWnd, g_bgColor);
-		ListView_SetBkColor(hWnd, g_bgColor);
+		ListView_SetTextColor(hWnd, DarkMode::getViewTextColor());
+		ListView_SetTextBkColor(hWnd, DarkMode::getViewBackgroundColor());
+		ListView_SetBkColor(hWnd, DarkMode::getViewBackgroundColor());
 
 		if (p._subclass)
 		{
@@ -2959,8 +3033,8 @@ namespace DarkMode
 
 	void themeTreeView(HWND hWnd, DarkModeParams p)
 	{
-		TreeView_SetTextColor(hWnd, g_fgColor);
-		TreeView_SetBkColor(hWnd, g_bgColor);
+		TreeView_SetTextColor(hWnd, DarkMode::getViewTextColor());
+		TreeView_SetBkColor(hWnd, DarkMode::getViewBackgroundColor());
 
 		//DarkMode::calculateTreeViewStyle();
 		DarkMode::setTreeViewStyle(hWnd);
@@ -3141,11 +3215,9 @@ namespace DarkMode
 					}
 				}
 			}
-			else if (DarkMode::isThemeDark() && hasGridlines)
+			else if (hasGridlines)
 			{
-				HBRUSH hbrDarkTheme = ::CreateSolidBrush(g_bgColor);
-				::FillRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, hbrDarkTheme);
-				::DeleteObject(hbrDarkTheme);
+				::FillRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, DarkMode::getViewBackgroundBrush());
 			}
 		}
 
@@ -3162,7 +3234,7 @@ namespace DarkMode
 	static void drawGridlines(LPNMLVCUSTOMDRAW& lplvcd)
 	{
 		HWND& hList = lplvcd->nmcd.hdr.hwndFrom;
-		const HBRUSH& hBrush = DarkMode::getEdgeBrush();
+		const HBRUSH& hBrush = DarkMode::getViewGridlinesBrush();
 
 		HWND hHeader = ListView_GetHeader(hList);
 		RECT rcHeader{};
@@ -3178,10 +3250,6 @@ namespace DarkMode
 			, lplvcd->nmcd.rc.bottom
 		};
 
-		HBRUSH hbrDarkTheme = nullptr;
-		if (DarkMode::isThemeDark())
-			hbrDarkTheme = ::CreateSolidBrush(g_bgColor);
-
 		const int iLastItem = ListView_GetItemCount(hList);
 
 		LVITEMINDEX lvii{ iLastItem, 0 };
@@ -3195,31 +3263,19 @@ namespace DarkMode
 
 			::FillRect(lplvcd->nmcd.hdc, &rcGridline, hBrush);
 
-			if (hbrDarkTheme != nullptr)
-			{
-				rcGridline.top = rcGridlineTmp.top;
-				::OffsetRect(&rcGridline, -2, 0);
-				::FillRect(lplvcd->nmcd.hdc, &rcGridline, hbrDarkTheme);
-				rcGridline.top = rcHeader.bottom;
-			}
+			rcGridline.top = rcGridlineTmp.top;
+			::OffsetRect(&rcGridline, DarkMode::isThemeDark() ? -2 : -1, 0);
+			::FillRect(lplvcd->nmcd.hdc, &rcGridline, DarkMode::getViewBackgroundBrush());
+			rcGridline.top = rcHeader.bottom;
 		}
 
 		rcGridline.left = rcGridlineTmp.right;
 		rcGridline.right = rcGridline.left + wGrid;
 		::FillRect(lplvcd->nmcd.hdc, &rcGridline, hBrush);
 
-		if (hbrDarkTheme != nullptr)
-		{
-			rcGridline.top = rcGridlineTmp.top;
-			::OffsetRect(&rcGridline, -2, 0);
-			::FillRect(lplvcd->nmcd.hdc, &rcGridline, hbrDarkTheme);
-		}
-
-		if (hbrDarkTheme != nullptr)
-		{
-			::DeleteObject(hbrDarkTheme);
-			hbrDarkTheme= nullptr;
-		}
+		rcGridline.top = rcGridlineTmp.top;
+		::OffsetRect(&rcGridline, DarkMode::isThemeDark() ? -2 : -1, 0);
+		::FillRect(lplvcd->nmcd.hdc, &rcGridline, DarkMode::getViewBackgroundBrush());
 
 		rcGridline = lplvcd->nmcd.rc;
 		RECT rcItem{};
@@ -3750,7 +3806,7 @@ namespace DarkMode
 
 	void calculateTreeViewStyle()
 	{
-		COLORREF bgColor = g_bgColor;
+		COLORREF bgColor = DarkMode::getViewBackgroundColor();
 
 		if (g_treeViewBg != bgColor || g_lightnessTreeView == 50.0)
 		{

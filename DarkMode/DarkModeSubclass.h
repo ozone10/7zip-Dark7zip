@@ -40,6 +40,13 @@ namespace DarkMode
 		COLORREF disabledEdge = 0;
 	};
 
+	struct ColorsView
+	{
+		COLORREF background = 0;
+		COLORREF text = 0;
+		COLORREF gridlines = 0;
+	};
+
 	struct DarkModeParams
 	{
 		const wchar_t* _themeClassName = nullptr;
@@ -121,6 +128,12 @@ namespace DarkMode
 	HPEN getDisabledEdgePen();
 
 	void changeCustomTheme(const Colors& colors);
+
+	COLORREF getViewBackgroundColor();
+	COLORREF getViewTextColor();
+	COLORREF getViewGridlinesColor();
+	HBRUSH getViewBackgroundBrush();
+	HBRUSH getViewGridlinesBrush();
 
 	// handle events
 	bool handleSettingChange(LPARAM lParam);
