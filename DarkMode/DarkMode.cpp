@@ -384,8 +384,10 @@ static fnGetSysColor _GetSysColor = nullptr;
 
 static COLORREF _clrWindow = RGB(32, 32, 32);
 static COLORREF _clrText = RGB(224, 224, 224);
+static COLORREF _clrTGridlines = RGB(100, 100, 100);
 
 static bool isGetSysColorHooked = false;
+static int hookRef = 0;
 
 void SetMySysColor(int nIndex, COLORREF clr)
 {
@@ -400,6 +402,12 @@ void SetMySysColor(int nIndex, COLORREF clr)
 		case COLOR_WINDOWTEXT:
 		{
 			_clrText = clr;
+			break;
+		}
+
+		case COLOR_BTNFACE:
+		{
+			_clrTGridlines = clr;
 			break;
 		}
 
@@ -420,6 +428,9 @@ DWORD MyGetSysColor(int nIndex)
 
 		case COLOR_WINDOWTEXT: 
 			return _clrText;
+
+		case COLOR_BTNFACE:
+			return _clrTGridlines;
 		
 		default:
 			return GetSysColor(nIndex);
@@ -458,6 +469,11 @@ bool HookSysColor()
 			}
 		}
 
+		if (isGetSysColorHooked)
+		{
+			++hookRef;
+		}
+
 		FreeLibrary(hComctl);
 		return true;
 	}
@@ -471,11 +487,19 @@ void UnhookSysColor()
 	{
 		if (isGetSysColorHooked)
 		{
-			auto addr = FindIatThunkInModule(hComctl, "user32.dll", "GetSysColor");
-			if (addr)
+			if (hookRef > 0)
 			{
-				ReplaceFunction(addr, _GetSysColor);
-				isGetSysColorHooked = false;
+				--hookRef;
+			}
+
+			if (hookRef == 0)
+			{
+				auto addr = FindIatThunkInModule(hComctl, "user32.dll", "GetSysColor");
+				if (addr)
+				{
+					ReplaceFunction(addr, _GetSysColor);
+					isGetSysColorHooked = false;
+				}
 			}
 		}
 

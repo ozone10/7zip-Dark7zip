@@ -629,6 +629,7 @@ namespace DarkMode
 
 			DarkMode::setSysColor(COLOR_WINDOW, DarkMode::getBackgroundColor());
 			DarkMode::setSysColor(COLOR_WINDOWTEXT, DarkMode::getTextColor());
+			DarkMode::setSysColor(COLOR_BTNFACE, DarkMode::getViewGridlinesColor());
 
 			g_isInit = true;
 		}
@@ -2118,8 +2119,30 @@ namespace DarkMode
 	{
 		switch (uMsg)
 		{
+			case WM_PAINT:
+			{
+				const auto lvStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE) & LVS_TYPEMASK;
+				const bool isReport = (lvStyle == LVS_REPORT);
+				bool hasGridlines = false;
+				if (isReport)
+				{
+					const auto lvExStyle = ListView_GetExtendedListViewStyle(hWnd);
+					hasGridlines = (lvExStyle & LVS_EX_GRIDLINES) == LVS_EX_GRIDLINES;
+				}
+
+				if (hasGridlines)
+				{
+					DarkMode::hookSysColor();
+					LRESULT lr = ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+					DarkMode::unhookSysColor();
+					return lr;
+				}
+				break;
+			}
+
 			case WM_NCDESTROY:
 			{
+				DarkMode::unhookSysColor();
 				::RemoveWindowSubclass(hWnd, ListViewSubclass, uIdSubclass);
 				break;
 			}
@@ -3231,68 +3254,6 @@ namespace DarkMode
 		}
 	}
 
-	static void drawGridlines(LPNMLVCUSTOMDRAW& lplvcd)
-	{
-		HWND& hList = lplvcd->nmcd.hdr.hwndFrom;
-		const HBRUSH& hBrush = DarkMode::getViewGridlinesBrush();
-
-		HWND hHeader = ListView_GetHeader(hList);
-		RECT rcHeader{};
-		::GetClientRect(hHeader, &rcHeader);
-		const int nCol = Header_GetItemCount(hHeader);
-
-		const int wGrid = ::GetSystemMetrics(SM_CXBORDER);
-
-		RECT rcGridline{
-			0
-			, rcHeader.bottom
-			, wGrid
-			, lplvcd->nmcd.rc.bottom
-		};
-
-		const int iLastItem = ListView_GetItemCount(hList);
-
-		LVITEMINDEX lvii{ iLastItem, 0 };
-		RECT rcGridlineTmp{};
-		for (int i = 1; i < nCol; ++i)
-		{
-			ListView_GetItemIndexRect(hList, &lvii, i, LVIR_BOUNDS, &rcGridlineTmp);
-
-			rcGridline.left = rcGridlineTmp.left;
-			rcGridline.right = rcGridline.left + wGrid;
-
-			::FillRect(lplvcd->nmcd.hdc, &rcGridline, hBrush);
-
-			rcGridline.top = rcGridlineTmp.top;
-			::OffsetRect(&rcGridline, DarkMode::isThemeDark() ? -2 : -1, 0);
-			::FillRect(lplvcd->nmcd.hdc, &rcGridline, DarkMode::getViewBackgroundBrush());
-			rcGridline.top = rcHeader.bottom;
-		}
-
-		rcGridline.left = rcGridlineTmp.right;
-		rcGridline.right = rcGridline.left + wGrid;
-		::FillRect(lplvcd->nmcd.hdc, &rcGridline, hBrush);
-
-		rcGridline.top = rcGridlineTmp.top;
-		::OffsetRect(&rcGridline, DarkMode::isThemeDark() ? -2 : -1, 0);
-		::FillRect(lplvcd->nmcd.hdc, &rcGridline, DarkMode::getViewBackgroundBrush());
-
-		rcGridline = lplvcd->nmcd.rc;
-		RECT rcItem{};
-		ListView_GetItemIndexRect(hList, &lvii, 1, LVIR_BOUNDS, &rcItem);
-		const int hItem = rcItem.bottom - rcItem.top;
-
-		int iGridline = rcHeader.bottom + hItem - wGrid;
-
-		while (iGridline < lplvcd->nmcd.rc.bottom)
-		{
-			rcGridline.top = iGridline;
-			rcGridline.bottom = iGridline + wGrid;
-			::FillRect(lplvcd->nmcd.hdc, &rcGridline, hBrush);
-			iGridline += hItem;
-		}
-	}
-
 	static LRESULT darkListViewNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool isPlugin)
 	{
 		auto lplvcd = reinterpret_cast<LPNMLVCUSTOMDRAW>(lParam);
@@ -3313,7 +3274,7 @@ namespace DarkMode
 				LRESULT lr = CDRF_NOTIFYITEMDRAW;
 				if (isReport && hasGridlines)
 				{
-					lr |= CDRF_NOTIFYPOSTPAINT;
+					::FillRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, DarkMode::getViewBackgroundBrush());
 				}
 
 				if (isPlugin)
@@ -3336,12 +3297,6 @@ namespace DarkMode
 				}
 
 				return lr;
-			}
-
-			case CDDS_POSTPAINT:
-			{
-				DarkMode::drawGridlines(lplvcd);
-				return CDRF_SKIPDEFAULT;
 			}
 
 			default:
