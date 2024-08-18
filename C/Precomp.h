@@ -21,7 +21,7 @@
     _UNICODE 1
 */
 
-#define Z7_WIN32_WINNT_MIN  0x0a00
+#define Z7_WIN32_WINNT_MIN  0x0600
 
 #include "Compiler.h"
 

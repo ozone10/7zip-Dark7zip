@@ -44,10 +44,10 @@
 #define WINAPI_LAMBDA
 #endif
 
-//#ifndef WM_DPICHANGED
-//#define WM_DPICHANGED 0x02E0
-//#endif
-//
+#ifndef WM_DPICHANGED
+#define WM_DPICHANGED 0x02E0
+#endif
+
 //#ifndef WM_DPICHANGED_BEFOREPARENT
 //#define WM_DPICHANGED_BEFOREPARENT 0x02E2
 //#endif
@@ -1028,7 +1028,6 @@ namespace DarkMode
 		// Saves width and height from the resource file for use as restrictions.
 		ButtonData(HWND hWnd)
 		{
-			// Notepad++ doesn't use BS_3STATE, BS_AUTO3STATE and BS_PUSHLIKE buttons.
 			const auto nBtnStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 			switch (nBtnStyle & BS_TYPEMASK)
 			{
@@ -1080,7 +1079,7 @@ namespace DarkMode
 	static void renderButton(HWND hWnd, HDC hdc, HTHEME hTheme, int iPartID, int iStateID)
 	{
 		RECT rcClient{};
-		WCHAR szText[256] = { '\0' };
+		wchar_t szText[256] = { '\0' };
 		DWORD nState = static_cast<DWORD>(SendMessage(hWnd, BM_GETSTATE, 0, 0));
 		DWORD uiState = static_cast<DWORD>(SendMessage(hWnd, WM_QUERYUISTATE, 0, 0));
 		auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
@@ -1136,12 +1135,7 @@ namespace DarkMode
 		DTTOPTS dtto{};
 		dtto.dwSize = sizeof(DTTOPTS);
 		dtto.dwFlags = DTT_TEXTCOLOR;
-		dtto.crText = DarkMode::getTextColor();
-
-		if ((nStyle & WS_DISABLED) == WS_DISABLED)
-		{
-			dtto.crText = DarkMode::getDisabledTextColor();
-		}
+		dtto.crText = ((nStyle & WS_DISABLED) == WS_DISABLED) ? DarkMode::getDisabledTextColor() : DarkMode::getTextColor();
 
 		::DrawThemeTextEx(hTheme, hdc, iPartID, iStateID, szText, -1, dtFlags, &rcText, &dtto);
 
@@ -2773,7 +2767,7 @@ namespace DarkMode
 		::EnableThemeDialogTexture(hwndParent, theme && !DarkMode::isEnabled() ? ETDT_ENABLETAB : ETDT_DISABLE);
 
 		::EnumChildWindows(hwndParent, [](HWND hWnd, LPARAM lParam) WINAPI_LAMBDA {
-			auto& p = *reinterpret_cast<DarkModeParams*>(lParam);
+			const auto& p = *reinterpret_cast<DarkModeParams*>(lParam);
 			std::wstring className = getWndClassName(hWnd);
 
 			if (className == WC_BUTTON)
@@ -2824,13 +2818,6 @@ namespace DarkMode
 				return TRUE;
 			}
 
-			// Plugin might use rich edit control version 2.0 and later
-			if (className == L"RichEdit20W" || className == L"RICHEDIT50W")
-			{
-				DarkMode::themeRichEdit(hWnd, p);
-				return TRUE;
-			}
-
 			// For plugins
 			if (className == UPDOWN_CLASS)
 			{
@@ -2868,6 +2855,13 @@ namespace DarkMode
 			if (className == PROGRESS_CLASS)
 			{
 				DarkMode::themeProgressBar(hWnd, p);
+				return TRUE;
+			}
+
+			// Plugin might use rich edit control version 2.0 and later
+			if (className == L"RichEdit20W" || className == L"RICHEDIT50W")
+			{
+				DarkMode::themeRichEdit(hWnd, p);
 				return TRUE;
 			}
 
@@ -2980,9 +2974,8 @@ namespace DarkMode
 
 			if (p._theme && DarkMode::isExperimentalSupported())
 			{
-				::SetWindowTheme(hWnd, L"CFD", nullptr);
 				DarkMode::allowDarkModeForWindow(hWnd, true);
-				::SendMessage(hWnd, WM_THEMECHANGED, 0, 0);
+				::SetWindowTheme(hWnd, L"CFD", nullptr);
 			}
 		}
 	}
