@@ -19,6 +19,12 @@ if exist "%InstallDir%\VC\Auxiliary\Build\vcvarsall.bat" (
   pushd CPP\7zip
   nmake PLATFORM=%1
   popd
+
+  if not exist "%ARCH%\" mkdir "%ARCH%"
+  copy "CPP\7zip\Bundles\SFXWin\%ARCH%\7z.sfx" "%ARCH%"
+  copy "CPP\7zip\UI\FileManager\%ARCH%\7zFM.exe" "%ARCH%"
+  copy "CPP\7zip\UI\GUI\%ARCH%\7zG.exe" "%ARCH%"
+  copy "DarkMode\7zDark.ini" "%ARCH%"
 )
 
 endlocal
