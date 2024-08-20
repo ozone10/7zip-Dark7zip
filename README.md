@@ -18,14 +18,14 @@ Dark7zip is project to experiment with dark mode using win32 API.
 
 ## Installation
 
-Replace 7z original files with files from downloaded zip file (currently only for x64 platform).
+Replace 7z original files (e.g. `C:\Program Files\7-Zip\`) with files from downloaded zip file (currently only for x64 platform).
 
 - `7zFM.exe` - file manager, "main exe"
 - `7zG.exe` - mainly extraction, compression dialogs
 - `7z.sfx`- optional, file needed for creating self-extracting archives
 - `7zDark.ini` - optional, more information below
 
-## Options
+## Config
 
 `7zDark.ini` is configuration file to allow mainly to set custom colors.
 `7zDark.ini` should be in same folder as `7zFM.exe` and `7zG.exe`.
