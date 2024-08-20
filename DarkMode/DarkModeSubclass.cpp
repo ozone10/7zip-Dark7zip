@@ -670,7 +670,8 @@ namespace DarkMode
 		return GetWindowsBuildNumber();
 	}
 
-	static TreeViewStyle g_treeViewStyle = TreeViewStyle::classic;
+	static TreeViewStyle g_treeViewStylePrev = TreeViewStyle::unknown;
+	static TreeViewStyle g_treeViewStyle = TreeViewStyle::unknown;
 	static COLORREF g_treeViewBg = RGB(41, 49, 52);
 	static double g_lightnessTreeView = 50.0;
 
@@ -3776,52 +3777,73 @@ namespace DarkMode
 		}
 	}
 
+	void updatePrevTreeViewStyle()
+	{
+		g_treeViewStylePrev = g_treeViewStyle;
+	}
+
+	TreeViewStyle getTreeViewStyle()
+	{
+		const auto style = g_treeViewStyle;
+		return style;
+	}
+
 	void setTreeViewStyle(HWND hWnd)
 	{
-		auto style = static_cast<long>(::GetWindowLongPtr(hWnd, GWL_STYLE));
-		const bool hasHotStyle = (style & TVS_TRACKSELECT) == TVS_TRACKSELECT;
-		bool change = false;
-		switch (g_treeViewStyle)
+		if (g_treeViewStylePrev != g_treeViewStyle)
 		{
-			case TreeViewStyle::light:
+			auto style = ::GetWindowLongPtr(hWnd, GWL_STYLE);
+			const bool hasHotStyle = (style & TVS_TRACKSELECT) == TVS_TRACKSELECT;
+			bool change = false;
+			std::wstring strSubAppName;
+
+			switch (g_treeViewStyle)
 			{
-				if (!hasHotStyle)
-				{
-					style |= TVS_TRACKSELECT;
-					change = true;
-				}
-				::SetWindowTheme(hWnd, L"Explorer", nullptr);
-				break;
-			}
-			case TreeViewStyle::dark:
-			{
-				if (DarkMode::isExperimentalActive())
+				case TreeViewStyle::light:
 				{
 					if (!hasHotStyle)
 					{
 						style |= TVS_TRACKSELECT;
 						change = true;
 					}
-					::SetWindowTheme(hWnd, L"DarkMode_Explorer", nullptr);
+					strSubAppName = L"Explorer";
 					break;
 				}
-				[[fallthrough]];
-			}
-			case TreeViewStyle::classic:
-			{
-				if (hasHotStyle)
-				{
-					style &= ~TVS_TRACKSELECT;
-					change = true;
-				}
-				::SetWindowTheme(hWnd, nullptr, nullptr);
-				break;
-			}
-		}
 
-		if (change)
-		{
-			::SetWindowLongPtr(hWnd, GWL_STYLE, style);
+				case TreeViewStyle::dark:
+				{
+					if (DarkMode::isExperimentalActive())
+					{
+						if (!hasHotStyle)
+						{
+							style |= TVS_TRACKSELECT;
+							change = true;
+						}
+						strSubAppName = L"DarkMode_Explorer";
+						break;
+					}
+					[[fallthrough]];
+				}
+
+				case TreeViewStyle::unknown:
+				case TreeViewStyle::classic:
+				{
+					if (hasHotStyle)
+					{
+						style &= ~TVS_TRACKSELECT;
+						change = true;
+					}
+					strSubAppName = L"";
+					break;
+				}
+			}
+
+			if (change)
+			{
+				::SetWindowLongPtr(hWnd, GWL_STYLE, style);
+			}
+
+			::SetWindowTheme(hWnd, strSubAppName.empty() ? nullptr : strSubAppName.c_str(), nullptr);
 		}
 	}
 
