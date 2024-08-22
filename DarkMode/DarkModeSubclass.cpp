@@ -670,8 +670,8 @@ namespace DarkMode
 		return GetWindowsBuildNumber();
 	}
 
-	static TreeViewStyle g_treeViewStylePrev = TreeViewStyle::unknown;
-	static TreeViewStyle g_treeViewStyle = TreeViewStyle::unknown;
+	static TreeViewStyle g_treeViewStylePrev = TreeViewStyle::classic;
+	static TreeViewStyle g_treeViewStyle = TreeViewStyle::classic;
 	static COLORREF g_treeViewBg = RGB(41, 49, 52);
 	static double g_lightnessTreeView = 50.0;
 
@@ -3054,7 +3054,7 @@ namespace DarkMode
 		TreeView_SetBkColor(hWnd, DarkMode::getViewBackgroundColor());
 
 		//DarkMode::calculateTreeViewStyle();
-		DarkMode::setTreeViewStyle(hWnd);
+		DarkMode::setTreeViewStyle(hWnd, p._theme);
 
 		if (p._theme)
 		{
@@ -3727,7 +3727,7 @@ namespace DarkMode
 	{
 		if (DarkMode::isExperimentalSupported())
 		{
-			bool useDark = DarkMode::isExperimentalActive();
+			const bool useDark = DarkMode::isExperimentalActive();
 
 			HWND hHeader = ListView_GetHeader(hWnd);
 			DarkMode::allowDarkModeForWindow(hHeader, useDark);
@@ -3788,9 +3788,9 @@ namespace DarkMode
 		return style;
 	}
 
-	void setTreeViewStyle(HWND hWnd)
+	void setTreeViewStyle(HWND hWnd, bool force)
 	{
-		if (g_treeViewStylePrev != g_treeViewStyle)
+		if (force || g_treeViewStylePrev != g_treeViewStyle)
 		{
 			auto style = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 			const bool hasHotStyle = (style & TVS_TRACKSELECT) == TVS_TRACKSELECT;
@@ -3812,7 +3812,7 @@ namespace DarkMode
 
 				case TreeViewStyle::dark:
 				{
-					if (DarkMode::isExperimentalActive())
+					if (DarkMode::isExperimentalSupported())
 					{
 						if (!hasHotStyle)
 						{
@@ -3825,7 +3825,6 @@ namespace DarkMode
 					[[fallthrough]];
 				}
 
-				case TreeViewStyle::unknown:
 				case TreeViewStyle::classic:
 				{
 					if (hasHotStyle)

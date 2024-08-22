@@ -76,10 +76,9 @@ namespace DarkMode
 
 	enum class TreeViewStyle
 	{
-		unknown = 0,
-		classic = 1,
-		light = 2,
-		dark = 3
+		classic = 0,
+		light = 1,
+		dark = 2
 	};
 
 	void initDarkMode();
@@ -199,7 +198,7 @@ namespace DarkMode
 	void calculateTreeViewStyle();
 	void updatePrevTreeViewStyle();
 	TreeViewStyle getTreeViewStyle();
-	void setTreeViewStyle(HWND hWnd);
+	void setTreeViewStyle(HWND hWnd, bool force = false);
 	bool isThemeDark();
 	void setBorder(HWND hWnd, bool border = true, long borderStyle = WS_BORDER);
 
