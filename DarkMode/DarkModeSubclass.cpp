@@ -253,8 +253,8 @@ namespace DarkMode
 	// black (default)
 	static const Colors darkColors{
 		HEXRGB(0x202020),   // background
-		HEXRGB(0x404040),   // softerBackground
-		HEXRGB(0x404040),   // hotBackground
+		HEXRGB(0x383838),   // softerBackground
+		HEXRGB(0x454545),   // hotBackground
 		HEXRGB(0x202020),   // pureBackground
 		HEXRGB(0xB00000),   // errorBackground
 		HEXRGB(0xE0E0E0),   // textColor
@@ -269,8 +269,8 @@ namespace DarkMode
 	// red tone
 	static const Colors darkRedColors{
 		HEXRGB(0x302020),   // background
-		HEXRGB(0x504040),   // softerBackground
-		HEXRGB(0x504040),   // hotBackground
+		HEXRGB(0x483838),   // softerBackground
+		HEXRGB(0x554545),   // hotBackground
 		HEXRGB(0x302020),   // pureBackground
 		HEXRGB(0xC00000),   // errorBackground
 		HEXRGB(0xE0E0E0),   // textColor
@@ -285,8 +285,8 @@ namespace DarkMode
 	// green tone
 	static const Colors darkGreenColors{
 		HEXRGB(0x203020),   // background
-		HEXRGB(0x405040),   // softerBackground
-		HEXRGB(0x405040),   // hotBackground
+		HEXRGB(0x384838),   // softerBackground
+		HEXRGB(0x455545),   // hotBackground
 		HEXRGB(0x203020),   // pureBackground
 		HEXRGB(0xB01000),   // errorBackground
 		HEXRGB(0xE0E0E0),   // textColor
@@ -301,8 +301,8 @@ namespace DarkMode
 	// blue tone
 	static const Colors darkBlueColors{
 		HEXRGB(0x202040),   // background
-		HEXRGB(0x404060),   // softerBackground
-		HEXRGB(0x404060),   // hotBackground
+		HEXRGB(0x383858),   // softerBackground
+		HEXRGB(0x454565),   // hotBackground
 		HEXRGB(0x202040),   // pureBackground
 		HEXRGB(0xB00020),   // errorBackground
 		HEXRGB(0xE0E0E0),   // textColor
@@ -317,8 +317,8 @@ namespace DarkMode
 	// purple tone
 	static const Colors darkPurpleColors{
 		HEXRGB(0x302040),   // background
-		HEXRGB(0x504060),   // softerBackground
-		HEXRGB(0x504060),   // hotBackground
+		HEXRGB(0x483858),   // softerBackground
+		HEXRGB(0x554565),   // hotBackground
 		HEXRGB(0x302040),   // pureBackground
 		HEXRGB(0xC00020),   // errorBackground
 		HEXRGB(0xE0E0E0),   // textColor
@@ -333,8 +333,8 @@ namespace DarkMode
 	// cyan tone
 	static const Colors darkCyanColors{
 		HEXRGB(0x203040),   // background
-		HEXRGB(0x405060),   // softerBackground
-		HEXRGB(0x405060),   // hotBackground
+		HEXRGB(0x384858),   // softerBackground
+		HEXRGB(0x455565),   // hotBackground
 		HEXRGB(0x203040),   // pureBackground
 		HEXRGB(0xB01020),   // errorBackground
 		HEXRGB(0xE0E0E0),   // textColor
@@ -349,8 +349,8 @@ namespace DarkMode
 	// olive tone
 	static const Colors darkOliveColors{
 		HEXRGB(0x303020),   // background
-		HEXRGB(0x505040),   // softerBackground
-		HEXRGB(0x505040),   // hotBackground
+		HEXRGB(0x484838),   // softerBackground
+		HEXRGB(0x555545),   // hotBackground
 		HEXRGB(0x303020),   // pureBackground
 		HEXRGB(0xC01000),   // errorBackground
 		HEXRGB(0xE0E0E0),   // textColor
@@ -1024,7 +1024,7 @@ namespace DarkMode
 		bool isSizeSet = false;
 		SIZE szBtn{};
 
-		ButtonData() {};
+		ButtonData() = default;
 
 		// Saves width and height from the resource file for use as restrictions.
 		ButtonData(HWND hWnd)
@@ -1317,7 +1317,7 @@ namespace DarkMode
 				if (DarkMode::isEnabled())
 				{
 					// skip the button's normal wndproc so it won't redraw out of wm_paint
-					LRESULT lr = DefWindowProc(hWnd, uMsg, wParam, lParam);
+					LRESULT lr = ::DefWindowProc(hWnd, uMsg, wParam, lParam);
 					::InvalidateRect(hWnd, nullptr, FALSE);
 					return lr;
 				}
@@ -1870,6 +1870,152 @@ namespace DarkMode
 		}
 	}
 
+	struct ComboboxData
+	{
+		HTHEME hTheme = nullptr;
+
+		ComboboxData() = default;
+
+		~ComboboxData()
+		{
+			closeTheme();
+		}
+
+		bool ensureTheme(HWND hWnd)
+		{
+			if (!hTheme)
+			{
+				hTheme = ::OpenThemeData(hWnd, VSCLASS_COMBOBOX);
+			}
+			return hTheme != nullptr;
+		}
+
+		void closeTheme()
+		{
+			if (hTheme)
+			{
+				::CloseThemeData(hTheme);
+				hTheme = nullptr;
+			}
+		}
+	};
+
+	void paintCombobox(HWND hWnd, HDC hdc, ComboboxData* pComboboxData)
+	{
+		COMBOBOXINFO cbi{};
+		cbi.cbSize = sizeof(COMBOBOXINFO);
+		::GetComboBoxInfo(hWnd, &cbi);
+
+		RECT rc{};
+		::GetClientRect(hWnd, &rc);
+
+		POINT ptCursor{};
+		::GetCursorPos(&ptCursor);
+		::ScreenToClient(hWnd, &ptCursor);
+
+		const bool isDisabled = ::IsWindowEnabled(hWnd) != TRUE;
+		const bool isHot = ::PtInRect(&rc, ptCursor) == TRUE && !isDisabled;
+		
+		bool hasFocus = false;
+
+		::SelectObject(hdc, reinterpret_cast<HFONT>(::SendMessage(hWnd, WM_GETFONT, 0, 0)));
+		::SetBkMode(hdc, TRANSPARENT);
+
+		auto holdBrush = ::SelectObject(hdc, DarkMode::getDarkerBackgroundBrush());
+
+		RECT rcArrow{ cbi.rcButton };
+		rcArrow.left -= 1;
+
+		// CBS_DROPDOWN text is handled by parent by WM_CTLCOLOREDIT
+		const auto cbStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE) & CBS_DROPDOWNLIST;
+		if (cbStyle == CBS_DROPDOWNLIST)
+		{
+			::FillRect(hdc, &rc, isHot ? DarkMode::getHotBackgroundBrush() : DarkMode::getSofterBackgroundBrush()); // erase background on item change
+
+			auto index = static_cast<int>(::SendMessage(hWnd, CB_GETCURSEL, 0, 0));
+			if (index != CB_ERR)
+			{
+				auto bufferLen = static_cast<size_t>(::SendMessage(hWnd, CB_GETLBTEXTLEN, index, 0));
+				wchar_t* buffer = new wchar_t[(bufferLen + 1)];
+				::SendMessage(hWnd, CB_GETLBTEXT, index, reinterpret_cast<LPARAM>(buffer));
+
+				RECT rcText{ cbi.rcItem.left + 2, cbi.rcItem.top, cbi.rcItem.right - 2, cbi.rcItem.bottom };
+
+				constexpr DWORD dtFlags = DT_NOPREFIX | DT_LEFT | DT_VCENTER | DT_SINGLELINE;
+				if (pComboboxData->ensureTheme(hWnd))
+				{
+					DTTOPTS dtto{};
+					dtto.dwSize = sizeof(DTTOPTS);
+					dtto.dwFlags = DTT_TEXTCOLOR;
+					dtto.crText = isDisabled ? DarkMode::getDisabledTextColor() : DarkMode::getTextColor();
+
+					::DrawThemeTextEx(pComboboxData->hTheme, hdc, CP_DROPDOWNITEM, isDisabled ? CBXSR_DISABLED : CBXSR_NORMAL, buffer, -1, dtFlags, &rcText, &dtto);
+				}
+				else
+				{
+					::SetTextColor(hdc, isDisabled ? DarkMode::getDisabledTextColor() : DarkMode::getTextColor());
+					::DrawText(hdc, buffer, -1, &rcText, dtFlags);
+				}
+				delete[] buffer;
+			}
+
+			hasFocus = ::GetFocus() == hWnd;
+			if (!isDisabled && hasFocus && ::SendMessage(hWnd, CB_GETDROPPEDSTATE, 0, 0) == FALSE)
+			{
+				::DrawFocusRect(hdc, &cbi.rcItem);
+			}
+		}
+		else if (cbStyle == CBS_DROPDOWN && cbi.hwndItem != nullptr)
+		{
+			hasFocus = ::GetFocus() == cbi.hwndItem;
+
+			::FillRect(hdc, &rcArrow, isHot ? DarkMode::getHotBackgroundBrush() : DarkMode::getSofterBackgroundBrush());
+		}
+
+		const auto hSelectedPen = isDisabled ? DarkMode::getDisabledEdgePen() : ((isHot || hasFocus) ? DarkMode::getHotEdgePen() : DarkMode::getEdgePen());
+		auto holdPen = static_cast<HPEN>(::SelectObject(hdc, hSelectedPen));
+
+		if (cbStyle != CBS_SIMPLE)
+		{
+			if (pComboboxData->ensureTheme(hWnd))
+			{
+				RECT rcThemedArrow { rcArrow.left, rcArrow.top - 1, rcArrow.right, rcArrow.bottom - 1 };
+				::DrawThemeBackground(pComboboxData->hTheme, hdc, CP_DROPDOWNBUTTONRIGHT, isDisabled ? CBXSR_DISABLED : CBXSR_NORMAL, &rcThemedArrow, nullptr);
+			}
+			else
+			{
+				const auto clrText = isDisabled ? DarkMode::getDisabledTextColor() : (isHot ? DarkMode::getTextColor() : DarkMode::getDarkerTextColor());
+				::SetTextColor(hdc, clrText);
+				wchar_t arrow[] = L"˅";
+				::DrawText(hdc, arrow, -1, &rcArrow, DT_NOPREFIX | DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
+			}
+		}
+
+		if (cbStyle == CBS_DROPDOWNLIST)
+		{
+			::ExcludeClipRect(hdc, rc.left + 1, rc.top + 1, rc.right - 1, rc.bottom - 1);
+		}
+		else if (cbStyle == CBS_DROPDOWN)
+		{
+			POINT edge[] = {
+				{rcArrow.left - 1, rcArrow.top},
+				{rcArrow.left - 1, rcArrow.bottom}
+			};
+
+			::Polyline(hdc, edge, _countof(edge));
+
+			::ExcludeClipRect(hdc, cbi.rcItem.left, cbi.rcItem.top, cbi.rcItem.right, cbi.rcItem.bottom);
+			::ExcludeClipRect(hdc, rcArrow.left - 1, rcArrow.top, rcArrow.right, rcArrow.bottom);
+		}
+
+		//const int roundCornerValue = DarkMode::isWindows11() ? 4 : 0;
+
+		::RoundRect(hdc, rc.left, rc.top, rc.right, rc.bottom, 0, 0);
+
+		::SelectObject(hdc, holdPen);
+		::SelectObject(hdc, holdBrush);
+	}
+
 	constexpr UINT_PTR g_comboBoxSubclassID = 42;
 
 	static LRESULT CALLBACK ComboBoxSubclass(
@@ -1881,10 +2027,20 @@ namespace DarkMode
 		DWORD_PTR dwRefData
 	)
 	{
-		auto hwndEdit = reinterpret_cast<HWND>(dwRefData);
+		auto pComboboxData = reinterpret_cast<ComboboxData*>(dwRefData);
 
 		switch (uMsg)
 		{
+			case WM_ERASEBKGND:
+			{
+				if (!DarkMode::isEnabled())
+				{
+					break;
+				}
+
+				return TRUE;
+			}
+
 			case WM_PAINT:
 			{
 				if (!DarkMode::isEnabled())
@@ -1892,130 +2048,51 @@ namespace DarkMode
 					break;
 				}
 
+				PAINTSTRUCT ps{};
+				auto hdc = ::BeginPaint(hWnd, &ps);
+
 				RECT rc{};
 				::GetClientRect(hWnd, &rc);
 
-				PAINTSTRUCT ps{};
-				auto hdc = ::BeginPaint(hWnd, &ps);
-				
-				::SelectObject(hdc, reinterpret_cast<HFONT>(::SendMessage(hWnd, WM_GETFONT, 0, 0)));
-				::SetBkColor(hdc, DarkMode::getBackgroundColor());
+				HDC hMemoryDC = ::CreateCompatibleDC(hdc);
+				HBITMAP hBitmap = ::CreateCompatibleBitmap(hdc, rc.right, rc.bottom);
+				auto holdBitmap = static_cast<HBITMAP>(::SelectObject(hMemoryDC, hBitmap));
 
-				auto holdBrush = ::SelectObject(hdc, DarkMode::getDarkerBackgroundBrush());
+				int savedState = ::SaveDC(hMemoryDC);
 
-				RECT rcArrow{};
+				DarkMode::paintCombobox(hWnd, hMemoryDC, pComboboxData);
 
-				COMBOBOXINFO cbi{};
-				cbi.cbSize = sizeof(COMBOBOXINFO);
-				const bool resultCbi = ::GetComboBoxInfo(hWnd, &cbi) != FALSE;
-				if (resultCbi)
-				{
-					rcArrow = cbi.rcButton;
-					rcArrow.left -= 1;
-				}
-				else
-				{
-					rcArrow = {
-						rc.right - 17, rc.top + 1,
-						rc.right - 1, rc.bottom - 1
-					};
-				}
+				::RestoreDC(hMemoryDC, savedState);
 
-				bool hasFocus = false;
+				::BitBlt(
+					hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top,
+					hMemoryDC, ps.rcPaint.left, ps.rcPaint.top,
+					SRCCOPY
+				);
 
-				const bool isWindowEnabled = ::IsWindowEnabled(hWnd) == TRUE;
-
-				// CBS_DROPDOWN text is handled by parent by WM_CTLCOLOREDIT
-				auto style = ::GetWindowLongPtr(hWnd, GWL_STYLE);
-				if ((style & CBS_DROPDOWNLIST) == CBS_DROPDOWNLIST)
-				{
-					hasFocus = ::GetFocus() == hWnd;
-
-					RECT rcTextBg{};
-					if (resultCbi)
-					{
-						rcTextBg = cbi.rcItem;
-					}
-					else
-					{
-						rcTextBg = rc;
-
-						rcTextBg.left += 1;
-						rcTextBg.top += 1;
-						rcTextBg.right = rcArrow.left - 1;
-						rcTextBg.bottom -= 1;
-					}
-
-					::FillRect(hdc, &rcTextBg, DarkMode::getBackgroundBrush()); // erase background on item change
-
-					auto index = static_cast<int>(::SendMessage(hWnd, CB_GETCURSEL, 0, 0));
-					if (index != CB_ERR)
-					{
-						::SetTextColor(hdc, isWindowEnabled ? DarkMode::getTextColor() : DarkMode::getDisabledTextColor());
-						::SetBkColor(hdc, DarkMode::getBackgroundColor());
-						auto bufferLen = static_cast<size_t>(::SendMessage(hWnd, CB_GETLBTEXTLEN, index, 0));
-						wchar_t* buffer = new wchar_t[(bufferLen + 1)];
-						::SendMessage(hWnd, CB_GETLBTEXT, index, reinterpret_cast<LPARAM>(buffer));
-
-						RECT rcText = rcTextBg;
-						rcText.left += 4;
-						rcText.right -= 4;
-
-						::DrawText(hdc, buffer, -1, &rcText, DT_NOPREFIX | DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-						delete[] buffer;
-					}
-
-					if (hasFocus && ::SendMessage(hWnd, CB_GETDROPPEDSTATE, 0, 0) == FALSE)
-					{
-						::DrawFocusRect(hdc, &rcTextBg);
-					}
-				}
-				else if ((style & CBS_DROPDOWN) == CBS_DROPDOWN && hwndEdit != nullptr)
-				{
-					hasFocus = ::GetFocus() == hwndEdit;
-				}
-
-				POINT ptCursor{};
-				::GetCursorPos(&ptCursor);
-				::ScreenToClient(hWnd, &ptCursor);
-
-				bool isHot = ::PtInRect(&rc, ptCursor);
-
-				auto colorEnabledText = isHot ? DarkMode::getTextColor() : DarkMode::getDarkerTextColor();
-				::SetTextColor(hdc, isWindowEnabled ? colorEnabledText : DarkMode::getDisabledTextColor());
-				::SetBkColor(hdc, isHot ? DarkMode::getHotBackgroundColor() : DarkMode::getBackgroundColor());
-				::FillRect(hdc, &rcArrow, isHot ? DarkMode::getHotBackgroundBrush() : DarkMode::getBackgroundBrush());
-				wchar_t arrow[] = L"˅";
-				::DrawText(hdc, arrow, -1, &rcArrow, DT_NOPREFIX | DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
-				::SetBkColor(hdc, DarkMode::getBackgroundColor());
-
-				auto hEnabledPen = (isHot || hasFocus) ? DarkMode::getHotEdgePen() : DarkMode::getEdgePen();
-				auto hSelectedPen = isWindowEnabled ? hEnabledPen : DarkMode::getDisabledEdgePen();
-				auto holdPen = static_cast<HPEN>(::SelectObject(hdc, hSelectedPen));
-
-				POINT edge[] = {
-					{rcArrow.left - 1, rcArrow.top},
-					{rcArrow.left - 1, rcArrow.bottom}
-				};
-				::Polyline(hdc, edge, _countof(edge));
-
-				const int roundCornerValue = DarkMode::isWindows11() ? 4 : 0;
-
-				::ExcludeClipRect(hdc, cbi.rcItem.left, cbi.rcItem.top, cbi.rcItem.right, cbi.rcItem.bottom);
-				::ExcludeClipRect(hdc, rcArrow.left - 1, rcArrow.top, rcArrow.right, rcArrow.bottom);
-
-				::RoundRect(hdc, rc.left, rc.top, rc.right, rc.bottom, roundCornerValue, roundCornerValue);
-
-				::SelectObject(hdc, holdPen);
-				::SelectObject(hdc, holdBrush);
+				::DeleteObject(::SelectObject(hMemoryDC, holdBitmap));
+				::DeleteDC(hMemoryDC);
 
 				::EndPaint(hWnd, &ps);
 				return 0;
 			}
 
+			case WM_DPICHANGED:
+			{
+				pComboboxData->closeTheme();
+				return 0;
+			}
+
+			case WM_THEMECHANGED:
+			{
+				pComboboxData->closeTheme();
+				break;
+			}
+
 			case WM_NCDESTROY:
 			{
 				::RemoveWindowSubclass(hWnd, ComboBoxSubclass, uIdSubclass);
+				delete pComboboxData;
 				break;
 			}
 		}
@@ -2026,14 +2103,8 @@ namespace DarkMode
 	{
 		if (::GetWindowSubclass(hWnd, ComboBoxSubclass, g_comboBoxSubclassID, nullptr) == FALSE)
 		{
-			DWORD_PTR hwndEditData = 0;
-			auto style = ::GetWindowLongPtr(hWnd, GWL_STYLE);
-			if ((style & CBS_DROPDOWN) == CBS_DROPDOWN)
-			{
-				POINT pt{ 5, 5 };
-				hwndEditData = reinterpret_cast<DWORD_PTR>(::ChildWindowFromPoint(hWnd, pt));
-			}
-			::SetWindowSubclass(hWnd, ComboBoxSubclass, g_comboBoxSubclassID, hwndEditData);
+			auto pComboboxData = reinterpret_cast<DWORD_PTR>(new ComboboxData());
+			::SetWindowSubclass(hWnd, ComboBoxSubclass, g_comboBoxSubclassID, pComboboxData);
 		}
 	}
 
@@ -2197,7 +2268,7 @@ namespace DarkMode
 		RECT rcNext{};
 		bool wasHotNext = false;
 
-		UpDownData() {};
+		UpDownData() = default;
 
 		UpDownData(HWND hWnd)
 		{
@@ -2686,7 +2757,7 @@ namespace DarkMode
 	{
 		bool isEnabled = true;
 
-		StaticTextSubclassInfo() {};
+		StaticTextSubclassInfo() = default;
 		StaticTextSubclassInfo(HWND hWnd)
 		{
 			auto style = ::GetWindowLongPtr(hWnd, GWL_STYLE);
@@ -2970,12 +3041,16 @@ namespace DarkMode
 
 			if (p._subclass)
 			{
-				//DarkMode::subclassComboBoxControl(hWnd);
+				HWND hParent = ::GetParent(hWnd);
+				if ((hParent == nullptr || getWndClassName(hParent) != WC_COMBOBOXEX))
+				{
+					DarkMode::subclassComboBoxControl(hWnd);
+				}
 			}
 
 			if (p._theme && DarkMode::isExperimentalSupported())
 			{
-				DarkMode::allowDarkModeForWindow(hWnd, true);
+				DarkMode::allowDarkModeForWindow(hWnd, DarkMode::isExperimentalActive());
 				::SetWindowTheme(hWnd, L"CFD", nullptr);
 			}
 		}
