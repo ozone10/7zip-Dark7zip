@@ -2213,6 +2213,16 @@ namespace DarkMode
 				break;
 			}
 
+			// For edit control, which is created when renaming/editing items
+			case WM_CTLCOLOREDIT:
+			{
+				if (DarkMode::isEnabled())
+				{
+					return DarkMode::onCtlColorSofter(reinterpret_cast<HDC>(wParam));
+				}
+				break;
+			}
+
 			case WM_NOTIFY:
 			{
 				switch (reinterpret_cast<LPNMHDR>(lParam)->code)
