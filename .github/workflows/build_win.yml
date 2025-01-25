@@ -28,5 +28,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Dark7z ${{ matrix.platform }}
-          path: ${{ matrix.platform }}
-
+          path: ${{ matrix.platform }}-bin

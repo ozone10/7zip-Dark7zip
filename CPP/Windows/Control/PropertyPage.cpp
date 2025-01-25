@@ -40,7 +40,6 @@ APIENTRY MyProperyPageProcedure(HWND dialogHWND, UINT message, WPARAM wParam, LP
       DarkMode::autoSubclassNotifyCustomDraw(::GetParent(*dialog), true);
       DarkMode::autoSubclassNotifyCustomDraw(*dialog, true);
       DarkMode::autoSubclassCtlColor(*dialog);
-
     }
   try { return BoolToBOOL(dialog->OnMessage(message, wParam, lParam)); }
   catch(...) { return TRUE; }
