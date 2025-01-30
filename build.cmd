@@ -8,10 +8,15 @@ for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio
 
 setlocal
 
-if "%1" == "" set ARCH=x64
-if "%1" == "x64" set ARCH=x64
-if "%1" == "x86" set ARCH=x64_x86
-if "%1" == "arm64" set ARCH=x64_arm64
+set PLATFORM=%1
+
+if "%PLATFORM%" == "" (
+  set ARCH=x64
+  set PLATFORM=x64
+)
+if "%PLATFORM%" == "x64" set ARCH=x64
+if "%PLATFORM%" == "x86" set ARCH=x64_x86
+if "%PLATFORM%" == "arm64" set ARCH=x64_arm64
 
 if exist "%InstallDir%\VC\Auxiliary\Build\vcvarsall.bat" (
   call "%InstallDir%\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
@@ -32,11 +37,11 @@ if exist "%InstallDir%\VC\Auxiliary\Build\vcvarsall.bat" (
   nmake
   popd
 
-  if not exist "%ARCH%-bin\" mkdir "%ARCH%-bin"
-  copy "CPP\7zip\Bundles\SFXWin\%ARCH%\7z.sfx" "%ARCH%-bin"
-  copy "CPP\7zip\UI\FileManager\%ARCH%\7zFM.exe" "%ARCH%-bin"
-  copy "CPP\7zip\UI\GUI\%ARCH%\7zG.exe" "%ARCH%-bin"
-  copy "DarkMode\7zDark.ini" "%ARCH%-bin"
+  if not exist "%PLATFORM%-bin\" mkdir "%PLATFORM%-bin"
+  copy "CPP\7zip\Bundles\SFXWin\%PLATFORM%\7z.sfx" "%PLATFORM%-bin"
+  copy "CPP\7zip\UI\FileManager\%PLATFORM%\7zFM.exe" "%PLATFORM%-bin"
+  copy "CPP\7zip\UI\GUI\%PLATFORM%\7zG.exe" "%PLATFORM%-bin"
+  copy "DarkMode\7zDark.ini" "%PLATFORM%-bin"
 )
 
 endlocal

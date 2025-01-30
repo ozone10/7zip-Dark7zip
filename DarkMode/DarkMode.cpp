@@ -94,7 +94,7 @@ bool ptrFn(HMODULE handle, P& pointer, const char* name)
 template <typename P>
 bool ptrFn(HMODULE handle, P& pointer, WORD index)
 {
-    return ptrFn(handle, pointer, MAKEINTRESOURCEA(index));
+	return ptrFn(handle, pointer, MAKEINTRESOURCEA(index));
 }
 
 using fnRtlGetNtVersionNumbers = void (WINAPI *)(LPDWORD major, LPDWORD minor, LPDWORD build);
@@ -416,7 +416,7 @@ void SetMySysColor(int nIndex, COLORREF clr)
 	}
 }
 
-DWORD MyGetSysColor(int nIndex)
+DWORD WINAPI MyGetSysColor(int nIndex)
 {
 	if( !(g_darkModeEnabled))
 			return GetSysColor(nIndex);
