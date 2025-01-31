@@ -6,7 +6,8 @@
 [![License](https://img.shields.io/github/license/ozone10/7zip-Dark7zip?color=9cf)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 ---
 
-Dark7zip is project to experiment with dark mode using win32 API.
+Dark7zip is project to experiment with dark mode using win32 API.  
+It is mainly for Windows 10 and Windows 11. Some controls might, might not use dark/custom colors on older OS.
 
 * * *
 
@@ -45,6 +46,23 @@ Replace 7z original files (e.g. `C:\Program Files\7-Zip\`) with files from downl
     - 4 - purple
     - 5 - cyan
     - 6 - olive
+  - micaExtend - apply Mica material on all window/dialog, experimental, only for "dark" mode
+    - 0 - apply Mica material only on title bar, default value
+    - 1 - extend Mica material on all window/dialog
+
+> [!IMPORTANT]  
+> `micaExtend=1` is only used with `[main]` `mode=1` and with `mica` with other valid values than `0`.
+> `micaExtend=1` should also be used with HDR and ACM (Auto Color Management) off.
+> Due to Windows bug using `micaExtend=1` can cause visual glitches, with HDR/ACM visual glitches are more severe (e.g. invisible controls).  
+> It is also recommended when using with `mica=1` to turn off Settings -> Personalization > Colors -> "Show accent color on title bars and window borders" setting.
+
+- [dark]/[light]
+  - mica - apply Mica material on title bar, requires Windows 11 22H2 build 22621
+    - 0 - let OS automatically decide the use of Mica material, default value
+    - 1 - do not use Mica material
+    - 2 - apply Mica material
+    - 3 - apply "acrylic" effect
+    - 4 - apply Mica Alt material
 
 Values for custom colors are in RGB hex format - RRGGBB.
 
@@ -66,7 +84,9 @@ Values for custom colors are in RGB hex format - RRGGBB.
   - gridlines - color for listview grid lines, when View -> Details is used and Tools -> Options... -> Settings tab -> Show grid lines is checked
 
 All options are optional. You can define only "[section]" and "key=value" you want to be applied.  
-Tip: renaming section will disable all "key=value" pairs of that section and default values will be used.
+
+> [!TIP]  
+> Renaming section will disable all "key=value" pairs of that section and default values will be used.
 
 Examples:
 - full config
@@ -76,6 +96,8 @@ mode = 1
 
 [dark]
 tone = 0
+mica = 0
+micaExtend = 0
 
 [dark.colors]
 background =            "202020"
@@ -93,6 +115,9 @@ edgeDisabled =          "484848"
 backgroundView =        "293134"
 textView =              "E0E2E4"
 gridlines =             "646464"
+
+[light]
+mica = 0
 
 [light.colors]
 background =            "F0F0F0"

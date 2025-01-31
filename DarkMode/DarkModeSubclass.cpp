@@ -533,6 +533,9 @@ namespace DarkMode
 	static bool g_useDarkMode = true;
 	static bool g_enableWindowsMode = false;
 
+	static auto g_mica = DWMSBT_AUTO;
+	static bool g_micaExtend = false;
+
 	void initOptions()
 	{
 		std::wstring iniPath = getIniPath(L"7zDark");
@@ -567,6 +570,39 @@ namespace DarkMode
 			std::wstring sectionColorsView = sectionBase + L".colors.view";
 			std::wstring sectionColors = sectionBase + L".colors";
 
+			switch (::GetPrivateProfileInt(sectionBase.c_str(), L"mica", 0, iniPath.c_str()))
+			{
+				case 1:
+				{
+					g_mica = DWMSBT_NONE;
+					break;
+				}
+
+				case 2:
+				{
+					g_mica = DWMSBT_MAINWINDOW;
+					break;
+				}
+
+				case 3:
+				{
+					g_mica = DWMSBT_TRANSIENTWINDOW;
+					break;
+				}
+
+				case 4:
+				{
+					g_mica = DWMSBT_TABBEDWINDOW;
+					break;
+				}
+
+				default:
+				{
+					g_mica = DWMSBT_AUTO;
+					break;
+				}
+			}
+
 			if (g_useDarkMode)
 			{
 				int tone = ::GetPrivateProfileInt(sectionBase.c_str(), L"tone", 0, iniPath.c_str());
@@ -576,6 +612,9 @@ namespace DarkMode
 				DarkMode::setDarkCustomColors(static_cast<DarkMode::ColorTone>(tone));
 				DarkMode::getTheme()._colors = DarkMode::darkCustomizedColors;
 				DarkMode::getThemeView()._clrView = DarkMode::darkColorsView;
+
+				if (!g_enableWindowsMode)
+					g_micaExtend = (::GetPrivateProfileInt(sectionBase.c_str(), L"micaExtend", 0, iniPath.c_str()) == 1);
 			}
 			else
 			{
@@ -3731,10 +3770,22 @@ namespace DarkMode
 	void setDarkTitleBar(HWND hWnd)
 	{
 		constexpr DWORD win10Build2004 = 19041;
+		constexpr DWORD win11Mica = 22621;
 		if (DarkMode::getWindowsBuildNumber() >= win10Build2004)
 		{
 			BOOL value = DarkMode::isExperimentalActive() ? TRUE : FALSE;
 			::DwmSetWindowAttribute(hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
+
+			if (DarkMode::getWindowsBuildNumber() >= win11Mica)
+			{
+				if (g_micaExtend && g_mica != DWMSBT_AUTO && !g_enableWindowsMode && g_useDarkMode)
+				{
+					constexpr MARGINS margins = { -1 };
+					::DwmExtendFrameIntoClientArea(hWnd, &margins);
+				}
+
+				::DwmSetWindowAttribute(hWnd, DWMWA_SYSTEMBACKDROP_TYPE, &g_mica, sizeof(g_mica));
+			}
 		}
 		else
 		{
