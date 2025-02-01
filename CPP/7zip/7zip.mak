@@ -36,6 +36,7 @@ OBJS = \
   $(ZSTDMT_OBJS) \
   $(FASTLZMA2_OBJS) \
   $(ASM_OBJS) \
+  $(DARK_MODE_OBJS) \
   $O\resource.res \
 
 !include "../../../Build.mak"
@@ -175,6 +176,11 @@ $(GUI_OBJS): ../../UI/GUI/$(*B).cpp
 	$(COMPL)
 !ENDIF
 
+!IFDEF DARK_MODE_OBJS
+$(DARK_MODE_OBJS): ../../../../DarkMode/$(*B).cpp
+	$(COMPL)
+!ENDIF
+
 !IFDEF C_OBJS
 $(C_OBJS): ../../../../C/$(*B).c
 	$(COMPL_O2)
@@ -299,6 +305,9 @@ $(FASTLZMA2_OBJS): ../../../../C/fast-lzma2/$(*B).c
 	-I ../../../../C/zstd
 {../../../../C/fast-lzma2}.c{$O}.obj::
 	$(CCOMPLB) -DNO_XXHASH -DFL2_7ZIP_BUILD
+
+{../../../../DarkMode}.cpp{$O}.obj::
+	$(COMPLB)
 
 !ENDIF
 

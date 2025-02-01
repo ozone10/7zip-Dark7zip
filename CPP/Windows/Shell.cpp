@@ -10,6 +10,8 @@
 #include "MemoryGlobal.h"
 #include "Shell.h"
 
+#include "../../DarkMode/DarkModeSubclass.h"
+
 #ifndef _UNICODE
 extern bool g_IsNT;
 #endif
@@ -683,6 +685,9 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /* lp */, LP
   {
     case BFFM_INITIALIZED:
     {
+      DarkMode::setDarkTitleBar(hwnd);
+      DarkMode::autoSubclassCtlColor(hwnd);
+      DarkMode::autoSubclassNotifyCustomDraw(hwnd, true);
       SendMessage(hwnd, BFFM_SETSELECTION, TRUE, data);
       break;
     }
