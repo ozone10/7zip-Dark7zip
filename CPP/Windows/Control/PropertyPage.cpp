@@ -8,6 +8,8 @@
 
 #include "PropertyPage.h"
 
+#include "../../../DarkMode/DarkModeSubclass.h"
+
 extern HINSTANCE g_hInstance;
 #ifndef _UNICODE
 extern bool g_IsNT;
@@ -31,7 +33,12 @@ APIENTRY MyProperyPageProcedure(HWND dialogHWND, UINT message, WPARAM wParam, LP
   if (dialog == NULL)
     return FALSE;
   if (message == WM_INITDIALOG)
-    dialog->Attach(dialogHWND);
+    {
+      dialog->Attach(dialogHWND);
+      DarkMode::setDarkDlgNotifySafe(::GetParent(*dialog), true);
+      DarkMode::setWindowCtlColorSubclass(*dialog);
+      DarkMode::setWindowNotifyCustomDrawSubclass(*dialog, true);
+    }
   try { return BoolToBOOL(dialog->OnMessage(message, wParam, lParam)); }
   catch(...) { return TRUE; }
 }
