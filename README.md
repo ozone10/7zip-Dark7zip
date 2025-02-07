@@ -1,9 +1,11 @@
 # Dark7zip
 
 [![7z](https://img.shields.io/badge/7z-DarkMode-black.svg?&logo=7zip)](https://github.com/ozone10/7zip-Dark7zip)
+[![Build status](https://img.shields.io/github/actions/workflow/status/ozone10/7zip-Dark7zip/build_win.yml?logo=Github)](https://github.com/ozone10/7zip-Dark7zip/actions)
 [![Latest release](https://img.shields.io/github/v/release/ozone10/7zip-Dark7zip?include_prereleases)](https://github.com/ozone10/7zip-Dark7zip/releases/latest)
 [![Total downloads](https://img.shields.io/github/downloads/ozone10/7zip-Dark7zip/total.svg)](https://github.com/ozone10/7zip-Dark7zip/releases)
 [![License](https://img.shields.io/github/license/ozone10/7zip-Dark7zip?color=9cf)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+[![PayPal.me](https://img.shields.io/badge/PayPal-me-blue.svg?maxAge=2592000)](https://paypal.me/ozone10/)
 ---
 
 Dark7zip is project to experiment with dark mode using win32 API.  
