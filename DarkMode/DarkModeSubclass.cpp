@@ -2451,7 +2451,7 @@ namespace DarkMode
 			else if ((hdi.fmt & HDF_CENTER) == HDF_CENTER)
 				dtFlags |= DT_CENTER;
 
-			rcItem.left += 4;
+			rcItem.left += 6;
 			rcItem.right -= 8;
 
 			if (hasTheme)
