@@ -45,6 +45,10 @@ namespace DarkMode
 		COLORREF background = 0;
 		COLORREF text = 0;
 		COLORREF gridlines = 0;
+		COLORREF headerBackground = 0;
+		COLORREF headerHotBackground = 0;
+		COLORREF headerText = 0;
+		COLORREF headerEdge = 0;
 	};
 
 	struct DarkModeParams

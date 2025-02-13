@@ -457,13 +457,21 @@ namespace DarkMode
 	static ColorsView darkColorsView{
 		RGB(41, 49, 52),      // background
 		RGB(224, 226, 228),   // text
-		RGB(100, 100, 100)    // gridlines
+		RGB(100, 100, 100),   // gridlines
+		HEXRGB(0x202020),     // header background
+		HEXRGB(0x454545),     // header hot background
+		HEXRGB(0xC0C0C0),     // header text
+		RGB(100, 100, 100)    // header divider
 	};
 
 	static ColorsView lightColorsView{
 		RGB(255, 255, 255),   // background
 		RGB(0, 0, 0),         // text
-		RGB(240, 240, 240)    // gridlines
+		RGB(240, 240, 240),   // gridlines
+		RGB(255, 255, 255),   // header background
+		RGB(217, 235, 249),   // header hot background
+		RGB(0, 0, 0),         // header text
+		RGB(229, 229, 229)    // header divider
 	};
 
 	static Theme& getTheme()
@@ -471,56 +479,76 @@ namespace DarkMode
 		return tDefault;
 	}
 
-	struct BrushesView
+	struct BrushesAndPensView
 	{
 		HBRUSH background = nullptr;
 		HBRUSH gridlines = nullptr;
+		HBRUSH headerBackground = nullptr;
+		HBRUSH headerHotBackground = nullptr;
 
-		BrushesView(const ColorsView& colors)
+		HPEN edge = nullptr;
+
+		BrushesAndPensView(const ColorsView& colors)
 			: background(::CreateSolidBrush(colors.background))
 			, gridlines(::CreateSolidBrush(colors.gridlines))
+			, headerBackground(::CreateSolidBrush(colors.headerBackground))
+			, headerHotBackground(::CreateSolidBrush(colors.headerHotBackground))
+
+			, edge(::CreatePen(PS_SOLID, 1, colors.headerEdge))
 		{}
 
-		~BrushesView()
+		~BrushesAndPensView()
 		{
-			::DeleteObject(background);         background = nullptr;
-			::DeleteObject(gridlines);          gridlines = nullptr;
+			::DeleteObject(background);             background = nullptr;
+			::DeleteObject(gridlines);              gridlines = nullptr;
+			::DeleteObject(headerBackground);       headerBackground = nullptr;
+			::DeleteObject(headerHotBackground);    headerHotBackground = nullptr;
+
+			::DeleteObject(edge);                   edge = nullptr;
 		}
 
 		void change(const ColorsView& colors)
 		{
 			::DeleteObject(background);
 			::DeleteObject(gridlines);
+			::DeleteObject(headerBackground);
+			::DeleteObject(headerHotBackground);
 
 			background = ::CreateSolidBrush(colors.background);
 			gridlines = ::CreateSolidBrush(colors.gridlines);
+			headerBackground = ::CreateSolidBrush(colors.headerBackground);
+			headerHotBackground = ::CreateSolidBrush(colors.headerHotBackground);
+
+			::DeleteObject(edge);
+
+			edge = ::CreatePen(PS_SOLID, 1, colors.headerEdge);
 		}
 	};
 
 	struct ThemeView
 	{
 		ColorsView _clrView;
-		BrushesView _hbrView;
+		BrushesAndPensView _hbrPnView;
 
 		ThemeView()
-			: _clrView({ RGB(41, 49, 52), RGB(224, 226, 228), RGB(100, 100, 100) })
-			, _hbrView(_clrView)
+			: _clrView(darkColorsView)
+			, _hbrPnView(_clrView)
 		{}
 
 		ThemeView(const ColorsView& colorsView)
 			: _clrView(colorsView)
-			, _hbrView(_clrView)
+			, _hbrPnView(_clrView)
 		{}
 
-		void updateBrushes()
+		void updateBrushesAndPens()
 		{
-			_hbrView.change(_clrView);
+			_hbrPnView.change(_clrView);
 		}
 
 		void change(ColorsView colors)
 		{
 			_clrView = colors;
-			updateBrushes();
+			updateBrushesAndPens();
 		}
 	};
 
@@ -612,6 +640,9 @@ namespace DarkMode
 
 				DarkMode::setDarkCustomColors(static_cast<DarkMode::ColorTone>(tone));
 				DarkMode::getTheme()._colors = DarkMode::darkCustomizedColors;
+				DarkMode::darkColorsView.headerBackground = DarkMode::getTheme()._colors.background;
+				DarkMode::darkColorsView.headerHotBackground = DarkMode::getTheme()._colors.hotBackground;
+				DarkMode::darkColorsView.headerText = DarkMode::getTheme()._colors.darkerText;
 				DarkMode::getThemeView()._clrView = DarkMode::darkColorsView;
 
 				if (!g_enableWindowsMode)
@@ -626,6 +657,10 @@ namespace DarkMode
 			setClrFromIni(sectionColorsView, L"backgroundView", iniPath, &DarkMode::getThemeView()._clrView.background);
 			setClrFromIni(sectionColorsView, L"textView", iniPath, &DarkMode::getThemeView()._clrView.text);
 			setClrFromIni(sectionColorsView, L"gridlines", iniPath, &DarkMode::getThemeView()._clrView.gridlines);
+			setClrFromIni(sectionColorsView, L"backgroundHeader", iniPath, &DarkMode::getThemeView()._clrView.headerBackground);
+			setClrFromIni(sectionColorsView, L"backgroundHotHeader", iniPath, &DarkMode::getThemeView()._clrView.headerHotBackground);
+			setClrFromIni(sectionColorsView, L"textHeader", iniPath, &DarkMode::getThemeView()._clrView.headerText);
+			setClrFromIni(sectionColorsView, L"edgeHeader", iniPath, &DarkMode::getThemeView()._clrView.headerEdge);
 
 			setClrFromIni(sectionColors, L"background", iniPath, &DarkMode::getTheme()._colors.background);
 			setClrFromIni(sectionColors, L"backgroundInteractive", iniPath, &DarkMode::getTheme()._colors.softerBackground);
@@ -645,7 +680,7 @@ namespace DarkMode
 			DarkMode::getTheme()._brushes.change(DarkMode::getTheme()._colors);
 			DarkMode::getTheme()._pens.change(DarkMode::getTheme()._colors);
 
-			DarkMode::getThemeView().updateBrushes();
+			DarkMode::getThemeView().updateBrushesAndPens();
 		}
 	}
 
@@ -771,8 +806,12 @@ namespace DarkMode
 	COLORREF getViewBackgroundColor()       { return DarkMode::getThemeView()._clrView.background; }
 	COLORREF getViewTextColor()             { return DarkMode::getThemeView()._clrView.text; }
 	COLORREF getViewGridlinesColor()        { return DarkMode::getThemeView()._clrView.gridlines; }
-	HBRUSH getViewBackgroundBrush()         { return DarkMode::getThemeView()._hbrView.background; }
-	HBRUSH getViewGridlinesBrush()          { return DarkMode::getThemeView()._hbrView.gridlines; }
+	COLORREF getHeaderTextColor()           { return DarkMode::getThemeView()._clrView.headerText; }
+	HBRUSH getViewBackgroundBrush()         { return DarkMode::getThemeView()._hbrPnView.background; }
+	HBRUSH getViewGridlinesBrush()          { return DarkMode::getThemeView()._hbrPnView.gridlines; }
+	HBRUSH getHeaderBackgroundBrush()       { return DarkMode::getThemeView()._hbrPnView.headerBackground; }
+	HBRUSH getHeaderHotBackgroundBrush()    { return DarkMode::getThemeView()._hbrPnView.headerHotBackground; }
+	HPEN getHeaderEdgePen()                 { return DarkMode::getThemeView()._hbrPnView.edge; }
 
 	bool handleSettingChange(LPARAM lParam)
 	{
@@ -2355,11 +2394,11 @@ namespace DarkMode
 	void paintHeader(HWND hWnd, HDC hdc, HeaderData* pHeaderData)
 	{
 		::SetBkMode(hdc, TRANSPARENT);
-		auto hOldPen = static_cast<HPEN>(::SelectObject(hdc, DarkMode::getEdgePen()));
+		auto hOldPen = static_cast<HPEN>(::SelectObject(hdc, DarkMode::getHeaderEdgePen()));
 
 		RECT rcHeader{};
 		::GetClientRect(hWnd, &rcHeader);
-		::FillRect(hdc, &rcHeader, DarkMode::getBackgroundBrush());
+		::FillRect(hdc, &rcHeader, DarkMode::getHeaderBackgroundBrush());
 
 		const bool hasTheme = pHeaderData->ensureTheme(hWnd);
 
@@ -2379,11 +2418,11 @@ namespace DarkMode
 		{
 			dtto.dwSize = sizeof(DTTOPTS);
 			dtto.dwFlags = DTT_TEXTCOLOR;
-			dtto.crText = DarkMode::getDarkerTextColor();
+			dtto.crText = DarkMode::getHeaderTextColor();
 		}
 		else
 		{
-			::SetTextColor(hdc, DarkMode::getDarkerTextColor());
+			::SetTextColor(hdc, DarkMode::getHeaderTextColor());
 		}
 
 		auto hList = ::GetParent(hWnd);
@@ -2413,7 +2452,7 @@ namespace DarkMode
 				{
 					::OffsetRect(&rcTmp, -1, 0);
 				}
-				::FillRect(hdc, &rcTmp, DarkMode::getHotBackgroundBrush());
+				::FillRect(hdc, &rcTmp, DarkMode::getHeaderHotBackgroundBrush());
 			}
 
 			wchar_t buffer[MAX_PATH]{};
