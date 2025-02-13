@@ -2315,9 +2315,14 @@ namespace DarkMode
 		HTHEME hTheme = nullptr;
 		HFONT hFont = nullptr;
 		bool isHot = false;
+		bool _hasBtnStyle = true;
 		POINT pt{ LONG_MIN, LONG_MIN };
+		bool isPressed = false;
 
 		HeaderData() = default;
+
+		HeaderData(bool hasBtnStyle)
+			: _hasBtnStyle(hasBtnStyle) {}
 
 		~HeaderData()
 		{
@@ -2395,8 +2400,9 @@ namespace DarkMode
 		for (int i = 0; i < count; i++)
 		{
 			Header_GetItemRect(hWnd, i, &rcItem);
+			bool isOnItem = ::PtInRect(&rcItem, pHeaderData->pt);
 
-			if (::PtInRect(&rcItem, pHeaderData->pt))
+			if (pHeaderData->_hasBtnStyle && isOnItem)
 			{
 				RECT rcTmp{ rcItem };
 				if (hasGridlines)
@@ -2453,6 +2459,9 @@ namespace DarkMode
 
 			rcItem.left += 6;
 			rcItem.right -= 8;
+
+			if (pHeaderData->isPressed && isOnItem)
+				::OffsetRect(&rcItem, 1, 1);
 
 			if (hasTheme)
 				::DrawThemeTextEx(pHeaderData->hTheme, hdc, HP_HEADERITEM, HIS_NORMAL, hdi.pszText, -1, dtFlags, &rcItem, &dtto);
@@ -2537,8 +2546,30 @@ namespace DarkMode
 				break;
 			}
 
+			case WM_LBUTTONDOWN:
+			{
+				if (!pHeaderData->_hasBtnStyle)
+					break;
+
+				pHeaderData->isPressed = true;
+
+				break;
+			}
+
+			case WM_LBUTTONUP:
+			{
+				if (!pHeaderData->_hasBtnStyle)
+					break;
+
+				pHeaderData->isPressed = false;
+				break;
+			}
+
 			case WM_MOUSEMOVE:
 			{
+				if (!pHeaderData->_hasBtnStyle || pHeaderData->isPressed)
+					break;
+
 				TRACKMOUSEEVENT tme{};
 
 				if (!pHeaderData->isHot)
@@ -2561,6 +2592,9 @@ namespace DarkMode
 
 			case WM_MOUSELEAVE:
 			{
+				if (!pHeaderData->_hasBtnStyle)
+					break;
+
 				LRESULT result = ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 
 				pHeaderData->isHot = false;
@@ -2586,7 +2620,8 @@ namespace DarkMode
 	{
 		if (::GetWindowSubclass(hWnd, HeaderSubclass, g_headerSubclassID, nullptr) == FALSE)
 		{
-			auto pHeaderData = reinterpret_cast<DWORD_PTR>(new HeaderData());
+			const bool hasBtnStyle = (::GetWindowLongPtr(hWnd, GWL_STYLE) & HDS_BUTTONS) == HDS_BUTTONS;
+			auto pHeaderData = reinterpret_cast<DWORD_PTR>(new HeaderData(hasBtnStyle));
 			::SetWindowSubclass(hWnd, HeaderSubclass, g_headerSubclassID, pHeaderData);
 		}
 	}
