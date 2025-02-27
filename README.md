@@ -8,7 +8,7 @@
 [![PayPal.me](https://img.shields.io/badge/PayPal-me-blue.svg?maxAge=2592000)](https://paypal.me/ozone10/)
 ---
 
-Dark7zip is project to experiment with dark mode using win32 API.  
+Dark7zip is project to experiment with dark mode for [7-Zip](https://github.com/ip7z/7zip) and its fork [7-Zip-zstd](#7-zip-zstd).  
 It is mainly for Windows 10 and Windows 11. Some controls might, might not use dark/custom colors on older OS.
 
 * * *
@@ -21,12 +21,15 @@ It is mainly for Windows 10 and Windows 11. Some controls might, might not use d
 
 ## Installation
 
-Replace 7z original files (e.g. `C:\Program Files\7-Zip\`) with files from downloaded zip file (currently only for x64 platform).
+Replace 7z original files (e.g. `C:\Program Files\7-Zip\`) with files from downloaded zip file.  
 
 - `7zFM.exe` - file manager, "main exe"
 - `7zG.exe` - mainly extraction, compression dialogs
 - `7z.sfx`- optional, file needed for creating self-extracting archives
 - `7zDark.ini` - optional, more information below
+
+> [!NOTE]  
+> Currently files are released only for x64 platform. You can get files for other platform from Github Actions for original 7-Zip, 7-Zip-zstd has only x64 platform. Make sure to get correct version - [main](https://github.com/ozone10/7zip-Dark7zip/actions?query=branch%3Amain) for original 7-Zip, [7z-zstd](https://github.com/ozone10/7zip-Dark7zip/actions?query=branch%3A7z-zstd) for 7-Zip-zstd.
 
 ## Config
 
@@ -159,11 +162,17 @@ textView =              "C3BE98"
 gridlines =             "4F5F5F"
 ```
 
+## 7-Zip-zstd
+
+7-Zip-zstd is popular 7-Zip fork which contains additional compression algorithms such as Zstandard and Brotli.
+Source code for dark mode for it is in [7z-zstd](https://github.com/ozone10/7zip-Dark7zip/tree/7z-zstd) branch.
+
+For more information about 7-Zip-zstd fork check [7-Zip-zstd](https://github.com/mcmilk/7-Zip-zstd).
 
 ## License
 
 Most code related to dark mode is under license MIT, or GPLv3 or later version.
-  
+
 For 7-Zip check DOC folder for information on used license.  
 [License.txt](DOC/License.txt)  
 [readme.txt](DOC/readme.txt)
