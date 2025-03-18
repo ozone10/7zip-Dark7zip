@@ -3004,14 +3004,16 @@ namespace DarkMode
 				::SendMessage(hWnd, SB_GETBORDERS, 0, (LPARAM)&borders);
 
 				const auto style = ::GetWindowLongPtr(hWnd, GWL_STYLE);
-				bool isSizeGrip = style & SBARS_SIZEGRIP;
+				bool isSizeGrip = (style & SBARS_SIZEGRIP) == SBARS_SIZEGRIP;
 
 				PAINTSTRUCT ps{};
 				HDC hdc = ::BeginPaint(hWnd, &ps);
 
 				auto holdPen = static_cast<HPEN>(::SelectObject(hdc, DarkMode::getEdgePen()));
-
 				auto holdFont = static_cast<HFONT>(::SelectObject(hdc, pStatusBarInfo->_hFont));
+
+				::SetBkMode(hdc, TRANSPARENT);
+				::SetTextColor(hdc, DarkMode::getTextColor());
 
 				RECT rcClient{};
 				::GetClientRect(hWnd, &rcClient);
@@ -3020,26 +3022,24 @@ namespace DarkMode
 
 				auto nParts = static_cast<int>(::SendMessage(hWnd, SB_GETPARTS, 0, 0));
 				std::wstring str;
+				RECT rcPart{};
+				RECT rcIntersect{};
 				for (int i = 0; i < nParts; ++i)
 				{
-					RECT rcPart{};
 					::SendMessage(hWnd, SB_GETRECT, i, reinterpret_cast<LPARAM>(&rcPart));
-					RECT rcIntersect{};
 					if (::IntersectRect(&rcIntersect, &rcPart, &ps.rcPaint) == 0)
 					{
 						continue;
 					}
 
-					if (nParts > 2) //to not apply on status bar in find dialog
+					if (i < nParts - 0)
 					{
 						POINT edges[]{
-							{rcPart.right - 2, rcPart.top + 1},
-							{rcPart.right - 2, rcPart.bottom - 3}
+							{rcPart.right - borders.between, rcPart.top + 1},
+							{rcPart.right - borders.between, rcPart.bottom - 3}
 						};
 						::Polyline(hdc, edges, _countof(edges));
 					}
-
-					RECT rcDivider = { rcPart.right - borders.vertical, rcPart.top, rcPart.right, rcPart.bottom };
 
 					DWORD cchText = 0;
 					cchText = LOWORD(::SendMessage(hWnd, SB_GETTEXTLENGTH, i, 0));
@@ -3052,8 +3052,6 @@ namespace DarkMode
 						// this is a pointer to the text
 						ownerDraw = true;
 					}
-					::SetBkMode(hdc, TRANSPARENT);
-					::SetTextColor(hdc, DarkMode::getTextColor());
 
 					rcPart.left += borders.between;
 					rcPart.right -= borders.vertical;
@@ -3078,11 +3076,6 @@ namespace DarkMode
 					else
 					{
 						::DrawText(hdc, str.data(), static_cast<int>(str.size()), &rcPart, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
-					}
-
-					if (!isSizeGrip && i < (nParts - 1))
-					{
-						::FillRect(hdc, &rcDivider, DarkMode::getEdgeBrush());
 					}
 				}
 
