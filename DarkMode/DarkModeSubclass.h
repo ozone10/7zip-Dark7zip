@@ -27,7 +27,7 @@ namespace DarkMode
 	struct Colors
 	{
 		COLORREF background = 0;
-		COLORREF softerBackground = 0;
+		COLORREF controlBackground = 0;
 		COLORREF hotBackground = 0;
 		COLORREF pureBackground = 0;
 		COLORREF errorBackground = 0;
@@ -102,7 +102,7 @@ namespace DarkMode
 	void setDarkCustomColors(ColorTone colorTone);
 
 	COLORREF getBackgroundColor();
-	COLORREF getSofterBackgroundColor();
+	COLORREF getControlBackgroundColor();
 	COLORREF getHotBackgroundColor();
 	COLORREF getDarkerBackgroundColor();
 	COLORREF getErrorBackgroundColor();
@@ -118,7 +118,7 @@ namespace DarkMode
 
 	HBRUSH getBackgroundBrush();
 	HBRUSH getDarkerBackgroundBrush();
-	HBRUSH getSofterBackgroundBrush();
+	HBRUSH getControlBackgroundBrush();
 	HBRUSH getHotBackgroundBrush();
 	HBRUSH getErrorBackgroundBrush();
 
@@ -168,7 +168,8 @@ namespace DarkMode
 	void subclassGroupboxControl(HWND hWnd);
 	void subclassTabControl(HWND hWnd);
 	void subclassComboBoxControl(HWND hWnd);
-	void subclassStatusBar(HWND hWnd);
+	void subclassStatusBarControl(HWND hWnd);
+	void subclassProgressBarControl(HWND hWnd);
 	bool subclassTabUpDownControl(HWND hWnd);
 
 	void subclassAndThemeButton(HWND hWnd, DarkModeParams p);
@@ -180,7 +181,8 @@ namespace DarkMode
 	void themeRichEdit(HWND hWnd, DarkModeParams p);
 	void themeProgressBar(HWND hWnd, DarkModeParams p);
 	void subclassTabControl(HWND hWnd, DarkModeParams p);
-	void subclassStatusBar(HWND hWnd, DarkModeParams p);
+	void subclassStatusBarControl(HWND hWnd, DarkModeParams p);
+	void subclassProgressBarControl(HWND hWnd, DarkModeParams p);
 	void subclassComboboxEx(HWND hWnd, DarkModeParams p);
 
 	void autoSubclassAndThemeChildControls(HWND hWndParent, bool subclass = true, bool theme = true);
@@ -207,7 +209,7 @@ namespace DarkMode
 	void setBorder(HWND hWnd, bool border = true, long borderStyle = WS_BORDER);
 
 	LRESULT onCtlColor(HDC hdc);
-	LRESULT onCtlColorSofter(HDC hdc);
+	LRESULT onCtlColorControl(HDC hdc);
 	LRESULT onCtlColorDarker(HDC hdc);
 	LRESULT onCtlColorError(HDC hdc);
 	LRESULT onCtlColorDarkerBGStaticText(HDC hdc, bool isTextEnabled);
