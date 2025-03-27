@@ -31,5 +31,11 @@ jobs:
       - name: Archive artifact ${{ matrix.arch }}
         uses: actions/upload-artifact@v4
         with:
-          name: Dark7z ${{ matrix.platform }}
+          name: 7z-dark-${{ matrix.platform }}
           path: ${{ matrix.platform }}-bin
+
+      - name: Archive artifact ${{ matrix.arch }} with fluent icons
+        uses: actions/upload-artifact@v4
+        with:
+          name: 7z-dark-${{ matrix.platform }}-fluent-toolbar-icons
+          path: ${{ matrix.platform }}-fluent-bin

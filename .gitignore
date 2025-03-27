@@ -39,6 +39,6 @@
 **/x86
 **/x64
 **/arm64
-**/x86-bin
-**/x64-bin
-**/arm64-bin
+**/x86*-bin
+**/x64*-bin
+**/arm64*-bin
