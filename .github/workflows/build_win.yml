@@ -35,6 +35,7 @@ jobs:
           path: ${{ matrix.platform }}-bin
 
       - name: Archive artifact ${{ matrix.arch }} with fluent icons
+        if: ${{ matrix.platform == 'x64' }}
         uses: actions/upload-artifact@v4
         with:
           name: 7z-dark-${{ matrix.platform }}-fluent-toolbar-icons

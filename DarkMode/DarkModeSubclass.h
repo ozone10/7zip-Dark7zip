@@ -29,7 +29,7 @@ namespace DarkMode
 		COLORREF background = 0;
 		COLORREF controlBackground = 0;
 		COLORREF hotBackground = 0;
-		COLORREF pureBackground = 0;
+		COLORREF dlgBackground = 0;
 		COLORREF errorBackground = 0;
 		COLORREF text = 0;
 		COLORREF darkerText = 0;
@@ -104,7 +104,7 @@ namespace DarkMode
 	COLORREF getBackgroundColor();
 	COLORREF getControlBackgroundColor();
 	COLORREF getHotBackgroundColor();
-	COLORREF getDarkerBackgroundColor();
+	COLORREF getDlgBackgroundColor();
 	COLORREF getErrorBackgroundColor();
 
 	COLORREF getTextColor();
@@ -117,7 +117,7 @@ namespace DarkMode
 	COLORREF getDisabledEdgeColor();
 
 	HBRUSH getBackgroundBrush();
-	HBRUSH getDarkerBackgroundBrush();
+	HBRUSH getDlgBackgroundBrush();
 	HBRUSH getControlBackgroundBrush();
 	HBRUSH getHotBackgroundBrush();
 	HBRUSH getErrorBackgroundBrush();
@@ -210,8 +210,8 @@ namespace DarkMode
 
 	LRESULT onCtlColor(HDC hdc);
 	LRESULT onCtlColorControl(HDC hdc);
-	LRESULT onCtlColorDarker(HDC hdc);
+	LRESULT onCtlColorDlg(HDC hdc);
 	LRESULT onCtlColorError(HDC hdc);
-	LRESULT onCtlColorDarkerBGStaticText(HDC hdc, bool isTextEnabled);
-	INT_PTR onCtlColorListbox(WPARAM wParam, LPARAM lParam);
+	LRESULT onCtlColorDlgStaticText(HDC hdc, bool isTextEnabled);
+	LRESULT onCtlColorListbox(WPARAM wParam, LPARAM lParam);
 }

@@ -25,14 +25,14 @@ if "%PLATFORM%" == "arm64" set ARCH=x64_arm64
 
 call "%InstallDir%\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
 
-if exist "CPP\7zip\UI\FileManager\%PLATFORM%\resource.res" (
-  del /F /Q "CPP\7zip\UI\FileManager\%PLATFORM%\resource.res"
+rem Delete resource.res only if x64 is used, due to fluent version
+if "%PLATFORM%"=="x64" (
+  if exist "CPP\7zip\UI\FileManager\%PLATFORM%\resource.res" (
+    del /F /Q "CPP\7zip\UI\FileManager\%PLATFORM%\resource.res"
+  )
 )
 
-rem pushd CPP\7zip
-rem nmake
-rem popd
-
+rem Build the main version
 pushd CPP\7zip\UI\FileManager
 nmake
 popd
@@ -51,24 +51,30 @@ copy "CPP\7zip\UI\FileManager\%PLATFORM%\7zFM.exe" "%PLATFORM%-bin"
 copy "CPP\7zip\UI\GUI\%PLATFORM%\7zG.exe" "%PLATFORM%-bin"
 copy "DarkMode\7zDark.ini" "%PLATFORM%-bin"
 
-echo Building fluent version
-if not exist "tmp\" mkdir "tmp"
-move "CPP\7zip\UI\FileManager\*.bmp" "tmp" >nul
-xcopy "DarkMode\icons\*.bmp" "CPP\7zip\UI\FileManager" /Y >nul
-del /F /Q "CPP\7zip\UI\FileManager\%PLATFORM%\resource.res"
+rem Build the fluent version only for x64
+if "%PLATFORM%" == "x64" (
+  echo Building fluent version
+  if not exist "tmp\" mkdir "tmp"
+  move "CPP\7zip\UI\FileManager\*.bmp" "tmp" >nul
+  xcopy "DarkMode\icons\*.bmp" "CPP\7zip\UI\FileManager" /Y >nul
+  
+  if exist "CPP\7zip\UI\FileManager\%PLATFORM%\resource.res" (
+    del /F /Q "CPP\7zip\UI\FileManager\%PLATFORM%\resource.res"
+  )
+  
+  pushd CPP\7zip\UI\FileManager
+  nmake
+  popd
 
-pushd CPP\7zip\UI\FileManager
-nmake
-popd
+  if not exist "%PLATFORM%-fluent-bin\" mkdir "%PLATFORM%-fluent-bin"
+  copy "CPP\7zip\Bundles\SFXWin\%PLATFORM%\7z.sfx" "%PLATFORM%-fluent-bin"
+  copy "CPP\7zip\UI\FileManager\%PLATFORM%\7zFM.exe" "%PLATFORM%-fluent-bin"
+  copy "CPP\7zip\UI\GUI\%PLATFORM%\7zG.exe" "%PLATFORM%-fluent-bin"
+  copy "DarkMode\7zDark.ini" "%PLATFORM%-fluent-bin"
 
-if not exist "%PLATFORM%-fluent-bin\" mkdir "%PLATFORM%-fluent-bin"
-copy "CPP\7zip\Bundles\SFXWin\%PLATFORM%\7z.sfx" "%PLATFORM%-fluent-bin"
-copy "CPP\7zip\UI\FileManager\%PLATFORM%\7zFM.exe" "%PLATFORM%-fluent-bin"
-copy "CPP\7zip\UI\GUI\%PLATFORM%\7zG.exe" "%PLATFORM%-fluent-bin"
-copy "DarkMode\7zDark.ini" "%PLATFORM%-fluent-bin"
-
-xcopy "tmp\*.bmp" "CPP\7zip\UI\FileManager" /Y >nul
-rmdir /S /Q "tmp"
+  xcopy "tmp\*.bmp" "CPP\7zip\UI\FileManager" /Y >nul
+  rmdir /S /Q "tmp"
+)
 
 rem pause
 
