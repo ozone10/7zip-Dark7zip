@@ -726,9 +726,9 @@ namespace DarkMode
 	}
 
 	bool isWindowsModeEnabled()
-{
-	return g_enableWindowsMode;
-}
+	{
+		return g_enableWindowsMode;
+	}
 
 	bool isWindows10()
 	{
@@ -904,6 +904,7 @@ namespace DarkMode
 		::SelectObject(hdc, holdBrush);
 		::SelectObject(hdc, holdPen);
 	}
+
 	struct ThemeData
 	{
 		HTHEME _hTheme = nullptr;

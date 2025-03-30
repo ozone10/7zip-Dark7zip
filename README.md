@@ -14,8 +14,28 @@ It is mainly for Windows 10 and Windows 11. Some controls might, might not use d
 * * *
 
 <p align="center">
-  <img src="https://i.imgur.com/cnYZPAE.png">
+  <img src="https://i.imgur.com/pghAZEA.png">
 </p>
+
+<details>
+  <summary>Gallery</summary>
+
+  <p align="center">
+    <img src="https://i.imgur.com/cnYZPAE.png">
+  </p>
+
+  <p align="center">
+    <img src="https://i.imgur.com/6tNDlFM.png">
+  </p>
+
+  <p align="center">
+    <img src="https://i.imgur.com/Ddc4z7O.png">
+  </p>
+
+  <p align="center">
+    <img src="https://i.imgur.com/6a4lu9U.png">
+  </p>
+</details>
 
 * * *
 
@@ -28,8 +48,11 @@ Replace 7z original files (e.g. `C:\Program Files\7-Zip\`) with files from downl
 - `7z.sfx`- optional, file needed for creating self-extracting archives
 - `7zDark.ini` - optional, more information below
 
+> [!IMPORTANT]  
+> Ensure that you have downloaded the correct version. If the zip file name contains "zstd" (e.g. `7z-zstd-v24.09-v1.5.7-R1-dark-x64.zip`), it is intended for the zstd fork. If you are using the wrong version, a message box titled "7‑Zip ZS" will appear when attempting to extract the archive.
+
 > [!NOTE]  
-> Currently files are released only for x64 platform. You can get files for other platform from Github Actions for original 7-Zip, 7-Zip-zstd has only x64 platform. Make sure to get correct version - [main](https://github.com/ozone10/7zip-Dark7zip/actions?query=branch%3Amain) for original 7-Zip, [7z-zstd](https://github.com/ozone10/7zip-Dark7zip/actions?query=branch%3A7z-zstd) for 7-Zip-zstd.
+> Currently files are released only for x64 platform. You can get files for other platform from Github Actions for original 7-Zip, 7-Zip-zstd has only x64 platform. Ensure that you get correct version - [main](https://github.com/ozone10/7zip-Dark7zip/actions?query=branch%3Amain) for original 7-Zip, [7z-zstd](https://github.com/ozone10/7zip-Dark7zip/actions?query=branch%3A7z-zstd) for 7-Zip-zstd.
 
 ## Config
 
