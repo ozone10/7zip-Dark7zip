@@ -267,100 +267,108 @@ namespace DarkMode
 		HEXRGB(0x484848)    // disabledEdgeColor
 	};
 
+	constexpr int offsetEdge = HEXRGB(0x1C1C1C);
+
 	// red tone
+	constexpr int offsetRed = HEXRGB(0x100000);
 	static const Colors darkRedColors{
-		HEXRGB(0x302020),   // background
-		HEXRGB(0x483838),   // controlBackground
-		HEXRGB(0x554545),   // hotBackground
-		HEXRGB(0x302020),   // dlgBackground
-		HEXRGB(0xC00000),   // errorBackground
-		HEXRGB(0xE0E0E0),   // textColor
-		HEXRGB(0xC0C0C0),   // darkerTextColor
-		HEXRGB(0x808080),   // disabledTextColor
-		HEXRGB(0xFFFF00),   // linkTextColor
-		HEXRGB(0x908080),   // edgeColor
-		HEXRGB(0xBBABAB),   // hotEdgeColor
-		HEXRGB(0x584848)    // disabledEdgeColor
+		darkColors.background + offsetRed,
+		darkColors.controlBackground + offsetRed,
+		darkColors.hotBackground + offsetRed,
+		darkColors.dlgBackground + offsetRed,
+		darkColors.errorBackground,
+		darkColors.text,
+		darkColors.darkerText,
+		darkColors.disabledText,
+		darkColors.linkText,
+		darkColors.edge + offsetEdge + offsetRed,
+		darkColors.hotEdge + offsetRed,
+		darkColors.disabledEdge + offsetRed
 	};
 
 	// green tone
+	constexpr int offsetGreen = HEXRGB(0x001000);
 	static const Colors darkGreenColors{
-		HEXRGB(0x203020),   // background
-		HEXRGB(0x384838),   // controlBackground
-		HEXRGB(0x455545),   // hotBackground
-		HEXRGB(0x203020),   // dlgBackground
-		HEXRGB(0xB01000),   // errorBackground
-		HEXRGB(0xE0E0E0),   // textColor
-		HEXRGB(0xC0C0C0),   // darkerTextColor
-		HEXRGB(0x808080),   // disabledTextColor
-		HEXRGB(0xFFFF00),   // linkTextColor
-		HEXRGB(0x809080),   // edgeColor
-		HEXRGB(0xABBBAB),   // hotEdgeColor
-		HEXRGB(0x485848)    // disabledEdgeColor
+		darkColors.background + offsetGreen,
+		darkColors.controlBackground + offsetGreen,
+		darkColors.hotBackground + offsetGreen,
+		darkColors.dlgBackground + offsetGreen,
+		darkColors.errorBackground,
+		darkColors.text,
+		darkColors.darkerText,
+		darkColors.disabledText,
+		darkColors.linkText,
+		darkColors.edge + offsetEdge + offsetGreen,
+		darkColors.hotEdge + offsetGreen,
+		darkColors.disabledEdge + offsetGreen
 	};
 
 	// blue tone
+	constexpr int offsetBlue = HEXRGB(0x000020);
 	static const Colors darkBlueColors{
-		HEXRGB(0x202040),   // background
-		HEXRGB(0x383858),   // controlBackground
-		HEXRGB(0x454565),   // hotBackground
-		HEXRGB(0x202040),   // dlgBackground
-		HEXRGB(0xB00020),   // errorBackground
-		HEXRGB(0xE0E0E0),   // textColor
-		HEXRGB(0xC0C0C0),   // darkerTextColor
-		HEXRGB(0x808080),   // disabledTextColor
-		HEXRGB(0xFFFF00),   // linkTextColor
-		HEXRGB(0x8080A0),   // edgeColor
-		HEXRGB(0xABABCB),   // hotEdgeColor
-		HEXRGB(0x484868)    // disabledEdgeColor
+		darkColors.background + offsetBlue,
+		darkColors.controlBackground + offsetBlue,
+		darkColors.hotBackground + offsetBlue,
+		darkColors.dlgBackground + offsetBlue,
+		darkColors.errorBackground,
+		darkColors.text,
+		darkColors.darkerText,
+		darkColors.disabledText,
+		darkColors.linkText,
+		darkColors.edge + offsetEdge + offsetBlue,
+		darkColors.hotEdge + offsetBlue,
+		darkColors.disabledEdge + offsetBlue
 	};
 
 	// purple tone
+	constexpr int offsetPurple = HEXRGB(0x100020);
 	static const Colors darkPurpleColors{
-		HEXRGB(0x302040),   // background
-		HEXRGB(0x483858),   // controlBackground
-		HEXRGB(0x554565),   // hotBackground
-		HEXRGB(0x302040),   // dlgBackground
-		HEXRGB(0xC00020),   // errorBackground
-		HEXRGB(0xE0E0E0),   // textColor
-		HEXRGB(0xC0C0C0),   // darkerTextColor
-		HEXRGB(0x808080),   // disabledTextColor
-		HEXRGB(0xFFFF00),   // linkTextColor
-		HEXRGB(0x9080A0),   // edgeColor
-		HEXRGB(0xBBABCB),   // hotEdgeColor
-		HEXRGB(0x584868)    // disabledEdgeColor
+		darkColors.background + offsetPurple,
+		darkColors.controlBackground + offsetPurple,
+		darkColors.hotBackground + offsetPurple,
+		darkColors.dlgBackground + offsetPurple,
+		darkColors.errorBackground,
+		darkColors.text,
+		darkColors.darkerText,
+		darkColors.disabledText,
+		darkColors.linkText,
+		darkColors.edge + offsetEdge + offsetPurple,
+		darkColors.hotEdge + offsetPurple,
+		darkColors.disabledEdge + offsetPurple
 	};
 
 	// cyan tone
+	constexpr int offsetCyan = HEXRGB(0x001020);
 	static const Colors darkCyanColors{
-		HEXRGB(0x203040),   // background
-		HEXRGB(0x384858),   // controlBackground
-		HEXRGB(0x455565),   // hotBackground
-		HEXRGB(0x203040),   // dlgBackground
-		HEXRGB(0xB01020),   // errorBackground
-		HEXRGB(0xE0E0E0),   // textColor
-		HEXRGB(0xC0C0C0),   // darkerTextColor
-		HEXRGB(0x808080),   // disabledTextColor
-		HEXRGB(0xFFFF00),   // linkTextColor
-		HEXRGB(0x8090A0),   // edgeColor
-		HEXRGB(0xBBBBCB),   // hotEdgeColor
-		HEXRGB(0x485868)    // disabledEdgeColor
+		darkColors.background + offsetCyan,
+		darkColors.controlBackground + offsetCyan,
+		darkColors.hotBackground + offsetCyan,
+		darkColors.dlgBackground + offsetCyan,
+		darkColors.errorBackground,
+		darkColors.text,
+		darkColors.darkerText,
+		darkColors.disabledText,
+		darkColors.linkText,
+		darkColors.edge + offsetEdge + offsetCyan,
+		darkColors.hotEdge + offsetCyan,
+		darkColors.disabledEdge + offsetCyan
 	};
 
 	// olive tone
+	constexpr int offsetOlive = HEXRGB(0x101000);
 	static const Colors darkOliveColors{
-		HEXRGB(0x303020),   // background
-		HEXRGB(0x484838),   // controlBackground
-		HEXRGB(0x555545),   // hotBackground
-		HEXRGB(0x303020),   // dlgBackground
-		HEXRGB(0xC01000),   // errorBackground
-		HEXRGB(0xE0E0E0),   // textColor
-		HEXRGB(0xC0C0C0),   // darkerTextColor
-		HEXRGB(0x808080),   // disabledTextColor
-		HEXRGB(0xFFFF00),   // linkTextColor
-		HEXRGB(0x909080),   // edgeColor
-		HEXRGB(0xBBBBAB),   // hotEdgeColor
-		HEXRGB(0x585848)    // disabledEdgeColor
+		darkColors.background + offsetOlive,
+		darkColors.controlBackground + offsetOlive,
+		darkColors.hotBackground + offsetOlive,
+		darkColors.dlgBackground + offsetOlive,
+		darkColors.errorBackground,
+		darkColors.text,
+		darkColors.darkerText,
+		darkColors.disabledText,
+		darkColors.linkText,
+		darkColors.edge + offsetEdge + offsetOlive,
+		darkColors.hotEdge + offsetOlive,
+		darkColors.disabledEdge + offsetOlive
 	};
 
 	// customized
@@ -1937,6 +1945,9 @@ namespace DarkMode
 					dtto.dwFlags = DTT_TEXTCOLOR;
 					dtto.crText = isDisabled ? DarkMode::getDisabledTextColor() : DarkMode::getTextColor();
 
+#ifdef __GNUC__
+					constexpr int CP_DROPDOWNITEM = 9; // for some reason mingw use only enum up to 8
+#endif
 					::DrawThemeTextEx(hTheme, hdc, CP_DROPDOWNITEM, isDisabled ? CBXSR_DISABLED : CBXSR_NORMAL, buffer, -1, dtFlags, &rcText, &dtto);
 				}
 				else
@@ -2005,9 +2016,9 @@ namespace DarkMode
 			::FillRect(hdc, &rcInner, DarkMode::getControlBackgroundBrush());
 		}
 
-		//const int roundCornerValue = DarkMode::isWindows11() ? 4 : 0;
+		const int roundCornerValue = DarkMode::isWindows11() ? 4 : 0;
 
-		DarkMode::paintRoundFrameRect(hdc, rcClient, hSelectedPen);
+		DarkMode::paintRoundFrameRect(hdc, rcClient, hSelectedPen, roundCornerValue, roundCornerValue);
 
 		::SelectObject(hdc, holdPen);
 	}
@@ -2102,6 +2113,18 @@ namespace DarkMode
 
 				::EndPaint(hWnd, &ps);
 				return 0;
+			}
+
+			case WM_ENABLE:
+			{
+				if (!DarkMode::isEnabled())
+				{
+					break;
+				}
+
+				LRESULT lr = ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+				::RedrawWindow(hWnd, nullptr, nullptr, RDW_INVALIDATE);
+				return lr;
 			}
 
 			case WM_DPICHANGED:
