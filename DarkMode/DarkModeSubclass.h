@@ -143,11 +143,6 @@ namespace DarkMode
 	bool handleSettingChange(LPARAM lParam);
 	bool isDarkModeReg();
 
-	// processes messages related to UAH / custom menubar drawing.
-	// return true if handled, false to continue with normal processing in your wndproc
-	bool runUAHWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* lr);
-	void drawUAHMenuNCBottomLine(HWND hWnd);
-
 	// from DarkMode.h
 	void initExperimentalDarkMode();
 	void setDarkMode(bool useDark, bool fixDarkScrollbar);
