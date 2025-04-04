@@ -81,13 +81,13 @@ static std::wstring getWndClassName(HWND hWnd)
 {
 	constexpr int strLen = 32;
 	std::wstring className(strLen, 0);
-	className.resize(::GetClassName(hWnd, &className[0], strLen));
+	className.resize(::GetClassNameW(hWnd, className.data(), strLen));
 	return className;
 }
 
-static bool cmpWndClassName(HWND hWnd, std::wstring classNameToCmp)
+static bool cmpWndClassName(HWND hWnd, const wchar_t* classNameToCmp)
 {
-	return getWndClassName(hWnd) == classNameToCmp;
+	return (getWndClassName(hWnd) == classNameToCmp);
 }
 
 static std::wstring getIniPath(std::wstring iniFilename)
@@ -929,11 +929,6 @@ namespace DarkMode
 		~ThemeData()
 		{
 			closeTheme();
-		}
-
-		const wchar_t *getThemeClass() const
-		{
-			return _themeClass;
 		}
 
 		bool ensureTheme(HWND hWnd)
@@ -1914,7 +1909,7 @@ namespace DarkMode
 		bool hasFocus = false;
 
 		::SelectObject(hdc, reinterpret_cast<HFONT>(::SendMessage(hWnd, WM_GETFONT, 0, 0)));
-		//::SetBkMode(hdc, TRANSPARENT);
+		::SetBkMode(hdc, TRANSPARENT); // for non-theme DrawText
 
 		RECT rcArrow{ cbi.rcButton };
 		rcArrow.left -= 1;
@@ -2984,7 +2979,7 @@ namespace DarkMode
 			DWORD cchText = 0;
 			cchText = LOWORD(::SendMessage(hWnd, SB_GETTEXTLENGTH, i, 0));
 			str.resize(cchText + 1); // technically the std::wstring might not have an internal null character at the end of the buffer, so add one
-			LRESULT lr = ::SendMessage(hWnd, SB_GETTEXT, i, reinterpret_cast<LPARAM>(&str[0]));
+			LRESULT lr = ::SendMessage(hWnd, SB_GETTEXT, i, reinterpret_cast<LPARAM>(str.data()));
 			str.resize(cchText); // remove the extra NULL character
 			bool ownerDraw = false;
 			if (cchText == 0 && (lr & ~(SBT_NOBORDERS | SBT_POPOUT | SBT_RTLREADING)) != 0)
