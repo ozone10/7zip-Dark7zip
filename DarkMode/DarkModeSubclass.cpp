@@ -1,4 +1,4 @@
-﻿// Copyright (C)2024 ozone10
+﻿// Copyright (C)2024 - 2025 ozone10
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -156,7 +156,7 @@ namespace DarkMode
 	struct Brushes
 	{
 		HBRUSH background = nullptr;
-		HBRUSH controlBackground = nullptr;
+		HBRUSH ctrlBackground = nullptr;
 		HBRUSH hotBackground = nullptr;
 		HBRUSH dlgBackground = nullptr;
 		HBRUSH errorBackground = nullptr;
@@ -167,7 +167,7 @@ namespace DarkMode
 
 		Brushes(const Colors& colors)
 			: background(::CreateSolidBrush(colors.background))
-			, controlBackground(::CreateSolidBrush(colors.controlBackground))
+			, ctrlBackground(::CreateSolidBrush(colors.ctrlBackground))
 			, hotBackground(::CreateSolidBrush(colors.hotBackground))
 			, dlgBackground(::CreateSolidBrush(colors.dlgBackground))
 			, errorBackground(::CreateSolidBrush(colors.errorBackground))
@@ -180,7 +180,7 @@ namespace DarkMode
 		~Brushes()
 		{
 			::DeleteObject(background);         background = nullptr;
-			::DeleteObject(controlBackground);  controlBackground = nullptr;
+			::DeleteObject(ctrlBackground);  ctrlBackground = nullptr;
 			::DeleteObject(hotBackground);      hotBackground = nullptr;
 			::DeleteObject(dlgBackground);     dlgBackground = nullptr;
 			::DeleteObject(errorBackground);    errorBackground = nullptr;
@@ -193,7 +193,7 @@ namespace DarkMode
 		void change(const Colors& colors)
 		{
 			::DeleteObject(background);
-			::DeleteObject(controlBackground);
+			::DeleteObject(ctrlBackground);
 			::DeleteObject(hotBackground);
 			::DeleteObject(dlgBackground);
 			::DeleteObject(errorBackground);
@@ -203,7 +203,7 @@ namespace DarkMode
 			::DeleteObject(disabledEdge);
 
 			background = ::CreateSolidBrush(colors.background);
-			controlBackground = ::CreateSolidBrush(colors.controlBackground);
+			ctrlBackground = ::CreateSolidBrush(colors.ctrlBackground);
 			hotBackground = ::CreateSolidBrush(colors.hotBackground);
 			dlgBackground = ::CreateSolidBrush(colors.dlgBackground);
 			errorBackground = ::CreateSolidBrush(colors.errorBackground);
@@ -254,7 +254,7 @@ namespace DarkMode
 	// black (default)
 	static const Colors darkColors{
 		HEXRGB(0x202020),   // background
-		HEXRGB(0x383838),   // controlBackground
+		HEXRGB(0x383838),   // ctrlBackground
 		HEXRGB(0x454545),   // hotBackground
 		HEXRGB(0x202020),   // dlgBackground
 		HEXRGB(0xB00000),   // errorBackground
@@ -273,7 +273,7 @@ namespace DarkMode
 	constexpr int offsetRed = HEXRGB(0x100000);
 	static const Colors darkRedColors{
 		darkColors.background + offsetRed,
-		darkColors.controlBackground + offsetRed,
+		darkColors.ctrlBackground + offsetRed,
 		darkColors.hotBackground + offsetRed,
 		darkColors.dlgBackground + offsetRed,
 		darkColors.errorBackground,
@@ -290,7 +290,7 @@ namespace DarkMode
 	constexpr int offsetGreen = HEXRGB(0x001000);
 	static const Colors darkGreenColors{
 		darkColors.background + offsetGreen,
-		darkColors.controlBackground + offsetGreen,
+		darkColors.ctrlBackground + offsetGreen,
 		darkColors.hotBackground + offsetGreen,
 		darkColors.dlgBackground + offsetGreen,
 		darkColors.errorBackground,
@@ -307,7 +307,7 @@ namespace DarkMode
 	constexpr int offsetBlue = HEXRGB(0x000020);
 	static const Colors darkBlueColors{
 		darkColors.background + offsetBlue,
-		darkColors.controlBackground + offsetBlue,
+		darkColors.ctrlBackground + offsetBlue,
 		darkColors.hotBackground + offsetBlue,
 		darkColors.dlgBackground + offsetBlue,
 		darkColors.errorBackground,
@@ -324,7 +324,7 @@ namespace DarkMode
 	constexpr int offsetPurple = HEXRGB(0x100020);
 	static const Colors darkPurpleColors{
 		darkColors.background + offsetPurple,
-		darkColors.controlBackground + offsetPurple,
+		darkColors.ctrlBackground + offsetPurple,
 		darkColors.hotBackground + offsetPurple,
 		darkColors.dlgBackground + offsetPurple,
 		darkColors.errorBackground,
@@ -341,7 +341,7 @@ namespace DarkMode
 	constexpr int offsetCyan = HEXRGB(0x001020);
 	static const Colors darkCyanColors{
 		darkColors.background + offsetCyan,
-		darkColors.controlBackground + offsetCyan,
+		darkColors.ctrlBackground + offsetCyan,
 		darkColors.hotBackground + offsetCyan,
 		darkColors.dlgBackground + offsetCyan,
 		darkColors.errorBackground,
@@ -358,7 +358,7 @@ namespace DarkMode
 	constexpr int offsetOlive = HEXRGB(0x101000);
 	static const Colors darkOliveColors{
 		darkColors.background + offsetOlive,
-		darkColors.controlBackground + offsetOlive,
+		darkColors.ctrlBackground + offsetOlive,
 		darkColors.hotBackground + offsetOlive,
 		darkColors.dlgBackground + offsetOlive,
 		darkColors.errorBackground,
@@ -376,7 +376,7 @@ namespace DarkMode
 
 	static Colors lightColors{
 		::GetSysColor(COLOR_3DFACE),        // background
-		::GetSysColor(COLOR_WINDOW),        // controlBackground
+		::GetSysColor(COLOR_WINDOW),        // ctrlBackground
 		HEXRGB(0xC0DCF3),                   // hotBackground
 		::GetSysColor(COLOR_3DFACE),        // dlgBackground
 		HEXRGB(0xA01000),                   // errorBackground
@@ -460,7 +460,7 @@ namespace DarkMode
 		}
 	};
 
-	Theme tDefault(darkCustomizedColors);
+	static Theme tDefault(darkCustomizedColors);
 
 	static ColorsView darkColorsView{
 		RGB(41, 49, 52),      // background
@@ -671,7 +671,7 @@ namespace DarkMode
 			setClrFromIni(sectionColorsView, L"edgeHeader", iniPath, &DarkMode::getThemeView()._clrView.headerEdge);
 
 			setClrFromIni(sectionColors, L"background", iniPath, &DarkMode::getTheme()._colors.background);
-			setClrFromIni(sectionColors, L"backgroundInteractive", iniPath, &DarkMode::getTheme()._colors.controlBackground);
+			setClrFromIni(sectionColors, L"backgroundInteractive", iniPath, &DarkMode::getTheme()._colors.ctrlBackground);
 			setClrFromIni(sectionColors, L"backgroundHot", iniPath, &DarkMode::getTheme()._colors.hotBackground);
 			setClrFromIni(sectionColors, L"backgroundDlg", iniPath, &DarkMode::getTheme()._colors.dlgBackground);
 			//setClrFromIni(sectionColors, L"backgroundError", iniPath, getTheme()._colors.errorBackground);
@@ -779,7 +779,7 @@ namespace DarkMode
 	}
 
 	COLORREF getBackgroundColor()         { return getTheme()._colors.background; }
-	COLORREF getControlBackgroundColor()  { return getTheme()._colors.controlBackground; }
+	COLORREF getCtrlBackgroundColor()     { return getTheme()._colors.ctrlBackground; }
 	COLORREF getHotBackgroundColor()      { return getTheme()._colors.hotBackground; }
 	COLORREF getDlgBackgroundColor()      { return getTheme()._colors.dlgBackground; }
 	COLORREF getErrorBackgroundColor()    { return getTheme()._colors.errorBackground; }
@@ -792,7 +792,7 @@ namespace DarkMode
 	COLORREF getDisabledEdgeColor()       { return getTheme()._colors.disabledEdge; }
 
 	HBRUSH getBackgroundBrush()           { return getTheme()._brushes.background; }
-	HBRUSH getControlBackgroundBrush()    { return getTheme()._brushes.controlBackground; }
+	HBRUSH getCtrlBackgroundBrush()    { return getTheme()._brushes.ctrlBackground; }
 	HBRUSH getHotBackgroundBrush()        { return getTheme()._brushes.hotBackground; }
 	HBRUSH getDlgBackgroundBrush()        { return getTheme()._brushes.dlgBackground; }
 	HBRUSH getErrorBackgroundBrush()      { return getTheme()._brushes.errorBackground; }
@@ -904,13 +904,18 @@ namespace DarkMode
 		::EnableDarkScrollBarForWindowAndChildren(hWnd);
 	}
 
-	void paintRoundFrameRect(HDC hdc, const RECT rect, const HPEN hpen, int width, int height)
+	void paintRoundRect(HDC hdc, const RECT rect, const HPEN hpen, const HBRUSH hBrush, int width, int height)
 	{
-		auto holdBrush = ::SelectObject(hdc, ::GetStockObject(NULL_BRUSH));
+		auto holdBrush = ::SelectObject(hdc, hBrush);
 		auto holdPen = ::SelectObject(hdc, hpen);
 		::RoundRect(hdc, rect.left, rect.top, rect.right, rect.bottom, width, height);
 		::SelectObject(hdc, holdBrush);
 		::SelectObject(hdc, holdPen);
+	}
+
+	void paintRoundFrameRect(HDC hdc, const RECT rect, const HPEN hpen, int width, int height)
+	{
+		DarkMode::paintRoundRect(hdc, rect, hpen, static_cast<HBRUSH>(::GetStockObject(NULL_BRUSH)), width, height);
 	}
 
 	struct ThemeData
@@ -1555,10 +1560,10 @@ namespace DarkMode
 				rcItem.right += 1;
 
 				// for consistency getBackgroundBrush() 
-				// would be better, than getControlBackgroundBrush(),
+				// would be better, than getCtrlBackgroundBrush(),
 				// however default getBackgroundBrush() has same color
 				// as getDlgBackgroundBrush()
-				::FillRect(hdc, &rcItem, isSelectedTab ? DarkMode::getDlgBackgroundBrush() : bHot ? DarkMode::getHotBackgroundBrush() : DarkMode::getControlBackgroundBrush());
+				::FillRect(hdc, &rcItem, isSelectedTab ? DarkMode::getDlgBackgroundBrush() : bHot ? DarkMode::getHotBackgroundBrush() : DarkMode::getCtrlBackgroundBrush());
 
 				::SetBkMode(hdc, TRANSPARENT);
 
@@ -1914,7 +1919,7 @@ namespace DarkMode
 		RECT rcArrow{ cbi.rcButton };
 		rcArrow.left -= 1;
 
-		HBRUSH hSelectedBrush = isDisabled ? DarkMode::getDlgBackgroundBrush() : (isHot ? DarkMode::getHotBackgroundBrush() : DarkMode::getControlBackgroundBrush());
+		HBRUSH hSelectedBrush = isDisabled ? DarkMode::getDlgBackgroundBrush() : (isHot ? DarkMode::getHotBackgroundBrush() : DarkMode::getCtrlBackgroundBrush());
 
 		// CBS_DROPDOWN text is handled by parent by WM_CTLCOLOREDIT
 		if (comboboxData._cbStyle == CBS_DROPDOWNLIST)
@@ -2008,7 +2013,7 @@ namespace DarkMode
 			DarkMode::paintRoundFrameRect(hdc, rcInner, hPen);
 			::DeleteObject(hPen);
 			::InflateRect(&rcInner, -1, -1);
-			::FillRect(hdc, &rcInner, DarkMode::getControlBackgroundBrush());
+			::FillRect(hdc, &rcInner, DarkMode::getCtrlBackgroundBrush());
 		}
 
 		const int roundCornerValue = DarkMode::isWindows11() ? 4 : 0;
@@ -2257,7 +2262,7 @@ namespace DarkMode
 			{
 				if (DarkMode::isEnabled())
 				{
-					return DarkMode::onCtlColorControl(reinterpret_cast<HDC>(wParam));
+					return DarkMode::onCtlColorCtrl(reinterpret_cast<HDC>(wParam));
 				}
 				break;
 			}
@@ -2717,7 +2722,7 @@ namespace DarkMode
 		}
 		else
 		{
-			HBRUSH hBrush = isDisabled ? DarkMode::getDlgBackgroundBrush() : DarkMode::getControlBackgroundBrush();
+			HBRUSH hBrush = isDisabled ? DarkMode::getDlgBackgroundBrush() : DarkMode::getCtrlBackgroundBrush();
 			::FillRect(hdc, &upDownData._rcPrev, isHotPrev ? DarkMode::getHotBackgroundBrush() : hBrush);
 			::FillRect(hdc, &upDownData._rcNext, isHotNext ? DarkMode::getHotBackgroundBrush() : hBrush);
 		}
@@ -2967,7 +2972,8 @@ namespace DarkMode
 				continue;
 			}
 
-			if (i < nParts - 0 && !(nParts < 2 && hasSizeGrip))
+			const int lastDiv = hasSizeGrip ? 1 : 0;
+			if (i < nParts - lastDiv && !(nParts < 2 && hasSizeGrip))
 			{
 				POINT edges[]{
 					{rcPart.right - borders.between, rcPart.top + 1},
@@ -3222,7 +3228,7 @@ namespace DarkMode
 		RECT rcFill{};
 		DarkMode::getProgressBarRects(hWnd, &rcClient, &rcFill);
 		::DrawThemeBackground(hTheme, hdc, PP_FILL, progressBarData._iStateID, &rcFill, NULL);
-		::FillRect(hdc, &rcClient, DarkMode::getControlBackgroundBrush());
+		::FillRect(hdc, &rcClient, DarkMode::getCtrlBackgroundBrush());
 	}
 
 	const UINT_PTR g_progressBarSubclassID = 42;
@@ -3783,7 +3789,7 @@ namespace DarkMode
 		}
 	}
 
-	static LRESULT darkToolBarNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool isPlugin)
+	static LRESULT darkToolBarNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		auto lptbcd = reinterpret_cast<LPNMTBCUSTOMDRAW>(lParam);
 		static int roundCornerValue = 0;
@@ -3804,11 +3810,6 @@ namespace DarkMode
 					lr |= CDRF_NOTIFYITEMDRAW;
 				}
 
-				if (isPlugin)
-				{
-					lr |= ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
-				}
-
 				return lr;
 			}
 
@@ -3820,28 +3821,20 @@ namespace DarkMode
 				lptbcd->clrText = DarkMode::getDarkerTextColor();
 				lptbcd->clrTextHighlight = DarkMode::getTextColor();
 				lptbcd->clrBtnFace = DarkMode::getBackgroundColor();
-				lptbcd->clrBtnHighlight = DarkMode::getControlBackgroundColor();
+				lptbcd->clrBtnHighlight = DarkMode::getCtrlBackgroundColor();
 				lptbcd->clrHighlightHotTrack = DarkMode::getHotBackgroundColor();
 				lptbcd->nStringBkMode = TRANSPARENT;
 				lptbcd->nHLStringBkMode = TRANSPARENT;
 
 				if ((lptbcd->nmcd.uItemState & CDIS_HOT) == CDIS_HOT)
 				{
-					auto holdBrush = ::SelectObject(lptbcd->nmcd.hdc, DarkMode::getHotBackgroundBrush());
-					auto holdPen = ::SelectObject(lptbcd->nmcd.hdc, DarkMode::getHotEdgePen());
-					::RoundRect(lptbcd->nmcd.hdc, lptbcd->nmcd.rc.left, lptbcd->nmcd.rc.top, lptbcd->nmcd.rc.right, lptbcd->nmcd.rc.bottom, roundCornerValue, roundCornerValue);
-					::SelectObject(lptbcd->nmcd.hdc, holdBrush);
-					::SelectObject(lptbcd->nmcd.hdc, holdPen);
+					DarkMode::paintRoundRect(lptbcd->nmcd.hdc, lptbcd->nmcd.rc, DarkMode::getHotEdgePen(), DarkMode::getHotBackgroundBrush(), roundCornerValue, roundCornerValue);
 
 					lptbcd->nmcd.uItemState &= ~(CDIS_CHECKED | CDIS_HOT);
 				}
 				else if ((lptbcd->nmcd.uItemState & CDIS_CHECKED) == CDIS_CHECKED)
 				{
-					auto holdBrush = ::SelectObject(lptbcd->nmcd.hdc, DarkMode::getControlBackgroundBrush());
-					auto holdPen = ::SelectObject(lptbcd->nmcd.hdc, DarkMode::getEdgePen());
-					::RoundRect(lptbcd->nmcd.hdc, lptbcd->nmcd.rc.left, lptbcd->nmcd.rc.top, lptbcd->nmcd.rc.right, lptbcd->nmcd.rc.bottom, roundCornerValue, roundCornerValue);
-					::SelectObject(lptbcd->nmcd.hdc, holdBrush);
-					::SelectObject(lptbcd->nmcd.hdc, holdPen);
+					DarkMode::paintRoundRect(lptbcd->nmcd.hdc, lptbcd->nmcd.rc, DarkMode::getEdgePen(), DarkMode::getCtrlBackgroundBrush(), roundCornerValue, roundCornerValue);
 
 					lptbcd->nmcd.uItemState &= ~CDIS_CHECKED;
 				}
@@ -3850,11 +3843,6 @@ namespace DarkMode
 				if ((lptbcd->nmcd.uItemState & CDIS_SELECTED) == CDIS_SELECTED)
 				{
 					lr |= TBCDRF_NOBACKGROUND;
-				}
-
-				if (isPlugin)
-				{
-					lr |= ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 				}
 
 				return lr;
@@ -3879,8 +3867,8 @@ namespace DarkMode
 			if (isSelected)
 			{
 				lplvcd->clrText = DarkMode::getTextColor();
-				lplvcd->clrTextBk = DarkMode::getControlBackgroundColor();
-				hBrush = DarkMode::getControlBackgroundBrush();
+				lplvcd->clrTextBk = DarkMode::getCtrlBackgroundColor();
+				hBrush = DarkMode::getCtrlBackgroundBrush();
 			}
 			else if (isHot)
 			{
@@ -3936,7 +3924,7 @@ namespace DarkMode
 		}
 	}
 
-	static LRESULT darkListViewNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool isPlugin)
+	static LRESULT darkListViewNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		auto lplvcd = reinterpret_cast<LPNMLVCUSTOMDRAW>(lParam);
 		HWND& hList = lplvcd->nmcd.hdr.hwndFrom;
@@ -3953,32 +3941,18 @@ namespace DarkMode
 		{
 			case CDDS_PREPAINT:
 			{
-				LRESULT lr = CDRF_NOTIFYITEMDRAW;
 				if (isReport && hasGridlines)
 				{
 					::FillRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, DarkMode::getViewBackgroundBrush());
 				}
 
-				if (isPlugin)
-				{
-					lr |= ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
-				}
-
-				return lr;
+				return CDRF_NOTIFYITEMDRAW;
 			}
 
 			case CDDS_ITEMPREPAINT:
 			{
 				DarkMode::drawListviewItem(lplvcd, isReport, hasGridlines);
-
-				LRESULT lr = CDRF_NEWFONT;
-
-				if (isPlugin)
-				{
-					lr |= ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
-				}
-
-				return lr;
+				return CDRF_NEWFONT;
 			}
 
 			default:
@@ -3987,7 +3961,7 @@ namespace DarkMode
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	static LRESULT darkTreeViewNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool isPlugin)
+	static LRESULT darkTreeViewNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		auto lptvcd = reinterpret_cast<LPNMTVCUSTOMDRAW>(lParam);
 
@@ -3995,14 +3969,7 @@ namespace DarkMode
 		{
 			case CDDS_PREPAINT:
 			{
-				LRESULT lr = DarkMode::isEnabled() ? CDRF_NOTIFYITEMDRAW : CDRF_DODEFAULT;
-
-				if (isPlugin)
-				{
-					lr |= ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
-				}
-
-				return lr;
+				return DarkMode::isEnabled() ? CDRF_NOTIFYITEMDRAW : CDRF_DODEFAULT;
 			}
 
 			case CDDS_ITEMPREPAINT:
@@ -4014,8 +3981,8 @@ namespace DarkMode
 					if ((lptvcd->nmcd.uItemState & CDIS_SELECTED) == CDIS_SELECTED)
 					{
 						lptvcd->clrText = DarkMode::getTextColor();
-						lptvcd->clrTextBk = DarkMode::getControlBackgroundColor();
-						::FillRect(lptvcd->nmcd.hdc, &lptvcd->nmcd.rc, DarkMode::getControlBackgroundBrush());
+						lptvcd->clrTextBk = DarkMode::getCtrlBackgroundColor();
+						::FillRect(lptvcd->nmcd.hdc, &lptvcd->nmcd.rc, DarkMode::getCtrlBackgroundBrush());
 
 						lr |= CDRF_NEWFONT | CDRF_NOTIFYPOSTPAINT;
 					}
@@ -4031,11 +3998,6 @@ namespace DarkMode
 						}
 						lr |= CDRF_NEWFONT;
 					}
-				}
-
-				if (isPlugin)
-				{
-					lr |= ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 				}
 
 				return lr;
@@ -4059,11 +4021,6 @@ namespace DarkMode
 					}
 				}
 
-				if (isPlugin)
-				{
-					break;
-				}
-
 				return CDRF_DODEFAULT;
 			}
 
@@ -4073,7 +4030,7 @@ namespace DarkMode
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	static LRESULT darkTrackBarNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool isPlugin)
+	static LRESULT darkTrackBarNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		LPNMCUSTOMDRAW lpnmcd = reinterpret_cast<LPNMCUSTOMDRAW>(lParam);
 
@@ -4081,14 +4038,7 @@ namespace DarkMode
 		{
 			case CDDS_PREPAINT:
 			{
-				LRESULT lr = DarkMode::isEnabled() ? CDRF_NOTIFYITEMDRAW : CDRF_DODEFAULT;
-
-					if (isPlugin)
-					{
-						lr |= ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
-					}
-
-					return lr;
+				return DarkMode::isEnabled() ? CDRF_NOTIFYITEMDRAW : CDRF_DODEFAULT;
 			}
 
 			case CDDS_ITEMPREPAINT:
@@ -4099,13 +4049,8 @@ namespace DarkMode
 					{
 						if ((lpnmcd->uItemState & CDIS_SELECTED) == CDIS_SELECTED)
 						{
-							::FillRect(lpnmcd->hdc, &lpnmcd->rc, DarkMode::getControlBackgroundBrush());
-							LRESULT lr = CDRF_SKIPDEFAULT;
-							if (isPlugin)
-							{
-								lr |= ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
-							}
-							return lr;
+							::FillRect(lpnmcd->hdc, &lpnmcd->rc, DarkMode::getCtrlBackgroundBrush());
+							return CDRF_SKIPDEFAULT;
 						}
 						break;
 					}
@@ -4119,15 +4064,10 @@ namespace DarkMode
 						}
 						else
 						{
-							::FillRect(lpnmcd->hdc, &lpnmcd->rc, DarkMode::getControlBackgroundBrush());
+							::FillRect(lpnmcd->hdc, &lpnmcd->rc, DarkMode::getCtrlBackgroundBrush());
 						}
 
-						LRESULT lr = CDRF_SKIPDEFAULT;
-						if (isPlugin)
-						{
-							lr |= ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
-						}
-						return lr;
+						return CDRF_SKIPDEFAULT;
 					}
 
 					default:
@@ -4139,7 +4079,66 @@ namespace DarkMode
 			default:
 				break;
 			}
-		return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+	}
+
+	static LRESULT darkRebarNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	{
+		auto lpnmcd = reinterpret_cast<LPNMCUSTOMDRAW>(lParam);
+
+		switch (lpnmcd->dwDrawStage)
+		{
+			case CDDS_PREPAINT:
+			{
+				if (!DarkMode::isEnabled())
+				{
+					return CDRF_DODEFAULT;
+				}
+
+				::FillRect(lpnmcd->hdc, &lpnmcd->rc, DarkMode::getDlgBackgroundBrush());
+				REBARBANDINFO rbBand{};
+				rbBand.cbSize = sizeof(REBARBANDINFO);
+				rbBand.fMask = RBBIM_STYLE | RBBIM_CHEVRONLOCATION | RBBIM_CHEVRONSTATE;
+				::SendMessage(lpnmcd->hdr.hwndFrom, RB_GETBANDINFO, 0, reinterpret_cast<LPARAM>(&rbBand));
+
+				LRESULT lr = CDRF_DODEFAULT;
+
+				if ((rbBand.fStyle & RBBS_USECHEVRON) == RBBS_USECHEVRON
+					&& (rbBand.rcChevronLocation.right - rbBand.rcChevronLocation.left) > 0)
+				{
+					static int roundCornerValue = 0;
+					if (DarkMode::isWindows11())
+					{
+						roundCornerValue = 5;
+					}
+
+					const bool isHot = (rbBand.uChevronState & STATE_SYSTEM_HOTTRACKED) == STATE_SYSTEM_HOTTRACKED;
+					const bool isPressed = (rbBand.uChevronState & STATE_SYSTEM_PRESSED) == STATE_SYSTEM_PRESSED;
+
+					if (isHot)
+					{
+						DarkMode::paintRoundRect(lpnmcd->hdc, rbBand.rcChevronLocation, DarkMode::getHotEdgePen(), DarkMode::getHotBackgroundBrush(), roundCornerValue, roundCornerValue);
+					}
+					else if (isPressed)
+					{
+						DarkMode::paintRoundRect(lpnmcd->hdc, rbBand.rcChevronLocation, DarkMode::getEdgePen(), DarkMode::getCtrlBackgroundBrush(), roundCornerValue, roundCornerValue);
+					}
+
+					::SetTextColor(lpnmcd->hdc, isHot ? DarkMode::getTextColor() : DarkMode::getDarkerTextColor());
+					::SetBkMode(lpnmcd->hdc, TRANSPARENT);
+
+					constexpr auto dtFlags = DT_NOPREFIX | DT_CENTER | DT_TOP | DT_SINGLELINE | DT_NOCLIP;
+					::DrawText(lpnmcd->hdc, L"»", -1, &rbBand.rcChevronLocation, dtFlags);
+
+					lr = CDRF_SKIPDEFAULT;
+				}
+				return lr;
+			}
+
+			default:
+				break;
+		}
+		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
 	constexpr UINT_PTR g_WindowCtlColorSubclassID = 42;
@@ -4177,7 +4176,7 @@ namespace DarkMode
 			{
 				if (DarkMode::isEnabled())
 				{
-					return DarkMode::onCtlColorControl(reinterpret_cast<HDC>(wParam));
+					return DarkMode::onCtlColorCtrl(reinterpret_cast<HDC>(wParam));
 				}
 				break;
 			}
@@ -4277,25 +4276,33 @@ namespace DarkMode
 					{
 						if (className == TOOLBARCLASSNAME)
 						{
-							return DarkMode::darkToolBarNotifyCustomDraw(hWnd, uMsg, wParam, lParam, false);
+							return DarkMode::darkToolBarNotifyCustomDraw(hWnd, uMsg, wParam, lParam);
 						}
 
 						if (className == WC_LISTVIEW)
 						{
-							return DarkMode::darkListViewNotifyCustomDraw(hWnd, uMsg, wParam, lParam, false);
+							return DarkMode::darkListViewNotifyCustomDraw(hWnd, uMsg, wParam, lParam);
 						}
 
 						if (className == WC_TREEVIEW)
 						{
-							return DarkMode::darkTreeViewNotifyCustomDraw(hWnd, uMsg, wParam, lParam, false);
+							return DarkMode::darkTreeViewNotifyCustomDraw(hWnd, uMsg, wParam, lParam);
 						}
 
 						if (className == TRACKBAR_CLASS)
 						{
-							return DarkMode::darkTrackBarNotifyCustomDraw(hWnd, uMsg, wParam, lParam, false);
+							return DarkMode::darkTrackBarNotifyCustomDraw(hWnd, uMsg, wParam, lParam);
 						}
+
+						if (className == REBARCLASSNAME)
+						{
+							return DarkMode::darkRebarNotifyCustomDraw(hWnd, uMsg, wParam, lParam);
+						}
+						break;
 					}
-					break;
+
+					default:
+						break;
 				}
 				break;
 			}
@@ -4360,7 +4367,7 @@ namespace DarkMode
 		auto pMenuThemeData = reinterpret_cast<ThemeData*>(dwRefData);
 		auto& hTheme = pMenuThemeData->_hTheme;
 
-		if (!DarkMode::isEnabled() || !pMenuThemeData->ensureTheme(hWnd))
+		if (uMsg != WM_NCDESTROY && (!DarkMode::isEnabled() || !pMenuThemeData->ensureTheme(hWnd)))
 		{
 			return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 		}
@@ -4432,16 +4439,16 @@ namespace DarkMode
 					else if (pUDMI->dis.itemState & ODS_HOTLIGHT)
 					{
 						// hot tracking
-						iTextStateID = MBI_HOT;
+						iTextStateID = (pUDMI->dis.itemState & ODS_INACTIVE) ? MBI_DISABLEDHOT : MBI_HOT;
 						iBackgroundStateID = MBI_HOT;
 					}
-					else if ((pUDMI->dis.itemState & ODS_GRAYED) || (pUDMI->dis.itemState & ODS_DISABLED))
+					else if ((pUDMI->dis.itemState & ODS_GRAYED) || (pUDMI->dis.itemState & ODS_DISABLED) || (pUDMI->dis.itemState & ODS_INACTIVE))
 					{
-						// disabled / grey text
+						// disabled / grey text / inactive
 						iTextStateID = MBI_DISABLED;
 						iBackgroundStateID = MBI_DISABLED;
 					}
-					if ((pUDMI->dis.itemState & ODS_INACTIVE) || (pUDMI->dis.itemState & ODS_DEFAULT))
+					else if (pUDMI->dis.itemState & ODS_DEFAULT)
 					{
 						// normal display
 						iTextStateID = MBI_NORMAL;
@@ -4473,7 +4480,7 @@ namespace DarkMode
 					case MBI_PUSHED:
 					case MBI_DISABLEDPUSHED:
 					{
-						::FillRect(pUDMI->um.hdc, &pUDMI->dis.rcItem, DarkMode::getControlBackgroundBrush());
+						::FillRect(pUDMI->um.hdc, &pUDMI->dis.rcItem, DarkMode::getCtrlBackgroundBrush());
 						break;
 					}
 
@@ -4486,7 +4493,7 @@ namespace DarkMode
 
 				DTTOPTS dttopts{};
 				dttopts.dwSize = sizeof(DTTOPTS);
-				dttopts.dwFlags |= DTT_TEXTCOLOR;
+				dttopts.dwFlags = DTT_TEXTCOLOR;
 				switch (iTextStateID)
 				{
 					case MBI_NORMAL:
@@ -4509,6 +4516,12 @@ namespace DarkMode
 				::DrawThemeTextEx(hTheme, pUDMI->um.hdc, MENU_BARITEM, iTextStateID, menuString, mii.cch, dwFlags, &pUDMI->dis.rcItem, &dttopts);
 
 				return 0;
+			}
+
+			case WM_UAHMEASUREMENUITEM:
+			{
+				//auto pMMI = reinterpret_cast<UAHMEASUREMENUITEM*>(lParam);
+				return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 			}
 
 			case WM_DPICHANGED:
@@ -4836,7 +4849,7 @@ namespace DarkMode
 		return reinterpret_cast<LRESULT>(DarkMode::getBackgroundBrush());
 	}
 
-	LRESULT onCtlColorControl(HDC hdc)
+	LRESULT onCtlColorCtrl(HDC hdc)
 	{
 		if (!DarkMode::isEnabled())
 		{
@@ -4844,8 +4857,8 @@ namespace DarkMode
 		}
 
 		::SetTextColor(hdc, DarkMode::getTextColor());
-		::SetBkColor(hdc, DarkMode::getControlBackgroundColor());
-		return reinterpret_cast<LRESULT>(DarkMode::getControlBackgroundBrush());
+		::SetBkColor(hdc, DarkMode::getCtrlBackgroundColor());
+		return reinterpret_cast<LRESULT>(DarkMode::getCtrlBackgroundBrush());
 	}
 
 	LRESULT onCtlColorDlg(HDC hdc)
@@ -4892,9 +4905,11 @@ namespace DarkMode
 
 		const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 		const bool isComboBox = (nStyle & LBS_COMBOBOX) == LBS_COMBOBOX;
-		if ((!isComboBox || !DarkMode::isExperimentalActive()) && ::IsWindowEnabled(hWnd))
+		if ((!isComboBox || !DarkMode::isExperimentalActive()))
 		{
-			return DarkMode::onCtlColorControl(hdc);
+			if (::IsWindowEnabled(hWnd))
+				return DarkMode::onCtlColorCtrl(hdc);
+			return DarkMode::onCtlColorDlg(hdc);
 		}
 		return DarkMode::onCtlColor(hdc);
 	}

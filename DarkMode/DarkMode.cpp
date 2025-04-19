@@ -123,12 +123,12 @@ static fnIsDarkModeAllowedForWindow _IsDarkModeAllowedForWindow = nullptr;
 static fnGetIsImmersiveColorUsingHighContrast _GetIsImmersiveColorUsingHighContrast = nullptr;
 static fnOpenNcThemeData _OpenNcThemeData = nullptr;
 // 1903 18362
-//fnShouldSystemUseDarkMode _ShouldSystemUseDarkMode = nullptr;
-fnSetPreferredAppMode _SetPreferredAppMode = nullptr;
+//static fnShouldSystemUseDarkMode _ShouldSystemUseDarkMode = nullptr;
+static fnSetPreferredAppMode _SetPreferredAppMode = nullptr;
 
 bool g_darkModeSupported = false;
 bool g_darkModeEnabled = false;
-DWORD g_buildNumber = 0;
+static DWORD g_buildNumber = 0;
 
 bool ShouldAppsUseDarkMode()
 {
@@ -219,8 +219,8 @@ void FlushMenuThemes()
 
 // limit dark scroll bar to specific windows and their children
 
-std::unordered_set<HWND> g_darkScrollBarWindows;
-std::mutex g_darkScrollBarMutex;
+static std::unordered_set<HWND> g_darkScrollBarWindows;
+static std::mutex g_darkScrollBarMutex;
 
 void EnableDarkScrollBarForWindowAndChildren(HWND hwnd)
 {

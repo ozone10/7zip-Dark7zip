@@ -1,4 +1,4 @@
-// Copyright (C)2024 ozone10
+// Copyright (C)2024 - 2025 ozone10
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ namespace DarkMode
 	struct Colors
 	{
 		COLORREF background = 0;
-		COLORREF controlBackground = 0;
+		COLORREF ctrlBackground = 0;
 		COLORREF hotBackground = 0;
 		COLORREF dlgBackground = 0;
 		COLORREF errorBackground = 0;
@@ -102,7 +102,7 @@ namespace DarkMode
 	void setDarkCustomColors(ColorTone colorTone);
 
 	COLORREF getBackgroundColor();
-	COLORREF getControlBackgroundColor();
+	COLORREF getCtrlBackgroundColor();
 	COLORREF getHotBackgroundColor();
 	COLORREF getDlgBackgroundColor();
 	COLORREF getErrorBackgroundColor();
@@ -118,7 +118,7 @@ namespace DarkMode
 
 	HBRUSH getBackgroundBrush();
 	HBRUSH getDlgBackgroundBrush();
-	HBRUSH getControlBackgroundBrush();
+	HBRUSH getCtrlBackgroundBrush();
 	HBRUSH getHotBackgroundBrush();
 	HBRUSH getErrorBackgroundBrush();
 
@@ -157,6 +157,7 @@ namespace DarkMode
 	// enhancements to DarkMode.h
 	void enableDarkScrollBarForWindowAndChildren(HWND hWnd);
 
+	void paintRoundRect(HDC hdc, const RECT rect, const HPEN hpen, const HBRUSH hBrush, int width = 0, int height = 0);
 	inline void paintRoundFrameRect(HDC hdc, const RECT rect, const HPEN hpen, int width = 0, int height = 0);
 
 	void subclassButtonControl(HWND hWnd);
@@ -204,7 +205,7 @@ namespace DarkMode
 	void setBorder(HWND hWnd, bool border = true, long borderStyle = WS_BORDER);
 
 	LRESULT onCtlColor(HDC hdc);
-	LRESULT onCtlColorControl(HDC hdc);
+	LRESULT onCtlColorCtrl(HDC hdc);
 	LRESULT onCtlColorDlg(HDC hdc);
 	LRESULT onCtlColorError(HDC hdc);
 	LRESULT onCtlColorDlgStaticText(HDC hdc, bool isTextEnabled);
