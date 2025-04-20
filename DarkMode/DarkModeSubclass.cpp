@@ -1,4 +1,4 @@
-﻿// Copyright (C)2024 - 2025 ozone10
+﻿// Copyright (C)2024-2025 ozone10
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -180,14 +180,14 @@ namespace DarkMode
 		~Brushes()
 		{
 			::DeleteObject(background);         background = nullptr;
-			::DeleteObject(ctrlBackground);  ctrlBackground = nullptr;
+			::DeleteObject(ctrlBackground);     ctrlBackground = nullptr;
 			::DeleteObject(hotBackground);      hotBackground = nullptr;
-			::DeleteObject(dlgBackground);     dlgBackground = nullptr;
+			::DeleteObject(dlgBackground);      dlgBackground = nullptr;
 			::DeleteObject(errorBackground);    errorBackground = nullptr;
 
-			::DeleteObject(edge);          edge = nullptr;
-			::DeleteObject(hotEdge);       hotEdge = nullptr;
-			::DeleteObject(disabledEdge);  disabledEdge = nullptr;
+			::DeleteObject(edge);               edge = nullptr;
+			::DeleteObject(hotEdge);            hotEdge = nullptr;
+			::DeleteObject(disabledEdge);       disabledEdge = nullptr;
 		}
 
 		void change(const Colors& colors)
@@ -792,7 +792,7 @@ namespace DarkMode
 	COLORREF getDisabledEdgeColor()       { return getTheme()._colors.disabledEdge; }
 
 	HBRUSH getBackgroundBrush()           { return getTheme()._brushes.background; }
-	HBRUSH getCtrlBackgroundBrush()    { return getTheme()._brushes.ctrlBackground; }
+	HBRUSH getCtrlBackgroundBrush()       { return getTheme()._brushes.ctrlBackground; }
 	HBRUSH getHotBackgroundBrush()        { return getTheme()._brushes.hotBackground; }
 	HBRUSH getDlgBackgroundBrush()        { return getTheme()._brushes.dlgBackground; }
 	HBRUSH getErrorBackgroundBrush()      { return getTheme()._brushes.errorBackground; }
@@ -4420,7 +4420,7 @@ namespace DarkMode
 					mii.dwTypeData = menuString;
 					mii.cch = (sizeof(menuString) / 2) - 1;
 
-					GetMenuItemInfo(pUDMI->um.hmenu, pUDMI->umi.iPosition, TRUE, &mii);
+					::GetMenuItemInfo(pUDMI->um.hmenu, pUDMI->umi.iPosition, TRUE, &mii);
 				}
 
 				// get the item state for drawing
@@ -4813,25 +4813,14 @@ namespace DarkMode
 		return g_treeViewStyle == TreeViewStyle::dark;
 	}
 
-	void setBorder(HWND hWnd, bool border, long borderStyle)
+	void setBorder(HWND hWnd, bool setBorder, LONG_PTR borderStyle)
 	{
 		auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 		const bool hasBorder = (nStyle & borderStyle) == borderStyle;
-		bool change = false;
 
-		if (!hasBorder && border)
+		if (setBorder != hasBorder)
 		{
-			nStyle |= borderStyle;
-			change = true;
-		}
-		else if (hasBorder && !border)
-		{
-			nStyle &= ~borderStyle;
-			change = true;
-		}
-
-		if (change)
-		{
+			nStyle ^= borderStyle;
 			::SetWindowLongPtr(hWnd, GWL_STYLE, nStyle);
 			::SetWindowPos(hWnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 		}
@@ -4894,6 +4883,19 @@ namespace DarkMode
 		}
 
 		::SetTextColor(hdc, isTextEnabled ? DarkMode::getTextColor() : DarkMode::getDisabledTextColor());
+		::SetBkColor(hdc, DarkMode::getDlgBackgroundColor());
+		return reinterpret_cast<LRESULT>(DarkMode::getDlgBackgroundBrush());
+	}
+
+	LRESULT onCtlColorDlgLinkText(HDC hdc, bool isTextEnabled)
+	{
+		if (!DarkMode::isEnabled())
+		{
+			::SetTextColor(hdc, ::GetSysColor(isTextEnabled ? COLOR_HOTLIGHT : COLOR_GRAYTEXT));
+			return FALSE;
+		}
+
+		::SetTextColor(hdc, isTextEnabled ? DarkMode::getLinkTextColor() : DarkMode::getDisabledTextColor());
 		::SetBkColor(hdc, DarkMode::getDlgBackgroundColor());
 		return reinterpret_cast<LRESULT>(DarkMode::getDlgBackgroundBrush());
 	}

@@ -1,4 +1,4 @@
-// Copyright (C)2024 - 2025 ozone10
+// Copyright (C)2024-2025 ozone10
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -202,12 +202,13 @@ namespace DarkMode
 	TreeViewStyle getTreeViewStyle();
 	void setTreeViewStyle(HWND hWnd, bool force = false);
 	bool isThemeDark();
-	void setBorder(HWND hWnd, bool border = true, long borderStyle = WS_BORDER);
+	void setBorder(HWND hWnd, bool border = true, LONG_PTR borderStyle = WS_BORDER);
 
 	LRESULT onCtlColor(HDC hdc);
 	LRESULT onCtlColorCtrl(HDC hdc);
 	LRESULT onCtlColorDlg(HDC hdc);
 	LRESULT onCtlColorError(HDC hdc);
 	LRESULT onCtlColorDlgStaticText(HDC hdc, bool isTextEnabled);
+	LRESULT onCtlColorDlgLinkText(HDC hdc, bool isTextEnabled = true);
 	LRESULT onCtlColorListbox(WPARAM wParam, LPARAM lParam);
 }
