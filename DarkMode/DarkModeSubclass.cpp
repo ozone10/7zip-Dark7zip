@@ -68,6 +68,8 @@
 #pragma comment(lib, "Gdi32.lib")
 #endif
 
+static constexpr const wchar_t* g_iniName = L"7zDark";
+
 static constexpr COLORREF HEXRGB(DWORD rrggbb) {
 	// from 0xRRGGBB like natural #RRGGBB
 	// to the little-endian 0xBBGGRR
@@ -573,9 +575,9 @@ namespace DarkMode
 	static auto g_mica = DWMSBT_AUTO;
 	static bool g_micaExtend = false;
 
-	void initOptions()
+	static void initOptions()
 	{
-		std::wstring iniPath = getIniPath(L"7zDark");
+		std::wstring iniPath = getIniPath(g_iniName);
 		if (fileExists(iniPath))
 		{
 			switch (::GetPrivateProfileInt(L"main", L"mode", 1, iniPath.c_str()))
@@ -1890,7 +1892,7 @@ namespace DarkMode
 		~ComboboxData() = default;
 	};
 
-	void paintCombobox(HWND hWnd, HDC hdc, ComboboxData& comboboxData)
+	static void paintCombobox(HWND hWnd, HDC hdc, ComboboxData& comboboxData)
 	{
 		auto& themeData = comboboxData._themeData;
 		const auto& hTheme = themeData._hTheme;
@@ -2172,6 +2174,24 @@ namespace DarkMode
 				break;
 			}
 
+			case WM_CTLCOLOREDIT:
+			{
+				if (DarkMode::isEnabled())
+				{
+					return DarkMode::onCtlColorCtrl(reinterpret_cast<HDC>(wParam));
+				}
+				break;
+			}
+
+			case WM_CTLCOLORLISTBOX:
+			{
+				if (DarkMode::isEnabled())
+				{
+					return DarkMode::onCtlColorListbox(wParam, lParam);
+				}
+				break;
+			}
+
 			case WM_COMMAND:
 			{
 				// ComboboxEx has only one child combobox, so only control-defined notification code is checked.
@@ -2335,7 +2355,7 @@ namespace DarkMode
 		{}
 	};
 
-	void paintHeader(HWND hWnd, HDC hdc, HeaderData& headerData)
+	static void paintHeader(HWND hWnd, HDC hdc, HeaderData& headerData)
 	{
 		auto& themeData = headerData._themeData;
 		const auto& hTheme = themeData._hTheme;
@@ -2984,7 +3004,7 @@ namespace DarkMode
 
 			DWORD cchText = 0;
 			cchText = LOWORD(::SendMessage(hWnd, SB_GETTEXTLENGTH, i, 0));
-			str.resize(cchText + 1); // technically the std::wstring might not have an internal null character at the end of the buffer, so add one
+			str.resize(static_cast<size_t>(cchText) + 1); // technically the std::wstring might not have an internal null character at the end of the buffer, so add one
 			LRESULT lr = ::SendMessage(hWnd, SB_GETTEXT, i, reinterpret_cast<LPARAM>(str.data()));
 			str.resize(cchText); // remove the extra NULL character
 			bool ownerDraw = false;

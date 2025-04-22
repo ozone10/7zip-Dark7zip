@@ -209,7 +209,7 @@ void AllowDarkModeForApp(bool allow)
 		_SetPreferredAppMode(allow ? PreferredAppMode::ForceDark : PreferredAppMode::Default);
 }
 
-void FlushMenuThemes()
+static void FlushMenuThemes()
 {
 	if (_FlushMenuThemes)
 	{
@@ -228,7 +228,7 @@ void EnableDarkScrollBarForWindowAndChildren(HWND hwnd)
 	g_darkScrollBarWindows.insert(hwnd);
 }
 
-bool IsWindowOrParentUsingDarkScrollBar(HWND hwnd)
+static bool IsWindowOrParentUsingDarkScrollBar(HWND hwnd)
 {
 	HWND hwndRoot = GetAncestor(hwnd, GA_ROOT);
 
@@ -243,7 +243,7 @@ bool IsWindowOrParentUsingDarkScrollBar(HWND hwnd)
 	return false;
 }
 
-void FixDarkScrollBar()
+static void FixDarkScrollBar()
 {
 	HMODULE hComctl = LoadLibraryEx(L"comctl32.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
 	if (hComctl)
@@ -273,7 +273,7 @@ void FixDarkScrollBar()
 	}
 }
 
-constexpr bool CheckBuildNumber(DWORD buildNumber)
+static constexpr bool CheckBuildNumber(DWORD buildNumber)
 {
 	return (buildNumber == 17763 || // 1809
 		buildNumber == 18362 || // 1903
@@ -416,7 +416,7 @@ void SetMySysColor(int nIndex, COLORREF clr)
 	}
 }
 
-DWORD WINAPI MyGetSysColor(int nIndex)
+static DWORD WINAPI MyGetSysColor(int nIndex)
 {
 	if( !(g_darkModeEnabled))
 			return GetSysColor(nIndex);
