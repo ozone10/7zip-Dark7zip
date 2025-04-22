@@ -192,7 +192,7 @@ namespace DarkMode
 	void setDarkTitleBar(HWND hWnd);
 	void setDarkExplorerTheme(HWND hWnd);
 	void setDarkScrollBar(HWND hWnd);
-	void setDarkTooltips(HWND hWnd, ToolTipsType type);
+	void setDarkTooltips(HWND hWnd, ToolTipsType type = ToolTipsType::tooltip);
 	void setDarkLineAbovePanelToolbar(HWND hWnd);
 	void setDarkListView(HWND hWnd);
 

@@ -3846,15 +3846,57 @@ namespace DarkMode
 				lptbcd->nStringBkMode = TRANSPARENT;
 				lptbcd->nHLStringBkMode = TRANSPARENT;
 
-				if ((lptbcd->nmcd.uItemState & CDIS_HOT) == CDIS_HOT)
+				const bool isHot = (lptbcd->nmcd.uItemState & CDIS_HOT) == CDIS_HOT;
+				const bool isChecked = (lptbcd->nmcd.uItemState & CDIS_CHECKED) == CDIS_CHECKED;
+
+				RECT rcItem{ lptbcd->nmcd.rc };
+				RECT rcDrop{};
+
+				TBBUTTONINFO tbi{};
+				tbi.cbSize = sizeof(TBBUTTONINFO);
+				tbi.dwMask = TBIF_IMAGE | TBIF_STYLE;
+				::SendMessage(lptbcd->nmcd.hdr.hwndFrom, TB_GETBUTTONINFO, lptbcd->nmcd.dwItemSpec, reinterpret_cast<LPARAM>(&tbi));
+				const bool isIcon = tbi.iImage != I_IMAGENONE;
+				const bool isDropDown = (tbi.fsStyle & BTNS_DROPDOWN) == BTNS_DROPDOWN && isIcon;
+				if (isDropDown)
 				{
-					DarkMode::paintRoundRect(lptbcd->nmcd.hdc, lptbcd->nmcd.rc, DarkMode::getHotEdgePen(), DarkMode::getHotBackgroundBrush(), roundCornerValue, roundCornerValue);
+					WPARAM idx = ::SendMessage(lptbcd->nmcd.hdr.hwndFrom, TB_COMMANDTOINDEX, lptbcd->nmcd.dwItemSpec, 0);
+					::SendMessage(lptbcd->nmcd.hdr.hwndFrom, TB_GETITEMDROPDOWNRECT, idx, reinterpret_cast<LPARAM>(&rcDrop));
+
+					rcItem.right = rcDrop.left;
+				}
+
+				if (isHot)
+				{
+					if (!isIcon)
+					{
+						::FillRect(lptbcd->nmcd.hdc, &rcItem, DarkMode::getHotBackgroundBrush());
+					}
+					else
+					{
+						DarkMode::paintRoundRect(lptbcd->nmcd.hdc, rcItem, DarkMode::getHotEdgePen(), DarkMode::getHotBackgroundBrush(), roundCornerValue, roundCornerValue);
+						if (isDropDown)
+						{
+							DarkMode::paintRoundRect(lptbcd->nmcd.hdc, rcDrop, DarkMode::getHotEdgePen(), DarkMode::getHotBackgroundBrush(), roundCornerValue, roundCornerValue);
+						}
+					}
 
 					lptbcd->nmcd.uItemState &= ~(CDIS_CHECKED | CDIS_HOT);
 				}
-				else if ((lptbcd->nmcd.uItemState & CDIS_CHECKED) == CDIS_CHECKED)
+				else if (isChecked)
 				{
-					DarkMode::paintRoundRect(lptbcd->nmcd.hdc, lptbcd->nmcd.rc, DarkMode::getEdgePen(), DarkMode::getCtrlBackgroundBrush(), roundCornerValue, roundCornerValue);
+					if (!isIcon)
+					{
+						::FillRect(lptbcd->nmcd.hdc, &rcItem, DarkMode::getCtrlBackgroundBrush());
+					}
+					else
+					{
+						DarkMode::paintRoundRect(lptbcd->nmcd.hdc, rcItem, DarkMode::getEdgePen(), DarkMode::getCtrlBackgroundBrush(), roundCornerValue, roundCornerValue);
+						if (isDropDown)
+						{
+							DarkMode::paintRoundRect(lptbcd->nmcd.hdc, rcDrop, DarkMode::getEdgePen(), DarkMode::getCtrlBackgroundBrush(), roundCornerValue, roundCornerValue);
+						}
+					}
 
 					lptbcd->nmcd.uItemState &= ~CDIS_CHECKED;
 				}
@@ -3865,7 +3907,33 @@ namespace DarkMode
 					lr |= TBCDRF_NOBACKGROUND;
 				}
 
+				if (isDropDown)
+				{
+					lr |= CDRF_NOTIFYPOSTPAINT;
+				}
+
 				return lr;
+			}
+
+			case CDDS_ITEMPOSTPAINT:
+			{
+				auto hFont = reinterpret_cast<HFONT>(::SendMessage(lptbcd->nmcd.hdr.hwndFrom, WM_GETFONT, 0, 0));
+				auto holdFont = static_cast<HFONT>(::SelectObject(lptbcd->nmcd.hdc, hFont));
+
+				RECT rcArrow{};
+				WPARAM idx = ::SendMessage(lptbcd->nmcd.hdr.hwndFrom, TB_COMMANDTOINDEX, lptbcd->nmcd.dwItemSpec, 0);
+				::SendMessage(lptbcd->nmcd.hdr.hwndFrom, TB_GETITEMDROPDOWNRECT, idx, reinterpret_cast<LPARAM>(&rcArrow));
+				rcArrow.left += 1;
+				rcArrow.bottom -= 3;
+
+				COLORREF cArrow = DarkMode::getTextColor();
+
+				::SetBkMode(lptbcd->nmcd.hdc, TRANSPARENT);
+				::SetTextColor(lptbcd->nmcd.hdc, cArrow);
+				::DrawText(lptbcd->nmcd.hdc, L"⏷", -1, &rcArrow, DT_NOPREFIX | DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
+				::SelectObject(lptbcd->nmcd.hdc, holdFont);
+
+				return CDRF_DODEFAULT;
 			}
 
 			default:
