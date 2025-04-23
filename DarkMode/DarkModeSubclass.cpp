@@ -1571,7 +1571,7 @@ namespace DarkMode
 
 				wchar_t label[MAX_PATH]{};
 				TCITEM tci{};
-				tci.mask = TCIF_TEXT;
+				tci.mask = TCIF_TEXT | TCIF_IMAGE;
 				tci.pszText = label;
 				tci.cchTextMax = MAX_PATH - 1;
 
@@ -1587,6 +1587,17 @@ namespace DarkMode
 				if (i != nTabs - 1)
 				{
 					rcFrame.right += 1;
+				}
+
+				if (tci.iImage != -1)
+				{
+					int cx = 0;
+					int cy = 0;
+					auto hImagelist = TabCtrl_GetImageList(hWnd);
+					int offset = 2;
+					::ImageList_GetIconSize(hImagelist, &cx, &cy);
+					::ImageList_Draw(hImagelist, tci.iImage, hdc, rcText.left + offset, rcText.top + ((rcText.bottom - rcText.top) - cy) / 2, ILD_NORMAL);
+					rcText.left += cx;
 				}
 
 				::FrameRect(hdc, &rcFrame, DarkMode::getEdgeBrush());
@@ -2325,7 +2336,7 @@ namespace DarkMode
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	static void subclassListViewControl(HWND hWnd)
+	void subclassListViewControl(HWND hWnd)
 	{
 		if (::GetWindowSubclass(hWnd, ListViewSubclass, g_listViewSubclassID, nullptr) == FALSE)
 		{
