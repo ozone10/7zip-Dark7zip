@@ -119,7 +119,7 @@ static bool fileExists(std::wstring filePath)
 
 static bool setClrFromIni(std::wstring sectionName, std::wstring keyName, std::wstring iniFilePath, COLORREF* clr)
 {
-	constexpr int maxStringLength = 7;
+	constexpr size_t maxStringLength = 7;
 	wchar_t buffer[maxStringLength + 1]{};
 	
 	::GetPrivateProfileString(sectionName.c_str(), keyName.c_str(), L"", buffer, maxStringLength, iniFilePath.c_str());
@@ -175,6 +175,7 @@ namespace DarkMode
 		menuBar         = 15,
 		settingChange   = 16
 	};
+
 	struct Brushes
 	{
 		HBRUSH background = nullptr;
@@ -1624,7 +1625,7 @@ namespace DarkMode
 
 		const bool isDisabled = ::IsWindowEnabled(hWnd) == FALSE;
 		const bool hasTheme = themeData.ensureTheme(hWnd) && upDownData._isHorizontal;
-		
+
 		::FillRect(hdc, &upDownData._rcClient, DarkMode::getDlgBackgroundBrush());
 		::SetBkMode(hdc, TRANSPARENT);
 
@@ -1990,7 +1991,7 @@ namespace DarkMode
 
 				PAINTSTRUCT ps{};
 				auto hdc = ::BeginPaint(hWnd, &ps);
-				
+
 				DarkMode::paintTab(hWnd, hdc, ps.rcPaint);
 
 				::EndPaint(hWnd, &ps);
@@ -3986,6 +3987,14 @@ namespace DarkMode
 
 			case CDDS_ITEMPOSTPAINT:
 			{
+				TBBUTTONINFO tbi{};
+				tbi.cbSize = sizeof(TBBUTTONINFO);
+				tbi.dwMask = TBIF_IMAGE;
+				::SendMessage(lptbcd->nmcd.hdr.hwndFrom, TB_GETBUTTONINFO, lptbcd->nmcd.dwItemSpec, reinterpret_cast<LPARAM>(&tbi));
+				const bool isIcon = tbi.iImage != I_IMAGENONE;
+				if (!isIcon)
+					break;
+
 				auto hFont = reinterpret_cast<HFONT>(::SendMessage(lptbcd->nmcd.hdr.hwndFrom, WM_GETFONT, 0, 0));
 				auto holdFont = static_cast<HFONT>(::SelectObject(lptbcd->nmcd.hdc, hFont));
 
@@ -3995,10 +4004,10 @@ namespace DarkMode
 				rcArrow.left += 1;
 				rcArrow.bottom -= 3;
 
-				COLORREF cArrow = DarkMode::getTextColor();
+				COLORREF clrArrow = DarkMode::getTextColor();
 
 				::SetBkMode(lptbcd->nmcd.hdc, TRANSPARENT);
-				::SetTextColor(lptbcd->nmcd.hdc, cArrow);
+				::SetTextColor(lptbcd->nmcd.hdc, clrArrow);
 				::DrawText(lptbcd->nmcd.hdc, L"⏷", -1, &rcArrow, DT_NOPREFIX | DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
 				::SelectObject(lptbcd->nmcd.hdc, holdFont);
 
