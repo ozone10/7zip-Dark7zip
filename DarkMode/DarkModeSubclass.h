@@ -162,12 +162,13 @@ namespace DarkMode
 
 	void subclassButtonControl(HWND hWnd);
 	void subclassGroupboxControl(HWND hWnd);
+	bool subclassUpDownControl(HWND hWnd);
+	void subclassTabControlUpDown(HWND hWnd);
 	void subclassTabControl(HWND hWnd);
 	void subclassComboBoxControl(HWND hWnd);
 	void subclassListViewControl(HWND hWnd);
 	void subclassStatusBarControl(HWND hWnd);
 	void subclassProgressBarControl(HWND hWnd);
-	bool subclassTabUpDownControl(HWND hWnd);
 
 	void subclassAndThemeButton(HWND hWnd, DarkModeParams p);
 	void subclassAndThemeComboBox(HWND hWnd, DarkModeParams p);
