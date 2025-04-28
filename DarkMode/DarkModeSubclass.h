@@ -51,13 +51,6 @@ namespace DarkMode
 		COLORREF headerEdge = 0;
 	};
 
-	struct DarkModeParams
-	{
-		const wchar_t* _themeClassName = nullptr;
-		bool _subclass = false;
-		bool _theme = false;
-	};
-
 	enum class ToolTipsType
 	{
 		tooltip,
@@ -67,22 +60,23 @@ namespace DarkMode
 		tabbar
 	};
 
-	enum ColorTone {
-		blackTone  = 0,
-		redTone    = 1,
-		greenTone  = 2,
-		blueTone   = 3,
-		purpleTone = 4,
-		cyanTone   = 5,
-		oliveTone  = 6,
-		customizedTone = 32
+	enum class ColorTone
+	{
+		black       = 0,
+		red         = 1,
+		green       = 2,
+		blue        = 3,
+		purple      = 4,
+		cyan        = 5,
+		olive       = 6,
+		customized  = 32
 	};
 
 	enum class TreeViewStyle
 	{
 		classic = 0,
-		light = 1,
-		dark = 2
+		light   = 1,
+		dark    = 2
 	};
 
 	void initDarkMode();
@@ -97,9 +91,37 @@ namespace DarkMode
 	bool isWindows11();
 	DWORD getWindowsBuildNumber();
 
-	double calculatePerceivedLightness(COLORREF c);
+	// handle events
+	bool handleSettingChange(LPARAM lParam);
+	bool isDarkModeReg();
+
+	// from DarkMode.h
+	void setSysColor(int nIndex, COLORREF color);
+	bool hookSysColor();
+	void unhookSysColor();
+
+	// enhancements to DarkMode.h
+	void enableDarkScrollBarForWindowAndChildren(HWND hWnd);
 
 	void setDarkCustomColors(ColorTone colorTone);
+
+	COLORREF setBackgroundColor(COLORREF clrNew);
+	COLORREF setCtrlBackgroundColor(COLORREF clrNew);
+	COLORREF setHotBackgroundColor(COLORREF clrNew);
+	COLORREF setDlgBackgroundColor(COLORREF clrNew);
+	COLORREF setErrorBackgroundColor(COLORREF clrNew);
+
+	COLORREF setTextColor(COLORREF clrNew);
+	COLORREF setDarkerTextColor(COLORREF clrNew);
+	COLORREF setDisabledTextColor(COLORREF clrNew);
+	COLORREF setLinkTextColor(COLORREF clrNew);
+
+	COLORREF setEdgeColor(COLORREF clrNew);
+	COLORREF setHotEdgeColor(COLORREF clrNew);
+	COLORREF setDisabledEdgeColor(COLORREF clrNew);
+
+	void changeCustomTheme(const Colors& colors);
+	void updateBrushesAndPens();
 
 	COLORREF getBackgroundColor();
 	COLORREF getCtrlBackgroundColor();
@@ -131,31 +153,31 @@ namespace DarkMode
 	HPEN getHotEdgePen();
 	HPEN getDisabledEdgePen();
 
-	void changeCustomTheme(const Colors& colors);
+	COLORREF setViewBackgroundColor(COLORREF clrNew);
+	COLORREF setViewTextColor(COLORREF clrNew);
+	COLORREF setViewGridlinesColor(COLORREF clrNew);
+
+	COLORREF setHeaderBackgroundColor(COLORREF clrNew);
+	COLORREF setHeaderHotBackgroundColor(COLORREF clrNew);
+	COLORREF setHeaderTextColor(COLORREF clrNew);
+
+	void updateBrushesAndPensView();
 
 	COLORREF getViewBackgroundColor();
 	COLORREF getViewTextColor();
 	COLORREF getViewGridlinesColor();
+
+	COLORREF getHeaderBackgroundColor();
+	COLORREF getHeaderHotBackgroundColor();
+	COLORREF getHeaderTextColor();
+
 	HBRUSH getViewBackgroundBrush();
 	HBRUSH getViewGridlinesBrush();
 
-	// handle events
-	bool handleSettingChange(LPARAM lParam);
-	bool isDarkModeReg();
+	HBRUSH getHeaderBackgroundBrush();
+	HBRUSH getHeaderHotBackgroundBrush();
 
-	// from DarkMode.h
-	void initExperimentalDarkMode();
-	void setDarkMode(bool useDark, bool fixDarkScrollbar);
-	void allowDarkModeForApp(bool allow);
-	bool allowDarkModeForWindow(HWND hWnd, bool allow);
-	void setTitleBarThemeColor(HWND hWnd);
-
-	void setSysColor(int nIndex, COLORREF color);
-	bool hookSysColor();
-	void unhookSysColor();
-
-	// enhancements to DarkMode.h
-	void enableDarkScrollBarForWindowAndChildren(HWND hWnd);
+	HPEN getHeaderEdgePen();
 
 	void paintRoundRect(HDC hdc, const RECT rect, const HPEN hpen, const HBRUSH hBrush, int width = 0, int height = 0);
 	inline void paintRoundFrameRect(HDC hdc, const RECT rect, const HPEN hpen, int width = 0, int height = 0);
@@ -166,22 +188,12 @@ namespace DarkMode
 	void subclassTabControlUpDown(HWND hWnd);
 	void subclassTabControl(HWND hWnd);
 	void subclassComboBoxControl(HWND hWnd);
+	void subclassComboboxExControl(HWND hWnd);
 	void subclassListViewControl(HWND hWnd);
+	void subclassHeaderControl(HWND hWnd);
 	void subclassStatusBarControl(HWND hWnd);
 	void subclassProgressBarControl(HWND hWnd);
-
-	void subclassAndThemeButton(HWND hWnd, DarkModeParams p);
-	void subclassAndThemeComboBox(HWND hWnd, DarkModeParams p);
-	void subclassAndThemeListBoxOrEditControl(HWND hWnd, DarkModeParams p, bool isListBox);
-	void subclassAndThemeListView(HWND hWnd, DarkModeParams p);
-	void themeTreeView(HWND hWnd, DarkModeParams p);
-	void themeToolbar(HWND hWnd, DarkModeParams p);
-	void themeRichEdit(HWND hWnd, DarkModeParams p);
-	void themeProgressBar(HWND hWnd, DarkModeParams p);
-	void subclassTabControl(HWND hWnd, DarkModeParams p);
-	void subclassStatusBarControl(HWND hWnd, DarkModeParams p);
-	void subclassProgressBarControl(HWND hWnd, DarkModeParams p);
-	void subclassComboboxEx(HWND hWnd, DarkModeParams p);
+	void subclassStaticText(HWND hWnd);
 
 	void autoSubclassAndThemeChildControls(HWND hWndParent, bool subclass = true, bool theme = true);
 	void autoThemeChildControls(HWND hWndParent);
@@ -197,8 +209,10 @@ namespace DarkMode
 	void setDarkTooltips(HWND hWnd, ToolTipsType type = ToolTipsType::tooltip);
 	void setDarkLineAbovePanelToolbar(HWND hWnd);
 	void setDarkListView(HWND hWnd);
+	void setDarkThemeExperimental(HWND hWnd, const wchar_t* themeClassName = L"Explorer");
 
 	void disableVisualStyle(HWND hWnd, bool doDisable);
+	double calculatePerceivedLightness(COLORREF clr);
 	void calculateTreeViewStyle();
 	void updatePrevTreeViewStyle();
 	TreeViewStyle getTreeViewStyle();

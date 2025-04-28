@@ -176,6 +176,13 @@ namespace DarkMode
 		settingChange   = 16
 	};
 
+	struct DarkModeParams
+	{
+		const wchar_t* _themeClassName = nullptr;
+		bool _subclass = false;
+		bool _theme = false;
+	};
+
 	struct Brushes
 	{
 		HBRUSH background = nullptr;
@@ -412,50 +419,50 @@ namespace DarkMode
 		::GetSysColor(COLOR_GRAYTEXT)       // disabledEdgeColor
 	};
 
-	static ColorTone g_colorToneChoice = DarkMode::ColorTone::blackTone;
+	static ColorTone g_colorToneChoice = DarkMode::ColorTone::black;
 
 	void setDarkCustomColors(ColorTone colorTone)
 	{
 		switch (colorTone)
 		{
-			case DarkMode::ColorTone::redTone:
+			case DarkMode::ColorTone::red:
 			{
 				darkCustomizedColors = darkRedColors;
 				break;
 			}
 
-			case DarkMode::ColorTone::greenTone:
+			case DarkMode::ColorTone::green:
 			{
 				darkCustomizedColors = darkGreenColors;
 				break;
 			}
 
-			case DarkMode::ColorTone::blueTone:
+			case DarkMode::ColorTone::blue:
 			{
 				darkCustomizedColors = darkBlueColors;
 				break;
 			}
 
-			case DarkMode::ColorTone::purpleTone:
+			case DarkMode::ColorTone::purple:
 			{
 				darkCustomizedColors = darkPurpleColors;
 				break;
 			}
 
-			case DarkMode::ColorTone::cyanTone:
+			case DarkMode::ColorTone::cyan:
 			{
 				darkCustomizedColors = darkCyanColors;
 				break;
 			}
 
-			case DarkMode::ColorTone::oliveTone:
+			case DarkMode::ColorTone::olive:
 			{
 				darkCustomizedColors = darkOliveColors;
 				break;
 			}
 
-			case DarkMode::ColorTone::customizedTone:
-			case DarkMode::ColorTone::blackTone:
+			case DarkMode::ColorTone::customized:
+			case DarkMode::ColorTone::black:
 			{
 				darkCustomizedColors = darkColors;
 				break;
@@ -485,6 +492,11 @@ namespace DarkMode
 
 	static Theme tDefault(darkCustomizedColors);
 
+	static Theme& getTheme()
+	{
+		return tDefault;
+	}
+
 	static ColorsView darkColorsView{
 		RGB(41, 49, 52),      // background
 		RGB(224, 226, 228),   // text
@@ -505,11 +517,6 @@ namespace DarkMode
 		RGB(229, 229, 229)    // header divider
 	};
 
-	static Theme& getTheme()
-	{
-		return tDefault;
-	}
-
 	struct BrushesAndPensView
 	{
 		HBRUSH background = nullptr;
@@ -517,7 +524,7 @@ namespace DarkMode
 		HBRUSH headerBackground = nullptr;
 		HBRUSH headerHotBackground = nullptr;
 
-		HPEN edge = nullptr;
+		HPEN headerEdge = nullptr;
 
 		BrushesAndPensView(const ColorsView& colors)
 			: background(::CreateSolidBrush(colors.background))
@@ -525,7 +532,7 @@ namespace DarkMode
 			, headerBackground(::CreateSolidBrush(colors.headerBackground))
 			, headerHotBackground(::CreateSolidBrush(colors.headerHotBackground))
 
-			, edge(::CreatePen(PS_SOLID, 1, colors.headerEdge))
+			, headerEdge(::CreatePen(PS_SOLID, 1, colors.headerEdge))
 		{}
 
 		~BrushesAndPensView()
@@ -535,7 +542,7 @@ namespace DarkMode
 			::DeleteObject(headerBackground);       headerBackground = nullptr;
 			::DeleteObject(headerHotBackground);    headerHotBackground = nullptr;
 
-			::DeleteObject(edge);                   edge = nullptr;
+			::DeleteObject(headerEdge);             headerEdge = nullptr;
 		}
 
 		void change(const ColorsView& colors)
@@ -550,9 +557,9 @@ namespace DarkMode
 			headerBackground = ::CreateSolidBrush(colors.headerBackground);
 			headerHotBackground = ::CreateSolidBrush(colors.headerHotBackground);
 
-			::DeleteObject(edge);
+			::DeleteObject(headerEdge);
 
-			edge = ::CreatePen(PS_SOLID, 1, colors.headerEdge);
+			headerEdge = ::CreatePen(PS_SOLID, 1, colors.headerEdge);
 		}
 	};
 
@@ -590,11 +597,104 @@ namespace DarkMode
 		return tView;
 	}
 
+	inline static COLORREF setNewColor(COLORREF* clrOld, COLORREF clrNew)
+	{
+		auto clrTmp = *clrOld;
+		*clrOld = clrNew;
+		return clrTmp;
+	}
+
+	COLORREF setBackgroundColor(COLORREF clrNew)        { return DarkMode::setNewColor(&DarkMode::getTheme()._colors.background, clrNew); }
+	COLORREF setCtrlBackgroundColor(COLORREF clrNew)    { return DarkMode::setNewColor(&DarkMode::getTheme()._colors.ctrlBackground, clrNew); }
+	COLORREF setHotBackgroundColor(COLORREF clrNew)     { return DarkMode::setNewColor(&DarkMode::getTheme()._colors.hotBackground, clrNew); }
+	COLORREF setDlgBackgroundColor(COLORREF clrNew)     { return DarkMode::setNewColor(&DarkMode::getTheme()._colors.dlgBackground, clrNew); }
+	COLORREF setErrorBackgroundColor(COLORREF clrNew)   { return DarkMode::setNewColor(&DarkMode::getTheme()._colors.errorBackground, clrNew); }
+	COLORREF setTextColor(COLORREF clrNew)              { return DarkMode::setNewColor(&DarkMode::getTheme()._colors.text, clrNew); }
+	COLORREF setDarkerTextColor(COLORREF clrNew)        { return DarkMode::setNewColor(&DarkMode::getTheme()._colors.darkerText, clrNew); }
+	COLORREF setDisabledTextColor(COLORREF clrNew)      { return DarkMode::setNewColor(&DarkMode::getTheme()._colors.disabledText, clrNew); }
+	COLORREF setLinkTextColor(COLORREF clrNew)          { return DarkMode::setNewColor(&DarkMode::getTheme()._colors.linkText, clrNew); }
+	COLORREF setEdgeColor(COLORREF clrNew)              { return DarkMode::setNewColor(&DarkMode::getTheme()._colors.edge, clrNew); }
+	COLORREF setHotEdgeColor(COLORREF clrNew)           { return DarkMode::setNewColor(&DarkMode::getTheme()._colors.hotEdge, clrNew); }
+	COLORREF setDisabledEdgeColor(COLORREF clrNew)      { return DarkMode::setNewColor(&DarkMode::getTheme()._colors.disabledEdge, clrNew); }
+
+	void changeCustomTheme(const Colors& colors)
+	{
+		tDefault.change(colors);
+	}
+
+	void updateBrushesAndPens()
+	{
+		DarkMode::getTheme()._brushes.change(DarkMode::getTheme()._colors);
+		DarkMode::getTheme()._pens.change(DarkMode::getTheme()._colors);
+	}
+
+	COLORREF getBackgroundColor()         { return getTheme()._colors.background; }
+	COLORREF getCtrlBackgroundColor()     { return getTheme()._colors.ctrlBackground; }
+	COLORREF getHotBackgroundColor()      { return getTheme()._colors.hotBackground; }
+	COLORREF getDlgBackgroundColor()      { return getTheme()._colors.dlgBackground; }
+	COLORREF getErrorBackgroundColor()    { return getTheme()._colors.errorBackground; }
+	COLORREF getTextColor()               { return getTheme()._colors.text; }
+	COLORREF getDarkerTextColor()         { return getTheme()._colors.darkerText; }
+	COLORREF getDisabledTextColor()       { return getTheme()._colors.disabledText; }
+	COLORREF getLinkTextColor()           { return getTheme()._colors.linkText; }
+	COLORREF getEdgeColor()               { return getTheme()._colors.edge; }
+	COLORREF getHotEdgeColor()            { return getTheme()._colors.hotEdge; }
+	COLORREF getDisabledEdgeColor()       { return getTheme()._colors.disabledEdge; }
+
+	HBRUSH getBackgroundBrush()           { return getTheme()._brushes.background; }
+	HBRUSH getCtrlBackgroundBrush()       { return getTheme()._brushes.ctrlBackground; }
+	HBRUSH getHotBackgroundBrush()        { return getTheme()._brushes.hotBackground; }
+	HBRUSH getDlgBackgroundBrush()        { return getTheme()._brushes.dlgBackground; }
+	HBRUSH getErrorBackgroundBrush()      { return getTheme()._brushes.errorBackground; }
+
+	HBRUSH getEdgeBrush()                 { return getTheme()._brushes.edge; }
+	HBRUSH getHotEdgeBrush()              { return getTheme()._brushes.hotEdge; }
+	HBRUSH getDisabledEdgeBrush()         { return getTheme()._brushes.disabledEdge; }
+
+	HPEN getDarkerTextPen()               { return getTheme()._pens.darkerTextPen; }
+	HPEN getEdgePen()                     { return getTheme()._pens.edgePen; }
+	HPEN getHotEdgePen()                  { return getTheme()._pens.hotEdgePen; }
+	HPEN getDisabledEdgePen()             { return getTheme()._pens.disabledEdgePen; }
+
+	COLORREF setViewBackgroundColor(COLORREF clrNew)        { return DarkMode::setNewColor(&DarkMode::getThemeView()._clrView.background, clrNew); }
+	COLORREF setViewTextColor(COLORREF clrNew)              { return DarkMode::setNewColor(&DarkMode::getThemeView()._clrView.text, clrNew); }
+	COLORREF setViewGridlinesColor(COLORREF clrNew)         { return DarkMode::setNewColor(&DarkMode::getThemeView()._clrView.gridlines, clrNew); }
+
+	COLORREF setHeaderBackgroundColor(COLORREF clrNew)      { return DarkMode::setNewColor(&DarkMode::getThemeView()._clrView.headerBackground, clrNew); }
+	COLORREF setHeaderHotBackgroundColor(COLORREF clrNew)   { return DarkMode::setNewColor(&DarkMode::getThemeView()._clrView.headerHotBackground, clrNew); }
+	COLORREF setHeaderTextColor(COLORREF clrNew)            { return DarkMode::setNewColor(&DarkMode::getThemeView()._clrView.headerText, clrNew); }
+
+	void updateBrushesAndPensView()
+	{
+		DarkMode::getThemeView().updateBrushesAndPens();
+	}
+
+	COLORREF getViewBackgroundColor()       { return DarkMode::getThemeView()._clrView.background; }
+	COLORREF getViewTextColor()             { return DarkMode::getThemeView()._clrView.text; }
+	COLORREF getViewGridlinesColor()        { return DarkMode::getThemeView()._clrView.gridlines; }
+
+	COLORREF getHeaderBackgroundColor()     { return DarkMode::getThemeView()._clrView.headerBackground; }
+	COLORREF getHeaderHotBackgroundColor()  { return DarkMode::getThemeView()._clrView.headerHotBackground; }
+	COLORREF getHeaderTextColor()           { return DarkMode::getThemeView()._clrView.headerText; }
+
+	HBRUSH getViewBackgroundBrush()         { return DarkMode::getThemeView()._hbrPnView.background; }
+	HBRUSH getViewGridlinesBrush()          { return DarkMode::getThemeView()._hbrPnView.gridlines; }
+
+	HBRUSH getHeaderBackgroundBrush()       { return DarkMode::getThemeView()._hbrPnView.headerBackground; }
+	HBRUSH getHeaderHotBackgroundBrush()    { return DarkMode::getThemeView()._hbrPnView.headerHotBackground; }
+
+	HPEN getHeaderEdgePen()                 { return DarkMode::getThemeView()._hbrPnView.headerEdge; }
+
+	static TreeViewStyle g_treeViewStyle = TreeViewStyle::classic;
+
 	static bool g_useDarkMode = true;
 	static bool g_enableWindowsMode = false;
 
 	static auto g_mica = DWMSBT_AUTO;
 	static bool g_micaExtend = false;
+
+	static bool g_isInit = false;
+	static bool g_isInitExperimental = false;
 
 	static void initOptions()
 	{
@@ -697,7 +797,7 @@ namespace DarkMode
 			setClrFromIni(sectionColors, L"backgroundInteractive", iniPath, &DarkMode::getTheme()._colors.ctrlBackground);
 			setClrFromIni(sectionColors, L"backgroundHot", iniPath, &DarkMode::getTheme()._colors.hotBackground);
 			setClrFromIni(sectionColors, L"backgroundDlg", iniPath, &DarkMode::getTheme()._colors.dlgBackground);
-			//setClrFromIni(sectionColors, L"backgroundError", iniPath, &DarkMode::getTheme()._colors.errorBackground);
+			setClrFromIni(sectionColors, L"backgroundError", iniPath, &DarkMode::getTheme()._colors.errorBackground);
 
 			setClrFromIni(sectionColors, L"text", iniPath, &DarkMode::getTheme()._colors.text);
 			setClrFromIni(sectionColors, L"textItem", iniPath, &DarkMode::getTheme()._colors.darkerText);
@@ -708,15 +808,30 @@ namespace DarkMode
 			setClrFromIni(sectionColors, L"edgeHot", iniPath, &DarkMode::getTheme()._colors.hotEdge);
 			setClrFromIni(sectionColors, L"edgeDisabled", iniPath, &DarkMode::getTheme()._colors.disabledEdge);
 
-			DarkMode::getTheme()._brushes.change(DarkMode::getTheme()._colors);
-			DarkMode::getTheme()._pens.change(DarkMode::getTheme()._colors);
-
-			DarkMode::getThemeView().updateBrushesAndPens();
+			DarkMode::updateBrushesAndPens();
+			DarkMode::updateBrushesAndPensView();
 		}
 	}
 
-	static bool g_isInit = false;
-	static bool g_isInitExperimental = false;
+	static void initExperimentalDarkMode()
+	{
+		::InitDarkMode();
+	}
+
+	static void setDarkMode(bool useDark, bool fixDarkScrollbar)
+	{
+		::SetDarkMode(useDark, fixDarkScrollbar);
+	}
+
+	static bool allowDarkModeForWindow(HWND hWnd, bool allow)
+	{
+		return ::AllowDarkModeForWindow(hWnd, allow);
+	}
+
+	static void setTitleBarThemeColor(HWND hWnd)
+	{
+		::RefreshTitleBarThemeColor(hWnd);
+	}
 
 	void initDarkMode()
 	{
@@ -728,7 +843,7 @@ namespace DarkMode
 				g_isInitExperimental = true;
 			}
 
-			initOptions();
+			DarkMode::initOptions();
 
 			DarkMode::calculateTreeViewStyle();
 			DarkMode::setDarkMode(g_useDarkMode, true);
@@ -776,77 +891,9 @@ namespace DarkMode
 		return GetWindowsBuildNumber();
 	}
 
-	static TreeViewStyle g_treeViewStylePrev = TreeViewStyle::classic;
-	static TreeViewStyle g_treeViewStyle = TreeViewStyle::classic;
-	static COLORREF g_treeViewBg = RGB(41, 49, 52);
-	static double g_lightnessTreeView = 50.0;
-
-	// adapted from https://stackoverflow.com/a/56678483
-	double calculatePerceivedLightness(COLORREF c)
-	{
-		auto linearValue = [](double colorChannel) -> double {
-			colorChannel /= 255.0;
-			if (colorChannel <= 0.04045)
-				return colorChannel / 12.92;
-			return std::pow(((colorChannel + 0.055) / 1.055), 2.4);
-			};
-
-		double r = linearValue(static_cast<double>(GetRValue(c)));
-		double g = linearValue(static_cast<double>(GetGValue(c)));
-		double b = linearValue(static_cast<double>(GetBValue(c)));
-
-		double luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-
-		double lightness = (luminance <= 216.0 / 24389.0) ? (luminance * 24389.0 / 27.0) : (std::pow(luminance, (1.0 / 3.0)) * 116.0 - 16.0);
-		return lightness;
-	}
-
-	COLORREF getBackgroundColor()         { return getTheme()._colors.background; }
-	COLORREF getCtrlBackgroundColor()     { return getTheme()._colors.ctrlBackground; }
-	COLORREF getHotBackgroundColor()      { return getTheme()._colors.hotBackground; }
-	COLORREF getDlgBackgroundColor()      { return getTheme()._colors.dlgBackground; }
-	COLORREF getErrorBackgroundColor()    { return getTheme()._colors.errorBackground; }
-	COLORREF getTextColor()               { return getTheme()._colors.text; }
-	COLORREF getDarkerTextColor()         { return getTheme()._colors.darkerText; }
-	COLORREF getDisabledTextColor()       { return getTheme()._colors.disabledText; }
-	COLORREF getLinkTextColor()           { return getTheme()._colors.linkText; }
-	COLORREF getEdgeColor()               { return getTheme()._colors.edge; }
-	COLORREF getHotEdgeColor()            { return getTheme()._colors.hotEdge; }
-	COLORREF getDisabledEdgeColor()       { return getTheme()._colors.disabledEdge; }
-
-	HBRUSH getBackgroundBrush()           { return getTheme()._brushes.background; }
-	HBRUSH getCtrlBackgroundBrush()       { return getTheme()._brushes.ctrlBackground; }
-	HBRUSH getHotBackgroundBrush()        { return getTheme()._brushes.hotBackground; }
-	HBRUSH getDlgBackgroundBrush()        { return getTheme()._brushes.dlgBackground; }
-	HBRUSH getErrorBackgroundBrush()      { return getTheme()._brushes.errorBackground; }
-
-	HBRUSH getEdgeBrush()                 { return getTheme()._brushes.edge; }
-	HBRUSH getHotEdgeBrush()              { return getTheme()._brushes.hotEdge; }
-	HBRUSH getDisabledEdgeBrush()         { return getTheme()._brushes.disabledEdge; }
-
-	HPEN getDarkerTextPen()               { return getTheme()._pens.darkerTextPen; }
-	HPEN getEdgePen()                     { return getTheme()._pens.edgePen; }
-	HPEN getHotEdgePen()                  { return getTheme()._pens.hotEdgePen; }
-	HPEN getDisabledEdgePen()             { return getTheme()._pens.disabledEdgePen; }
-
-	void changeCustomTheme(const Colors& colors)
-	{
-		tDefault.change(colors);
-	}
-
-	COLORREF getViewBackgroundColor()       { return DarkMode::getThemeView()._clrView.background; }
-	COLORREF getViewTextColor()             { return DarkMode::getThemeView()._clrView.text; }
-	COLORREF getViewGridlinesColor()        { return DarkMode::getThemeView()._clrView.gridlines; }
-	COLORREF getHeaderTextColor()           { return DarkMode::getThemeView()._clrView.headerText; }
-	HBRUSH getViewBackgroundBrush()         { return DarkMode::getThemeView()._hbrPnView.background; }
-	HBRUSH getViewGridlinesBrush()          { return DarkMode::getThemeView()._hbrPnView.gridlines; }
-	HBRUSH getHeaderBackgroundBrush()       { return DarkMode::getThemeView()._hbrPnView.headerBackground; }
-	HBRUSH getHeaderHotBackgroundBrush()    { return DarkMode::getThemeView()._hbrPnView.headerHotBackground; }
-	HPEN getHeaderEdgePen()                 { return DarkMode::getThemeView()._hbrPnView.edge; }
-
 	bool handleSettingChange(LPARAM lParam)
 	{
-		if (DarkMode::isExperimentalSupported() && IsColorSchemeChangeMessage(lParam))
+		if (DarkMode::isExperimentalSupported() && ::IsColorSchemeChangeMessage(lParam))
 		{
 			// ShouldAppsUseDarkMode() is not reliable from 1903+, use NppDarkMode::isDarkModeReg() instead
 			bool isDarkModeUsed = DarkMode::isDarkModeReg() && !IsHighContrast();
@@ -882,31 +929,6 @@ namespace DarkMode
 	}
 
 	// from DarkMode.h
-
-	void initExperimentalDarkMode()
-	{
-		::InitDarkMode();
-	}
-
-	void setDarkMode(bool useDark, bool fixDarkScrollbar)
-	{
-		::SetDarkMode(useDark, fixDarkScrollbar);
-	}
-
-	void allowDarkModeForApp(bool allow)
-	{
-		::AllowDarkModeForApp(allow);
-	}
-
-	bool allowDarkModeForWindow(HWND hWnd, bool allow)
-	{
-		return ::AllowDarkModeForWindow(hWnd, allow);
-	}
-
-	void setTitleBarThemeColor(HWND hWnd)
-	{
-		::RefreshTitleBarThemeColor(hWnd);
-	}
 
 	void setSysColor(int nIndex, COLORREF color)
 	{
@@ -2122,7 +2144,7 @@ namespace DarkMode
 		DarkMode::subclassTabControlUpDown(hWnd);
 	}
 
-	void subclassTabControl(HWND hWnd, DarkModeParams p)
+	static void subclassTabControl(HWND hWnd, DarkModeParams p)
 	{
 		if (p._subclass)
 		{
@@ -2653,7 +2675,7 @@ namespace DarkMode
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	static void subclassComboboxEx(HWND hWnd)
+	void subclassComboboxExControl(HWND hWnd)
 	{
 		if (::GetWindowSubclass(hWnd, ComboboxExSubclass, g_comboboxExSubclassID, nullptr) == FALSE)
 		{
@@ -2661,11 +2683,11 @@ namespace DarkMode
 		}
 	}
 
-	void subclassComboboxEx(HWND hWnd, DarkModeParams p)
+	static void subclassComboboxExControl(HWND hWnd, DarkModeParams p)
 	{
 		if (p._subclass)
 		{
-			subclassComboboxEx(hWnd);
+			DarkMode::subclassComboboxExControl(hWnd);
 		}
 	}
 
@@ -2684,8 +2706,8 @@ namespace DarkMode
 		{
 			case WM_NCDESTROY:
 			{
-				DarkMode::unhookSysColor();
 				::RemoveWindowSubclass(hWnd, ListViewSubclass, uIdSubclass);
+				DarkMode::unhookSysColor();
 				break;
 			}
 
@@ -3335,7 +3357,7 @@ namespace DarkMode
 		}
 	}
 
-	void subclassStatusBarControl(HWND hWnd, DarkModeParams p)
+	static void subclassStatusBarControl(HWND hWnd, DarkModeParams p)
 	{
 		if (p._subclass)
 		{
@@ -3507,6 +3529,7 @@ namespace DarkMode
 						pProgressBarData->_iStateID = PBFS_ERROR; // red
 						break;
 					}
+
 					case PBST_PAUSED:
 					{
 						pProgressBarData->_iStateID = PBFS_PAUSED; // yellow
@@ -3528,7 +3551,7 @@ namespace DarkMode
 		}
 	}
 
-	void subclassProgressBarControl(HWND hWnd, DarkModeParams p)
+	static void subclassProgressBarControl(HWND hWnd, DarkModeParams p)
 	{
 		if (p._subclass)
 		{
@@ -3602,11 +3625,202 @@ namespace DarkMode
 		}
 	}
 
-	void subclassStaticText(HWND hWnd, DarkModeParams p)
+	static void subclassStaticText(HWND hWnd, DarkModeParams p)
 	{
 		if (p._subclass)
 		{
 			DarkMode::subclassStaticText(hWnd);
+		}
+	}
+
+	static void subclassAndThemeButton(HWND hWnd, DarkModeParams p)
+	{
+		const auto nBtnStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
+		switch (nBtnStyle & BS_TYPEMASK)
+		{
+			case BS_CHECKBOX:
+			case BS_AUTOCHECKBOX:
+			case BS_3STATE:
+			case BS_AUTO3STATE:
+			case BS_RADIOBUTTON:
+			case BS_AUTORADIOBUTTON:
+			{
+				if ((nBtnStyle & BS_PUSHLIKE) == BS_PUSHLIKE)
+				{
+					if (p._theme)
+					{
+						::SetWindowTheme(hWnd, p._themeClassName, nullptr);
+					}
+					break;
+				}
+
+				if (DarkMode::isWindows11() && p._theme)
+				{
+					::SetWindowTheme(hWnd, p._themeClassName, nullptr);
+				}
+
+				if (p._subclass)
+				{
+					DarkMode::subclassButtonControl(hWnd);
+				}
+				break;
+			}
+
+			case BS_GROUPBOX:
+			{
+				if (p._subclass)
+				{
+					DarkMode::subclassGroupboxControl(hWnd);
+				}
+				break;
+			}
+
+			case BS_PUSHBUTTON:
+			case BS_DEFPUSHBUTTON:
+			case BS_SPLITBUTTON:
+			case BS_DEFSPLITBUTTON:
+			{
+				if (p._theme)
+				{
+					::SetWindowTheme(hWnd, p._themeClassName, nullptr);
+				}
+				break;
+			}
+
+			default:
+			{
+				break;
+			}
+		}
+	}
+
+	static void subclassAndThemeComboBox(HWND hWnd, DarkModeParams p)
+	{
+		const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
+
+		if ((nStyle & CBS_DROPDOWNLIST) == CBS_DROPDOWNLIST || (nStyle & CBS_DROPDOWN) == CBS_DROPDOWN)
+		{
+			COMBOBOXINFO cbi{};
+			cbi.cbSize = sizeof(COMBOBOXINFO);
+			if (::GetComboBoxInfo(hWnd, &cbi) == TRUE)
+			{
+				if (p._theme && cbi.hwndList)
+				{
+					//dark scrollbar for listbox of combobox
+					::SetWindowTheme(cbi.hwndList, p._themeClassName, nullptr);
+				}
+			}
+
+			if (p._subclass)
+			{
+				HWND hParent = ::GetParent(hWnd);
+				if ((hParent == nullptr || getWndClassName(hParent) != WC_COMBOBOXEX))
+				{
+					DarkMode::subclassComboBoxControl(hWnd);
+				}
+			}
+
+			if (p._theme)
+			{
+				DarkMode::setDarkThemeExperimental(hWnd, L"CFD");
+			}
+		}
+	}
+
+	static void subclassAndThemeListBoxOrEditControl(HWND hWnd, DarkModeParams p, bool isListBox)
+	{
+		const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
+		const bool hasScrollBar = ((nStyle & WS_HSCROLL) == WS_HSCROLL) || ((nStyle & WS_VSCROLL) == WS_VSCROLL);
+		if (p._theme && (isListBox || hasScrollBar))
+		{
+			//dark scrollbar for listbox or edit control
+			::SetWindowTheme(hWnd, p._themeClassName, nullptr);
+		}
+
+		const auto nExStyle = ::GetWindowLongPtr(hWnd, GWL_EXSTYLE);
+		const bool hasClientEdge = (nExStyle & WS_EX_CLIENTEDGE) == WS_EX_CLIENTEDGE;
+		const bool isCBoxListBox = isListBox && (nStyle & LBS_COMBOBOX) == LBS_COMBOBOX;
+
+		if (p._subclass && hasClientEdge && !isCBoxListBox)
+		{
+			DarkMode::subclassCustomBorderForListBoxAndEditControls(hWnd);
+		}
+
+		if (::GetWindowSubclass(hWnd, CustomBorderSubclass, g_customBorderSubclassID, nullptr) == TRUE)
+		{
+			const bool enableClientEdge = !DarkMode::isEnabled();
+			if (enableClientEdge != hasClientEdge)
+			{
+				::SetWindowLongPtr(hWnd, GWL_EXSTYLE, nExStyle ^ WS_EX_CLIENTEDGE);
+				::SetWindowPos(hWnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+			}
+		}
+	}
+
+	static void subclassAndThemeListView(HWND hWnd, DarkModeParams p)
+	{
+		if (p._theme)
+		{
+			DarkMode::setDarkListView(hWnd);
+			DarkMode::setDarkTooltips(hWnd, DarkMode::ToolTipsType::listview);
+		}
+
+		ListView_SetTextColor(hWnd, DarkMode::getViewTextColor());
+		ListView_SetTextBkColor(hWnd, DarkMode::getViewBackgroundColor());
+		ListView_SetBkColor(hWnd, DarkMode::getViewBackgroundColor());
+
+		if (p._subclass)
+		{
+			auto nExStyle = ListView_GetExtendedListViewStyle(hWnd);
+			ListView_SetExtendedListViewStyle(hWnd, nExStyle | LVS_EX_DOUBLEBUFFER);
+			DarkMode::subclassListViewControl(hWnd);
+		}
+	}
+
+	static void themeTreeView(HWND hWnd, DarkModeParams p)
+	{
+		TreeView_SetTextColor(hWnd, DarkMode::getViewTextColor());
+		TreeView_SetBkColor(hWnd, DarkMode::getViewBackgroundColor());
+
+		//DarkMode::calculateTreeViewStyle();
+		DarkMode::setTreeViewStyle(hWnd, p._theme);
+
+		if (p._theme)
+		{
+			DarkMode::setDarkTooltips(hWnd, DarkMode::ToolTipsType::treeview);
+		}
+	}
+
+	static void themeToolbar(HWND hWnd, DarkModeParams p)
+	{
+		DarkMode::setDarkLineAbovePanelToolbar(hWnd);
+
+		if (p._theme)
+		{
+			DarkMode::setDarkTooltips(hWnd, DarkMode::ToolTipsType::toolbar);
+		}
+	}
+
+	static void themeProgressBar(HWND hWnd, DarkModeParams p)
+	{
+		if (p._theme)
+		{
+			DarkMode::setBorder(hWnd, DarkMode::isEnabled(), WS_DLGFRAME);
+			DarkMode::disableVisualStyle(hWnd, DarkMode::isEnabled());
+			if (DarkMode::isEnabled())
+			{
+				::SendMessage(hWnd, PBM_SETBKCOLOR, 0, static_cast<LPARAM>(DarkMode::getBackgroundColor()));
+				::SendMessage(hWnd, PBM_SETBARCOLOR, 0, static_cast<LPARAM>(HEXRGB(0x06B025)));
+			}
+		}
+	}
+
+	static void themeRichEdit(HWND hWnd, DarkModeParams p)
+	{
+		if (p._theme)
+		{
+			//dark scrollbar for rich edit control
+			::SetWindowTheme(hWnd, p._themeClassName, nullptr);
 		}
 	}
 
@@ -3701,7 +3915,7 @@ namespace DarkMode
 
 			if (className == WC_COMBOBOXEX)
 			{
-				DarkMode::subclassComboboxEx(hWnd, p);
+				DarkMode::subclassComboboxExControl(hWnd, p);
 				return TRUE;
 			}
 
@@ -3745,198 +3959,6 @@ namespace DarkMode
 	void autoThemeChildControls(HWND hwndParent)
 	{
 		autoSubclassAndThemeChildControls(hwndParent, false, DarkMode::isWindows10());
-	}
-
-	void subclassAndThemeButton(HWND hWnd, DarkModeParams p)
-	{
-		const auto nBtnStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
-		switch (nBtnStyle & BS_TYPEMASK)
-		{
-			case BS_CHECKBOX:
-			case BS_AUTOCHECKBOX:
-			case BS_3STATE:
-			case BS_AUTO3STATE:
-			case BS_RADIOBUTTON:
-			case BS_AUTORADIOBUTTON:
-			{
-				if ((nBtnStyle & BS_PUSHLIKE) == BS_PUSHLIKE)
-				{
-					if (p._theme)
-					{
-						::SetWindowTheme(hWnd, p._themeClassName, nullptr);
-					}
-					break;
-				}
-
-				if (DarkMode::isWindows11() && p._theme)
-				{
-					::SetWindowTheme(hWnd, p._themeClassName, nullptr);
-				}
-
-				if (p._subclass)
-				{
-					DarkMode::subclassButtonControl(hWnd);
-				}
-				break;
-			}
-
-			case BS_GROUPBOX:
-			{
-				if (p._subclass)
-				{
-					DarkMode::subclassGroupboxControl(hWnd);
-				}
-				break;
-			}
-
-			case BS_PUSHBUTTON:
-			case BS_DEFPUSHBUTTON:
-			case BS_SPLITBUTTON:
-			case BS_DEFSPLITBUTTON:
-			{
-				if (p._theme)
-				{
-					::SetWindowTheme(hWnd, p._themeClassName, nullptr);
-				}
-				break;
-			}
-
-			default:
-			{
-				break;
-			}
-		}
-	}
-
-	void subclassAndThemeComboBox(HWND hWnd, DarkModeParams p)
-	{
-		const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
-
-		if ((nStyle & CBS_DROPDOWNLIST) == CBS_DROPDOWNLIST || (nStyle & CBS_DROPDOWN) == CBS_DROPDOWN)
-		{
-			COMBOBOXINFO cbi{};
-			cbi.cbSize = sizeof(COMBOBOXINFO);
-			if (::GetComboBoxInfo(hWnd, &cbi) == TRUE)
-			{
-				if (p._theme && cbi.hwndList)
-				{
-					//dark scrollbar for listbox of combobox
-					::SetWindowTheme(cbi.hwndList, p._themeClassName, nullptr);
-				}
-			}
-
-			if (p._subclass)
-			{
-				HWND hParent = ::GetParent(hWnd);
-				if ((hParent == nullptr || getWndClassName(hParent) != WC_COMBOBOXEX))
-				{
-					DarkMode::subclassComboBoxControl(hWnd);
-				}
-			}
-
-			if (p._theme && DarkMode::isExperimentalSupported())
-			{
-				DarkMode::allowDarkModeForWindow(hWnd, DarkMode::isExperimentalActive());
-				::SetWindowTheme(hWnd, L"CFD", nullptr);
-			}
-		}
-	}
-
-	void subclassAndThemeListBoxOrEditControl(HWND hWnd, DarkModeParams p, bool isListBox)
-	{
-		const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
-		const bool hasScrollBar = ((nStyle & WS_HSCROLL) == WS_HSCROLL) || ((nStyle & WS_VSCROLL) == WS_VSCROLL);
-		if (p._theme && (isListBox || hasScrollBar))
-		{
-			//dark scrollbar for listbox or edit control
-			::SetWindowTheme(hWnd, p._themeClassName, nullptr);
-		}
-
-		const auto nExStyle = ::GetWindowLongPtr(hWnd, GWL_EXSTYLE);
-		const bool hasClientEdge = (nExStyle & WS_EX_CLIENTEDGE) == WS_EX_CLIENTEDGE;
-		const bool isCBoxListBox = isListBox && (nStyle & LBS_COMBOBOX) == LBS_COMBOBOX;
-
-		if (p._subclass && hasClientEdge && !isCBoxListBox)
-		{
-			DarkMode::subclassCustomBorderForListBoxAndEditControls(hWnd);
-		}
-
-		if (::GetWindowSubclass(hWnd, CustomBorderSubclass, g_customBorderSubclassID, nullptr) == TRUE)
-		{
-			const bool enableClientEdge = !DarkMode::isEnabled();
-			if (enableClientEdge != hasClientEdge)
-			{
-				::SetWindowLongPtr(hWnd, GWL_EXSTYLE, nExStyle ^ WS_EX_CLIENTEDGE);
-				::SetWindowPos(hWnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-			}
-		}
-	}
-
-	void subclassAndThemeListView(HWND hWnd, DarkModeParams p)
-	{
-		if (p._theme)
-		{
-			DarkMode::setDarkListView(hWnd);
-			DarkMode::setDarkTooltips(hWnd, DarkMode::ToolTipsType::listview);
-		}
-
-		ListView_SetTextColor(hWnd, DarkMode::getViewTextColor());
-		ListView_SetTextBkColor(hWnd, DarkMode::getViewBackgroundColor());
-		ListView_SetBkColor(hWnd, DarkMode::getViewBackgroundColor());
-
-		if (p._subclass)
-		{
-			auto nExStyle = ListView_GetExtendedListViewStyle(hWnd);
-			ListView_SetExtendedListViewStyle(hWnd, nExStyle | LVS_EX_DOUBLEBUFFER);
-			DarkMode::subclassListViewControl(hWnd);
-		}
-	}
-
-	void themeTreeView(HWND hWnd, DarkModeParams p)
-	{
-		TreeView_SetTextColor(hWnd, DarkMode::getViewTextColor());
-		TreeView_SetBkColor(hWnd, DarkMode::getViewBackgroundColor());
-
-		//DarkMode::calculateTreeViewStyle();
-		DarkMode::setTreeViewStyle(hWnd, p._theme);
-
-		if (p._theme)
-		{
-			DarkMode::setDarkTooltips(hWnd, DarkMode::ToolTipsType::treeview);
-		}
-	}
-
-	void themeToolbar(HWND hWnd, DarkModeParams p)
-	{
-		DarkMode::setDarkLineAbovePanelToolbar(hWnd);
-
-		if (p._theme)
-		{
-			DarkMode::setDarkTooltips(hWnd, DarkMode::ToolTipsType::toolbar);
-		}
-	}
-
-	void themeRichEdit(HWND hWnd, DarkModeParams p)
-	{
-		if (p._theme)
-		{
-			//dark scrollbar for rich edit control
-			::SetWindowTheme(hWnd, p._themeClassName, nullptr);
-		}
-	}
-
-	void themeProgressBar(HWND hWnd, DarkModeParams p)
-	{
-		if (p._theme)
-		{
-			DarkMode::setBorder(hWnd, DarkMode::isEnabled(), WS_DLGFRAME);
-			DarkMode::disableVisualStyle(hWnd, DarkMode::isEnabled());
-			if (DarkMode::isEnabled())
-			{
-				::SendMessage(hWnd, PBM_SETBKCOLOR, 0, static_cast<LPARAM>(DarkMode::getBackgroundColor()));
-				::SendMessage(hWnd, PBM_SETBARCOLOR, 0, static_cast<LPARAM>(HEXRGB(0x06B025)));
-			}
-		}
 	}
 
 	static LRESULT darkToolBarNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -4926,6 +4948,15 @@ namespace DarkMode
 		}
 	}
 
+	void setDarkThemeExperimental(HWND hWnd, const wchar_t* themeClassName)
+	{
+		if (DarkMode::isExperimentalSupported())
+		{
+			DarkMode::allowDarkModeForWindow(hWnd, DarkMode::isExperimentalActive());
+			::SetWindowTheme(hWnd, themeClassName, nullptr);
+		}
+	}
+
 	void disableVisualStyle(HWND hWnd, bool doDisable)
 	{
 		if (doDisable)
@@ -4940,6 +4971,29 @@ namespace DarkMode
 
 	// range to determine when it should be better to use classic style
 	constexpr double g_middleGrayRange = 2.0;
+	static TreeViewStyle g_treeViewStylePrev = TreeViewStyle::classic;
+	static COLORREF g_treeViewBg = RGB(41, 49, 52);
+	static double g_lightnessTreeView = 50.0;
+
+	// adapted from https://stackoverflow.com/a/56678483
+	double calculatePerceivedLightness(COLORREF clr)
+	{
+		auto linearValue = [](double colorChannel) -> double {
+			colorChannel /= 255.0;
+			if (colorChannel <= 0.04045)
+				return colorChannel / 12.92;
+			return std::pow(((colorChannel + 0.055) / 1.055), 2.4);
+			};
+
+		double r = linearValue(static_cast<double>(GetRValue(clr)));
+		double g = linearValue(static_cast<double>(GetGValue(clr)));
+		double b = linearValue(static_cast<double>(GetBValue(clr)));
+
+		double luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+		double lightness = (luminance <= 216.0 / 24389.0) ? (luminance * 24389.0 / 27.0) : (std::pow(luminance, (1.0 / 3.0)) * 116.0 - 16.0);
+		return lightness;
+	}
 
 	void calculateTreeViewStyle()
 	{
