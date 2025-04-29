@@ -20,6 +20,13 @@
 
 #include "StdAfx.h"
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include "DarkModeSubclass.h"
 
 #include "DarkMode.h"
@@ -41,6 +48,7 @@
 #ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
 #endif
+constexpr int CP_DROPDOWNITEM = 9; // for some reason mingw use only enum up to 8
 #else
 #define WINAPI_LAMBDA
 #endif
@@ -138,7 +146,7 @@ static bool setClrFromIni(std::wstring sectionName, std::wstring keyName, std::w
 		}
 	}
 
-	COLORREF clrTmp{ *clr };
+	COLORREF clrTmp = 0;
 
 	try
 	{
@@ -423,6 +431,8 @@ namespace DarkMode
 
 	void setDarkCustomColors(ColorTone colorTone)
 	{
+		g_colorToneChoice = colorTone;
+
 		switch (colorTone)
 		{
 			case DarkMode::ColorTone::red:
@@ -468,6 +478,11 @@ namespace DarkMode
 				break;
 			}
 		}
+	}
+
+	ColorTone getColorTone()
+	{
+		return g_colorToneChoice;
 	}
 
 	struct Theme
@@ -2402,9 +2417,6 @@ namespace DarkMode
 					dtto.dwFlags = DTT_TEXTCOLOR;
 					dtto.crText = isDisabled ? DarkMode::getDisabledTextColor() : DarkMode::getTextColor();
 
-#ifdef __GNUC__
-					constexpr int CP_DROPDOWNITEM = 9; // for some reason mingw use only enum up to 8
-#endif
 					::DrawThemeTextEx(hTheme, hdc, CP_DROPDOWNITEM, isDisabled ? CBXSR_DISABLED : CBXSR_NORMAL, buffer, -1, dtFlags, &rcText, &dtto);
 				}
 				else
@@ -4853,7 +4865,7 @@ namespace DarkMode
 			{
 				if (g_micaExtend && g_mica != DWMSBT_AUTO && !g_enableWindowsMode && g_useDarkMode)
 				{
-					constexpr MARGINS margins = { -1 };
+					constexpr MARGINS margins{ -1, 0, 0, 0 };
 					::DwmExtendFrameIntoClientArea(hWnd, &margins);
 				}
 

@@ -104,6 +104,7 @@ namespace DarkMode
 	void enableDarkScrollBarForWindowAndChildren(HWND hWnd);
 
 	void setDarkCustomColors(ColorTone colorTone);
+	ColorTone getColorTone();
 
 	COLORREF setBackgroundColor(COLORREF clrNew);
 	COLORREF setCtrlBackgroundColor(COLORREF clrNew);

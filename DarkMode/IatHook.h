@@ -37,9 +37,8 @@ PIMAGE_THUNK_DATA FindAddressByName(void *moduleBase, PIMAGE_THUNK_DATA impName,
 	return nullptr;
 }
 
-PIMAGE_THUNK_DATA FindAddressByOrdinal(void *moduleBase, PIMAGE_THUNK_DATA impName, PIMAGE_THUNK_DATA impAddr, uint16_t ordinal)
+PIMAGE_THUNK_DATA FindAddressByOrdinal(void */*moduleBase*/, PIMAGE_THUNK_DATA impName, PIMAGE_THUNK_DATA impAddr, uint16_t ordinal)
 {
-	UNREFERENCED_PARAMETER(moduleBase);
 	for (; impName->u1.Ordinal; ++impName, ++impAddr)
 	{
 		if (IMAGE_SNAP_BY_ORDINAL(impName->u1.Ordinal) && IMAGE_ORDINAL(impName->u1.Ordinal) == ordinal)
