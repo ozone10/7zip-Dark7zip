@@ -38,8 +38,8 @@ DialogProcedure(HWND dialogHWND, UINT message, WPARAM wParam, LPARAM lParam)
   if (message == WM_INITDIALOG)
     {
       dialog->Attach(dialogHWND);
-      DarkMode::initDarkMode();
-      DarkMode::setDarkTitleBar(*dialog);
+      DarkMode::initDarkMode(L"7zDark");
+      DarkMode::setDarkTitleBarEx(*dialog, true);
       DarkMode::autoSubclassCtlColor(*dialog);
       DarkMode::autoSubclassNotifyCustomDraw(*dialog, true);
     }

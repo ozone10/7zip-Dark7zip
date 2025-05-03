@@ -1,5 +1,7 @@
 #pragma once
 
+#include <windows.h>
+
 extern bool g_darkModeSupported;
 extern bool g_darkModeEnabled;
 

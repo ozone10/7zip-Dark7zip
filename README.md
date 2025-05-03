@@ -85,6 +85,13 @@ Replace 7z original files (e.g. `C:\Program Files\7-Zip\`) with files from downl
 > It is also recommended when using with `mica=1` to turn off Settings -> Personalization > Colors -> "Show accent color on title bars and window borders" setting.
 
 - [dark]/[light]
+  - roundCorner - on Windows 11 specifies rounded corners preference
+    - 0 - let the system decide when to round window corners, default value
+    - 1 - never round window corners
+    - 2 - round the corners, if appropriate
+    - 3 - round the corners if appropriate, with a small radius
+  - borderColor - on Windows 11 specifies the color of the window border, color is in RGB hex format - RRGGBB
+    - FFFFFF - use default system color, special value, default value
   - mica - apply Mica material on title bar, requires Windows 11 22H2 build 22621
     - 0 - let OS automatically decide the use of Mica material, default value
     - 1 - do not use Mica material
@@ -96,7 +103,7 @@ Values for custom colors are in RGB hex format - RRGGBB.
 
 - [dark.colors]/[light.colors]
   - background - for some controls (status bar, ...)
-  - backgroundInteractive - mainly for controls with some input 
+  - backgroundCtrl - mainly for controls with some input 
   - backgroundHot - for hot item
   - backgroundDlg - for dialog and some controls
   - text - for most text
@@ -128,12 +135,14 @@ mode = 1
 
 [dark]
 tone = 0
+roundCorner = 0
+borderColor = "FFFFFF"
 mica = 0
 micaExtend = 0
 
 [dark.colors]
 background =            "202020"
-backgroundInteractive = "404040"
+backgroundCtrl =        "404040"
 backgroundHot =         "404040"
 backgroundDlg =         "202020"
 text =                  "E0E0E0"
@@ -153,11 +162,13 @@ textHeader =            "C0C0C0"
 edgeHeader =            "646464"
 
 [light]
+roundCorner = 0
+borderColor = "FFFFFF"
 mica = 0
 
 [light.colors]
 background =            "F0F0F0"
-backgroundInteractive = "FFFFFF"
+backgroundCtrl =        "FFFFFF"
 backgroundHot =         "C0DCF3"
 backgroundDlg =         "F0F0F0"
 text =                  "000000"

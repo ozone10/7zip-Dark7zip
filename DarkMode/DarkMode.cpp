@@ -3,18 +3,27 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-
-#include <windows.h>
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 
 #include "DarkMode.h"
-
-#include "IatHook.h"
 
 #include <uxtheme.h>
 #include <vssym32.h>
 
 #include <unordered_set>
 #include <mutex>
+
+#if !defined(_DARKMODELIB_EXTERNAL_IATHOOK)
+#include "IatHook.h"
+#else
+extern PIMAGE_THUNK_DATA FindAddressByName(void* moduleBase, PIMAGE_THUNK_DATA impName, PIMAGE_THUNK_DATA impAddr, const char* funcName);
+extern PIMAGE_THUNK_DATA FindAddressByOrdinal(void* moduleBase, PIMAGE_THUNK_DATA impName, PIMAGE_THUNK_DATA impAddr, uint16_t ordinal);
+extern PIMAGE_THUNK_DATA FindIatThunkInModule(void* moduleBase, const char* dllName, const char* funcName);
+extern PIMAGE_THUNK_DATA FindDelayLoadThunkInModule(void* moduleBase, const char* dllName, const char* funcName);
+extern PIMAGE_THUNK_DATA FindDelayLoadThunkInModule(void* moduleBase, const char* dllName, uint16_t ordinal);
+#endif
 
 #if defined(__GNUC__) && (__GNUC__ > 8)
 #define WINAPI_LAMBDA_RETURN(return_t) -> return_t WINAPI

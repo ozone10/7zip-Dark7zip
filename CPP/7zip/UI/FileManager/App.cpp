@@ -287,7 +287,7 @@ HRESULT CApp::Create(HWND hwnd, const UString &mainPath, const UString &arcForma
 {
   _window.Attach(hwnd);
 
-  DarkMode::initDarkMode();
+  DarkMode::initDarkMode(L"7zDark");
 
   #ifdef UNDER_CE
   _commandBar.Create(g_hInstance, hwnd, 1);
@@ -355,7 +355,7 @@ HRESULT CApp::Create(HWND hwnd, const UString &mainPath, const UString &arcForma
     }
   }
 
-  DarkMode::setDarkTitleBar(hwnd);
+  DarkMode::setDarkTitleBarEx(hwnd, true);
   DarkMode::autoSubclassWindowMenuBar(hwnd);
   DarkMode::autoSubclassCtlColor(hwnd);
   DarkMode::autoSubclassNotifyCustomDraw(hwnd, true);

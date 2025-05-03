@@ -35,7 +35,7 @@ APIENTRY MyProperyPageProcedure(HWND dialogHWND, UINT message, WPARAM wParam, LP
   if (message == WM_INITDIALOG)
     {
       dialog->Attach(dialogHWND);
-      DarkMode::setDarkTitleBar(::GetParent(*dialog));
+      DarkMode::setDarkTitleBarEx(::GetParent(*dialog), true);
       DarkMode::autoSubclassCtlColor(::GetParent(*dialog));
       DarkMode::autoSubclassNotifyCustomDraw(::GetParent(*dialog), true);
       DarkMode::autoSubclassNotifyCustomDraw(*dialog, true);

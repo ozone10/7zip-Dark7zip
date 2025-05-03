@@ -17,10 +17,12 @@
 // with modification from Notepad++ team.
 // Heavily modified by ozone10 (contributor of Notepad++)
 
+
 #pragma once
 
 #include <windows.h>
 
+#if (NTDDI_VERSION >= NTDDI_VISTA)
 
 namespace DarkMode
 {
@@ -79,6 +81,18 @@ namespace DarkMode
 		dark    = 2
 	};
 
+	int* getDarkModeLibVersion();
+
+	// enum DarkModeType { light = 0, dark = 1, windows = 2, classic = 3 }; values
+	void setDarkModeTypeConfig(int dmType);
+	// DWM_WINDOW_CORNER_PREFERENCE values
+	void setRoundCornerConfig(int roundCornerStyle);
+	void setBorderColorConfig(COLORREF clr);
+	// DWM_SYSTEMBACKDROP_TYPE values
+	void setMicaConfig(int mica);
+	void setMicaExtendedConfig(bool extendMica);
+
+	void initDarkMode(const wchar_t* iniName);
 	void initDarkMode();
 
 	bool isEnabled();
@@ -204,6 +218,7 @@ namespace DarkMode
 	void autoSubclassWindowMenuBar(HWND hWnd);
 	void autoSubclassWindowSettingChange(HWND hWnd);
 
+	void setDarkTitleBarEx(HWND hWnd, bool win11Features);
 	void setDarkTitleBar(HWND hWnd);
 	void setDarkExplorerTheme(HWND hWnd);
 	void setDarkScrollBar(HWND hWnd);
@@ -229,3 +244,7 @@ namespace DarkMode
 	LRESULT onCtlColorDlgLinkText(HDC hdc, bool isTextEnabled = true);
 	LRESULT onCtlColorListbox(WPARAM wParam, LPARAM lParam);
 }
+
+#else
+#define _DARKMODELIB_NOT_USED
+#endif // (NTDDI_VERSION >= NTDDI_VISTA)

@@ -18,6 +18,7 @@
 // with modification from Notepad++ team.
 // Heavily modified by ozone10 (contributor of Notepad++)
 
+
 #include "StdAfx.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -29,19 +30,22 @@
 
 #include "DarkModeSubclass.h"
 
-#include "DarkMode.h"
-#include "UAHMenuBar.h"
+#if !defined(_DARKMODELIB_NOT_USED)
 
 #include <dwmapi.h>
+#include <shlwapi.h>
 #include <uxtheme.h>
 #include <vssym32.h>
 #include <windowsx.h>
 
-#include <shlwapi.h>
-
 #include <array>
 #include <cmath>
 #include <string>
+
+#include "DarkMode.h"
+#include "UAHMenuBar.h"
+
+#include "Version.h"
 
 #ifdef __GNUC__
 #define WINAPI_LAMBDA WINAPI
@@ -76,8 +80,6 @@ constexpr int CP_DROPDOWNITEM = 9; // for some reason mingw use only enum up to 
 #pragma comment(lib, "Gdi32.lib")
 #endif
 
-static constexpr const wchar_t* g_iniName = L"7zDark";
-
 static constexpr COLORREF HEXRGB(DWORD rrggbb) {
 	// from 0xRRGGBB like natural #RRGGBB
 	// to the little-endian 0xBBGGRR
@@ -100,6 +102,7 @@ static bool cmpWndClassName(HWND hWnd, const wchar_t* classNameToCmp)
 	return (getWndClassName(hWnd) == classNameToCmp);
 }
 
+#if !defined(_DARKMODELIB_NO_INI_CONFIG)
 static std::wstring getIniPath(std::wstring iniFilename)
 {
 	wchar_t buffer[MAX_PATH]{};
@@ -160,9 +163,24 @@ static bool setClrFromIni(std::wstring sectionName, std::wstring keyName, std::w
 	*clr = clrTmp;
 	return true;
 }
+#endif // !defined(_DARKMODELIB_NO_INI_CONFIG)
 
 namespace DarkMode
 {
+	int* getDarkModeLibVersion()
+	{
+		std::array<int, 4> version{ DM_VERSION_MAJOR, DM_VERSION_MINOR, DM_VERSION_REVISION, DM_VERSION_BUILD };
+		return version.data();
+	}
+
+	enum class DarkModeType
+	{
+		light   = 0,
+		dark    = 1,
+		windows = 2, // never used
+		classic = 3
+	};
+
 	enum class SubclassID : UINT_PTR
 	{
 		button          = 42,
@@ -702,86 +720,117 @@ namespace DarkMode
 
 	static TreeViewStyle g_treeViewStyle = TreeViewStyle::classic;
 
-	static bool g_useDarkMode = true;
+	static DarkModeType g_dmType = DarkModeType::dark;
 	static bool g_enableWindowsMode = false;
 
 	static auto g_mica = DWMSBT_AUTO;
 	static bool g_micaExtend = false;
 
+	static auto g_roundCorner = DWMWCP_DEFAULT;
+	static COLORREF g_borderColor = DWMWA_COLOR_DEFAULT;
+
 	static bool g_isInit = false;
 	static bool g_isInitExperimental = false;
 
-	static void initOptions()
+	void setDarkModeTypeConfig(int dmType)
 	{
+		switch (dmType)
+		{
+			case 0:
+			{
+				g_dmType = DarkModeType::light;
+				g_enableWindowsMode = false;
+				break;
+			}
+
+			case 2:
+			{
+				g_dmType = DarkMode::isDarkModeReg() ? DarkModeType::dark : DarkModeType::light;
+				g_enableWindowsMode = true;
+				break;
+			}
+
+			case 3:
+			{
+				g_dmType = DarkModeType::classic;
+				g_enableWindowsMode = false;
+				break;
+			}
+
+			case 1:
+			default:
+			{
+				g_dmType = DarkModeType::dark;
+				g_enableWindowsMode = false;
+				break;
+			}
+		}
+	}
+
+	void setRoundCornerConfig(int roundCornerStyle)
+	{
+		const auto cornerStyle = static_cast<DWM_WINDOW_CORNER_PREFERENCE>(roundCornerStyle);
+		if (cornerStyle > DWMWCP_ROUNDSMALL || cornerStyle < DWMWCP_DEFAULT)
+			g_roundCorner = DWMWCP_DEFAULT;
+		g_roundCorner = cornerStyle;
+	}
+
+	void setBorderColorConfig(COLORREF clr)
+	{
+		if (clr == 0xFFFFFF)
+			g_borderColor = DWMWA_COLOR_DEFAULT;
+		else
+			g_borderColor = clr;
+	}
+
+	void setMicaConfig(int mica)
+	{
+		const auto micaType = static_cast<DWM_SYSTEMBACKDROP_TYPE>(mica);
+		if (micaType > DWMSBT_TABBEDWINDOW || micaType < DWMSBT_AUTO)
+			g_mica = DWMSBT_AUTO;
+		g_mica = micaType;
+	}
+
+	void setMicaExtendedConfig(bool extendMica)
+	{
+		g_micaExtend = extendMica;
+	}
+
+#if !defined(_DARKMODELIB_NO_INI_CONFIG)
+	static std::wstring g_iniName = L"";
+
+	static void initOptions(std::wstring iniName = L"")
+	{
+		if (!iniName.empty() && iniName != L"")
+		{
+			g_iniName = iniName;
+		}
+
+		if (g_iniName.empty() || g_iniName == L"")
+		{
+			return;
+		}
+
 		std::wstring iniPath = getIniPath(g_iniName);
 		if (fileExists(iniPath))
 		{
-			switch (::GetPrivateProfileInt(L"main", L"mode", 1, iniPath.c_str()))
-			{
-				case 0:
-				{
-					g_useDarkMode = false;
-					g_enableWindowsMode = false;
-					break;
-				}
+			DarkMode::setDarkModeTypeConfig(::GetPrivateProfileInt(L"main", L"mode", 1, iniPath.c_str()));
+			const bool useDark = g_dmType == DarkModeType::dark;
 
-				case 2:
-				{
-					g_useDarkMode = DarkMode::isDarkModeReg();
-					g_enableWindowsMode = true;
-					break;
-				}
-
-				case 1:
-				default:
-				{
-					g_useDarkMode = true;
-					g_enableWindowsMode = false;
-					break;
-				}
-			}
-
-			std::wstring sectionBase = g_useDarkMode ? L"dark" : L"light";
+			std::wstring sectionBase = useDark ? L"dark" : L"light";
 			std::wstring sectionColorsView = sectionBase + L".colors.view";
 			std::wstring sectionColors = sectionBase + L".colors";
 
-			switch (::GetPrivateProfileInt(sectionBase.c_str(), L"mica", 0, iniPath.c_str()))
-			{
-				case 1:
-				{
-					g_mica = DWMSBT_NONE;
-					break;
-				}
+			DarkMode::setMicaConfig(::GetPrivateProfileInt(sectionBase.c_str(), L"mica", 0, iniPath.c_str()));
+			DarkMode::setRoundCornerConfig(::GetPrivateProfileInt(sectionBase.c_str(), L"roundCorner", 0, iniPath.c_str()));
+			setClrFromIni(sectionBase, L"borderColor", iniPath, &g_borderColor);
+			if (g_borderColor == 0xFFFFFF)
+				g_borderColor = DWMWA_COLOR_DEFAULT;
 
-				case 2:
-				{
-					g_mica = DWMSBT_MAINWINDOW;
-					break;
-				}
-
-				case 3:
-				{
-					g_mica = DWMSBT_TRANSIENTWINDOW;
-					break;
-				}
-
-				case 4:
-				{
-					g_mica = DWMSBT_TABBEDWINDOW;
-					break;
-				}
-
-				default:
-				{
-					g_mica = DWMSBT_AUTO;
-					break;
-				}
-			}
-
-			if (g_useDarkMode)
+			if (useDark)
 			{
 				int tone = ::GetPrivateProfileInt(sectionBase.c_str(), L"tone", 0, iniPath.c_str());
-				if (tone > 6)
+				if (tone > 6 || tone < 0)
 					tone = 0;
 
 				DarkMode::setDarkCustomColors(static_cast<DarkMode::ColorTone>(tone));
@@ -809,7 +858,7 @@ namespace DarkMode
 			setClrFromIni(sectionColorsView, L"edgeHeader", iniPath, &DarkMode::getThemeView()._clrView.headerEdge);
 
 			setClrFromIni(sectionColors, L"background", iniPath, &DarkMode::getTheme()._colors.background);
-			setClrFromIni(sectionColors, L"backgroundInteractive", iniPath, &DarkMode::getTheme()._colors.ctrlBackground);
+			setClrFromIni(sectionColors, L"backgroundCtrl", iniPath, &DarkMode::getTheme()._colors.ctrlBackground);
 			setClrFromIni(sectionColors, L"backgroundHot", iniPath, &DarkMode::getTheme()._colors.hotBackground);
 			setClrFromIni(sectionColors, L"backgroundDlg", iniPath, &DarkMode::getTheme()._colors.dlgBackground);
 			setClrFromIni(sectionColors, L"backgroundError", iniPath, &DarkMode::getTheme()._colors.errorBackground);
@@ -827,6 +876,7 @@ namespace DarkMode
 			DarkMode::updateBrushesAndPensView();
 		}
 	}
+#endif // !defined(_DARKMODELIB_NO_INI_CONFIG)
 
 	static void initExperimentalDarkMode()
 	{
@@ -848,7 +898,7 @@ namespace DarkMode
 		::RefreshTitleBarThemeColor(hWnd);
 	}
 
-	void initDarkMode()
+	void initDarkMode([[maybe_unused]] const wchar_t* iniName)
 	{
 		if (!g_isInit)
 		{
@@ -858,10 +908,12 @@ namespace DarkMode
 				g_isInitExperimental = true;
 			}
 
-			DarkMode::initOptions();
+#if !defined(_DARKMODELIB_NO_INI_CONFIG)
+			DarkMode::initOptions(iniName);
+#endif
 
 			DarkMode::calculateTreeViewStyle();
-			DarkMode::setDarkMode(g_useDarkMode, true);
+			DarkMode::setDarkMode(g_dmType == DarkModeType::dark, true);
 
 			DarkMode::setSysColor(COLOR_WINDOW, DarkMode::getBackgroundColor());
 			DarkMode::setSysColor(COLOR_WINDOWTEXT, DarkMode::getTextColor());
@@ -871,9 +923,14 @@ namespace DarkMode
 		}
 	}
 
+	void initDarkMode()
+	{
+		DarkMode::initDarkMode(L"");
+	}
+
 	bool isEnabled()
 	{
-		return DarkMode::isWindows10();
+		return DarkMode::isWindows10() && g_dmType != DarkModeType::classic;
 	}
 
 	bool isExperimentalActive()
@@ -4834,7 +4891,7 @@ namespace DarkMode
 			{
 				if (DarkMode::handleSettingChange(lParam))
 				{
-					DarkMode::setDarkTitleBar(hWnd);
+					DarkMode::setDarkTitleBarEx(hWnd, true);
 					DarkMode::autoThemeChildControls(hWnd);
 					::RedrawWindow(hWnd, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN | RDW_UPDATENOW);
 				}
@@ -4852,7 +4909,7 @@ namespace DarkMode
 		}
 	}
 
-	void setDarkTitleBar(HWND hWnd)
+	void setDarkTitleBarEx(HWND hWnd, bool win11Features)
 	{
 		constexpr DWORD win10Build2004 = 19041;
 		constexpr DWORD win11Mica = 22621;
@@ -4861,15 +4918,21 @@ namespace DarkMode
 			BOOL value = DarkMode::isExperimentalActive() ? TRUE : FALSE;
 			::DwmSetWindowAttribute(hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
 
-			if (DarkMode::getWindowsBuildNumber() >= win11Mica)
+			if (win11Features && DarkMode::isWindows11())
 			{
-				if (g_micaExtend && g_mica != DWMSBT_AUTO && !g_enableWindowsMode && g_useDarkMode)
-				{
-					constexpr MARGINS margins{ -1, 0, 0, 0 };
-					::DwmExtendFrameIntoClientArea(hWnd, &margins);
-				}
+				::DwmSetWindowAttribute(hWnd, DWMWA_WINDOW_CORNER_PREFERENCE, &g_roundCorner, sizeof(g_roundCorner));
+				::DwmSetWindowAttribute(hWnd, DWMWA_BORDER_COLOR, &g_borderColor, sizeof(g_borderColor));
 
-				::DwmSetWindowAttribute(hWnd, DWMWA_SYSTEMBACKDROP_TYPE, &g_mica, sizeof(g_mica));
+				if (DarkMode::getWindowsBuildNumber() >= win11Mica)
+				{
+					if (g_micaExtend && g_mica != DWMSBT_AUTO && !g_enableWindowsMode && (g_dmType == DarkModeType::dark))
+					{
+						constexpr MARGINS margins{ -1, 0, 0, 0 };
+						::DwmExtendFrameIntoClientArea(hWnd, &margins);
+					}
+
+					::DwmSetWindowAttribute(hWnd, DWMWA_SYSTEMBACKDROP_TYPE, &g_mica, sizeof(g_mica));
+				}
 			}
 		}
 		else
@@ -4877,6 +4940,11 @@ namespace DarkMode
 			DarkMode::allowDarkModeForWindow(hWnd, DarkMode::isExperimentalActive());
 			DarkMode::setTitleBarThemeColor(hWnd);
 		}
+	}
+
+	void setDarkTitleBar(HWND hWnd)
+	{
+		DarkMode::setDarkTitleBarEx(hWnd, false);
 	}
 
 	void setDarkExplorerTheme(HWND hWnd)
@@ -5208,3 +5276,5 @@ namespace DarkMode
 		return DarkMode::onCtlColor(hdc);
 	}
 }
+
+#endif // !defined(_DARKMODELIB_NOT_USED)
