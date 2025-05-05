@@ -80,7 +80,8 @@ constexpr int CP_DROPDOWNITEM = 9; // for some reason mingw use only enum up to 
 #pragma comment(lib, "Gdi32.lib")
 #endif
 
-static constexpr COLORREF HEXRGB(DWORD rrggbb) {
+static constexpr COLORREF HEXRGB(DWORD rrggbb)
+{
 	// from 0xRRGGBB like natural #RRGGBB
 	// to the little-endian 0xBBGGRR
 	return
@@ -103,7 +104,7 @@ static bool cmpWndClassName(HWND hWnd, const wchar_t* classNameToCmp)
 }
 
 #if !defined(_DARKMODELIB_NO_INI_CONFIG)
-static std::wstring getIniPath(std::wstring iniFilename)
+static std::wstring getIniPath(const std::wstring& iniFilename)
 {
 	wchar_t buffer[MAX_PATH]{};
 	::GetModuleFileName(nullptr, buffer, MAX_PATH);
@@ -122,13 +123,13 @@ static std::wstring getIniPath(std::wstring iniFilename)
 	return L"";
 }
 
-static bool fileExists(std::wstring filePath)
+static bool fileExists(const std::wstring& filePath)
 {
 	DWORD dwAttrib = ::GetFileAttributes(filePath.c_str());
 	return (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-static bool setClrFromIni(std::wstring sectionName, std::wstring keyName, std::wstring iniFilePath, COLORREF* clr)
+static bool setClrFromIni(const std::wstring& sectionName, const std::wstring& keyName, const std::wstring& iniFilePath, COLORREF* clr)
 {
 	constexpr size_t maxStringLength = 7;
 	wchar_t buffer[maxStringLength + 1]{};
@@ -167,17 +168,51 @@ static bool setClrFromIni(std::wstring sectionName, std::wstring keyName, std::w
 
 namespace DarkMode
 {
-	int* getDarkModeLibVersion()
+	int getLibInfo(LibInfoType libInfoType)
 	{
-		std::array<int, 4> version{ DM_VERSION_MAJOR, DM_VERSION_MINOR, DM_VERSION_REVISION, DM_VERSION_BUILD };
-		return version.data();
+		switch (libInfoType)
+		{
+			case LibInfoType::maxValue:
+			case LibInfoType::featureCheck:
+				return static_cast<int>(LibInfoType::maxValue);
+
+			case LibInfoType::verMajor:
+				return DM_VERSION_MAJOR;
+
+			case LibInfoType::verMinor:
+				return DM_VERSION_MINOR;
+
+			case LibInfoType::verRevision:
+				return DM_VERSION_REVISION;
+
+			case LibInfoType::iathookExternal:
+			{
+#if defined(_DARKMODELIB_EXTERNAL_IATHOOK)
+				return TRUE;
+#else
+				return FALSE;
+#endif
+			}
+
+			case LibInfoType::iniConfigUsed:
+			{
+#if !defined(_DARKMODELIB_NO_INI_CONFIG)
+				return TRUE;
+#else
+				return FALSE;
+#endif
+			}
+
+			default:
+				return -1;
+		}
 	}
 
 	enum class DarkModeType
 	{
 		light   = 0,
 		dark    = 1,
-		windows = 2, // never used
+		//windows = 2, // never used
 		classic = 3
 	};
 
@@ -221,7 +256,7 @@ namespace DarkMode
 		HBRUSH hotEdge = nullptr;
 		HBRUSH disabledEdge = nullptr;
 
-		Brushes(const Colors& colors)
+		explicit Brushes(const Colors& colors)
 			: background(::CreateSolidBrush(colors.background))
 			, ctrlBackground(::CreateSolidBrush(colors.ctrlBackground))
 			, hotBackground(::CreateSolidBrush(colors.hotBackground))
@@ -277,7 +312,7 @@ namespace DarkMode
 		HPEN hotEdgePen = nullptr;
 		HPEN disabledEdgePen = nullptr;
 
-		Pens(const Colors& colors)
+		explicit Pens(const Colors& colors)
 			: darkerTextPen(::CreatePen(PS_SOLID, 1, colors.darkerText))
 			, edgePen(::CreatePen(PS_SOLID, 1, colors.edge))
 			, hotEdgePen(::CreatePen(PS_SOLID, 1, colors.hotEdge))
@@ -509,7 +544,7 @@ namespace DarkMode
 		Brushes _brushes;
 		Pens _pens;
 
-		Theme(const Colors& colors)
+		explicit Theme(const Colors& colors)
 			: _colors(colors)
 			, _brushes(colors)
 			, _pens(colors)
@@ -559,7 +594,7 @@ namespace DarkMode
 
 		HPEN headerEdge = nullptr;
 
-		BrushesAndPensView(const ColorsView& colors)
+		explicit BrushesAndPensView(const ColorsView& colors)
 			: background(::CreateSolidBrush(colors.background))
 			, gridlines(::CreateSolidBrush(colors.gridlines))
 			, headerBackground(::CreateSolidBrush(colors.headerBackground))
@@ -606,7 +641,7 @@ namespace DarkMode
 			, _hbrPnView(_clrView)
 		{}
 
-		ThemeView(const ColorsView& colorsView)
+		explicit ThemeView(const ColorsView& colorsView)
 			: _clrView(colorsView)
 			, _hbrPnView(_clrView)
 		{}
@@ -623,7 +658,7 @@ namespace DarkMode
 		}
 	};
 
-	static ThemeView tView{darkColorsView};
+	static ThemeView tView{ darkColorsView };
 
 	static ThemeView& getThemeView()
 	{
@@ -799,7 +834,7 @@ namespace DarkMode
 #if !defined(_DARKMODELIB_NO_INI_CONFIG)
 	static std::wstring g_iniName = L"";
 
-	static void initOptions(std::wstring iniName = L"")
+	static void initOptions(const std::wstring& iniName = L"")
 	{
 		if (!iniName.empty() && iniName != L"")
 		{
@@ -928,6 +963,12 @@ namespace DarkMode
 		DarkMode::initDarkMode(L"");
 	}
 
+	void setDarkMode(int dmType)
+	{
+		DarkMode::setDarkModeTypeConfig(dmType);
+		DarkMode::setDarkMode(g_dmType == DarkModeType::dark, true);
+	}
+
 	bool isEnabled()
 	{
 		return DarkMode::isWindows10() && g_dmType != DarkModeType::classic;
@@ -971,7 +1012,6 @@ namespace DarkMode
 			bool isDarkModeUsed = DarkMode::isDarkModeReg() && !IsHighContrast();
 			if (DarkMode::isExperimentalActive() != isDarkModeUsed)
 			{
-				g_darkModeEnabled = isDarkModeUsed;
 				if (g_isInit)
 				{
 					g_isInit = false;
@@ -1038,9 +1078,9 @@ namespace DarkMode
 	struct ThemeData
 	{
 		HTHEME _hTheme = nullptr;
-		const wchar_t *_themeClass;
+		const wchar_t* _themeClass;
 
-		ThemeData(const wchar_t *themeClass)
+		explicit ThemeData(const wchar_t* themeClass)
 			: _themeClass(themeClass)
 		{}
 
@@ -1159,8 +1199,8 @@ namespace DarkMode
 		{}
 
 		// Saves width and height from the resource file for use as restrictions.
-		ButtonData(HWND hWnd)
-		: _themeData(VSCLASS_BUTTON)
+		explicit ButtonData(HWND hWnd)
+			: _themeData(VSCLASS_BUTTON)
 		{
 			const auto nBtnStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 			switch (nBtnStyle & BS_TYPEMASK)
@@ -1463,7 +1503,7 @@ namespace DarkMode
 		}
 	}
 
-	static void paintGroupbox(HWND hWnd, HDC hdc, ButtonData& buttonData)
+	static void paintGroupbox(HWND hWnd, HDC hdc, const ButtonData& buttonData)
 	{
 		const auto& hTheme = buttonData._themeData._hTheme;
 
@@ -1545,7 +1585,7 @@ namespace DarkMode
 
 			DWORD textFlags = isCenter ? DT_CENTER : DT_LEFT;
 
-			if(::SendMessage(hWnd, WM_QUERYUISTATE, 0, 0) != static_cast<LRESULT>(NULL))
+			if (::SendMessage(hWnd, WM_QUERYUISTATE, 0, 0) != static_cast<LRESULT>(NULL))
 			{
 				textFlags |= DT_HIDEPREFIX;
 			}
@@ -1553,7 +1593,8 @@ namespace DarkMode
 			::DrawThemeTextEx(hTheme, hdc, BP_GROUPBOX, iStateID, szText, -1, textFlags | DT_SINGLELINE, &rcText, &dtto);
 		}
 
-		if (hCreatedFont) ::DeleteObject(hCreatedFont);
+		if (hCreatedFont)
+			::DeleteObject(hCreatedFont);
 		::SelectObject(hdc, hOldFont);
 	}
 
@@ -1658,7 +1699,7 @@ namespace DarkMode
 			: _themeData(VSCLASS_BUTTON)
 		{}
 
-		UpDownData(HWND hWnd)
+		explicit UpDownData(HWND hWnd)
 			: _themeData(VSCLASS_BUTTON)
 		{
 			const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
@@ -2411,7 +2452,7 @@ namespace DarkMode
 			: _themeData(VSCLASS_COMBOBOX)
 		{}
 
-		ComboboxData(LONG_PTR cbStyle)
+		explicit ComboboxData(LONG_PTR cbStyle)
 			: _themeData(VSCLASS_COMBOBOX)
 			, _cbStyle(cbStyle)
 		{}
@@ -2504,7 +2545,7 @@ namespace DarkMode
 		{
 			if (hasTheme)
 			{
-				RECT rcThemedArrow { rcArrow.left, rcArrow.top - 1, rcArrow.right, rcArrow.bottom - 1 };
+				RECT rcThemedArrow{ rcArrow.left, rcArrow.top - 1, rcArrow.right, rcArrow.bottom - 1 };
 				::DrawThemeBackground(hTheme, hdc, CP_DROPDOWNBUTTONRIGHT, isDisabled ? CBXSR_DISABLED : CBXSR_NORMAL, &rcThemedArrow, nullptr);
 			}
 			else
@@ -2698,6 +2739,18 @@ namespace DarkMode
 				break;
 			}
 
+			case WM_ERASEBKGND:
+			{
+				if (DarkMode::isEnabled())
+				{
+					RECT rcClient{};
+					::GetClientRect(hWnd, &rcClient);
+					::FillRect(reinterpret_cast<HDC>(wParam), &rcClient, DarkMode::getDlgBackgroundBrush());
+					return TRUE;
+				}
+				break;
+			}
+
 			case WM_CTLCOLOREDIT:
 			{
 				if (DarkMode::isEnabled())
@@ -2873,7 +2926,7 @@ namespace DarkMode
 			_hasBtnStyle(true)
 		{}
 
-		HeaderData(bool hasBtnStyle)
+		explicit HeaderData(bool hasBtnStyle)
 			: _themeData(VSCLASS_HEADER),
 			_hasBtnStyle(hasBtnStyle)
 		{}
@@ -3183,7 +3236,7 @@ namespace DarkMode
 			: _themeData(VSCLASS_STATUS)
 		{}
 
-		StatusBarData(const HFONT & hFont)
+		explicit StatusBarData(const HFONT& hFont)
 			: _themeData(VSCLASS_STATUS)
 		{
 			_fontData.setFont(hFont);
@@ -3290,7 +3343,7 @@ namespace DarkMode
 			{
 				SIZE szGrip{};
 				::GetThemePartSize(hTheme, hdc, SP_GRIPPER, 0, &rcClient, TS_DRAW, &szGrip);
-				RECT rcGrip{ rcClient};
+				RECT rcGrip{ rcClient };
 				rcGrip.left = rcGrip.right - szGrip.cx;
 				rcGrip.top = rcGrip.bottom - szGrip.cy;
 				::DrawThemeBackground(hTheme, hdc, SP_GRIPPER, 0, &rcGrip, nullptr);
@@ -3452,17 +3505,16 @@ namespace DarkMode
 
 		PBRANGE range{};
 		::SendMessage(hWnd, PBM_GETRANGE, TRUE, reinterpret_cast<LPARAM>(&range));
-		int min = range.iLow;
-		int max = range.iHigh;
+		const int iMin = range.iLow;
 
-		int currPos = pos - min;
+		const int currPos = pos - iMin;
 		if (currPos != 0)
 		{
 			int totalWidth = rcEmpty->right - rcEmpty->left;
 			rcFilled->left = rcEmpty->left;
 			rcFilled->top = rcEmpty->top;
 			rcFilled->bottom = rcEmpty->bottom;
-			rcFilled->right = rcEmpty->left + static_cast<int>(static_cast<double>(currPos) / (max - min) * totalWidth);
+			rcFilled->right = rcEmpty->left + static_cast<int>(static_cast<double>(currPos) / (range.iHigh - iMin) * totalWidth);
 
 			rcEmpty->left = rcFilled->right; // to avoid painting under filled part
 		}
@@ -3633,7 +3685,7 @@ namespace DarkMode
 		bool isEnabled = true;
 
 		StaticTextData() = default;
-		StaticTextData(HWND hWnd)
+		explicit StaticTextData(HWND hWnd)
 		{
 			isEnabled = ::IsWindowEnabled(hWnd) == TRUE;
 		}
@@ -4196,7 +4248,7 @@ namespace DarkMode
 
 			if (hBrush != nullptr)
 			{
-				if (!isReport || (isReport && hasGridlines))
+				if (!isReport || hasGridlines)
 				{
 					::FillRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, hBrush);
 				}
@@ -4395,7 +4447,7 @@ namespace DarkMode
 
 			default:
 				break;
-			}
+		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
@@ -4535,8 +4587,8 @@ namespace DarkMode
 					DWORD_PTR dwRefData = 0;
 					if (::GetWindowSubclass(hWndChild, StaticTextSubclass, g_staticTextSubclassID, &dwRefData) == TRUE)
 					{
-						auto pStaticTextData = reinterpret_cast<StaticTextData*>(dwRefData);
-						return DarkMode::onCtlColorDlgStaticText(hdc, pStaticTextData->isEnabled);
+						const bool isTextEnabled = (reinterpret_cast<StaticTextData*>(dwRefData))->isEnabled;
+						return DarkMode::onCtlColorDlgStaticText(hdc, isTextEnabled);
 					}
 					return DarkMode::onCtlColorDlg(hdc);
 				}
@@ -5037,6 +5089,26 @@ namespace DarkMode
 		}
 	}
 
+	void setDarkDlgSafe(HWND hWnd, bool useWin11Features)
+	{
+		if (hWnd == nullptr)
+			return;
+
+		DarkMode::setDarkTitleBarEx(hWnd, useWin11Features);
+		DarkMode::autoSubclassCtlColor(hWnd);
+		DarkMode::autoSubclassAndThemeChildControls(hWnd);
+	}
+
+	void setDarkDlgNotifySafe(HWND hWnd, bool useWin11Features)
+	{
+		if (hWnd == nullptr)
+			return;
+
+		DarkMode::setDarkTitleBarEx(hWnd, useWin11Features);
+		DarkMode::autoSubclassCtlColor(hWnd);
+		DarkMode::autoSubclassNotifyCustomDraw(hWnd, true);
+	}
+
 	void disableVisualStyle(HWND hWnd, bool doDisable)
 	{
 		if (doDisable)
@@ -5275,6 +5347,6 @@ namespace DarkMode
 		}
 		return DarkMode::onCtlColor(hdc);
 	}
-}
+} // namespace DarkMode
 
 #endif // !defined(_DARKMODELIB_NOT_USED)

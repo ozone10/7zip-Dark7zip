@@ -39,9 +39,7 @@ DialogProcedure(HWND dialogHWND, UINT message, WPARAM wParam, LPARAM lParam)
     {
       dialog->Attach(dialogHWND);
       DarkMode::initDarkMode(L"7zDark");
-      DarkMode::setDarkTitleBarEx(*dialog, true);
-      DarkMode::autoSubclassCtlColor(*dialog);
-      DarkMode::autoSubclassNotifyCustomDraw(*dialog, true);
+      DarkMode::setDarkDlgNotifySafe(*dialog, true);
     }
 
   /* MSDN: The dialog box procedure should return

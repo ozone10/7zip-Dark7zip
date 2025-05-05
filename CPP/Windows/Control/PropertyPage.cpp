@@ -35,11 +35,9 @@ APIENTRY MyProperyPageProcedure(HWND dialogHWND, UINT message, WPARAM wParam, LP
   if (message == WM_INITDIALOG)
     {
       dialog->Attach(dialogHWND);
-      DarkMode::setDarkTitleBarEx(::GetParent(*dialog), true);
-      DarkMode::autoSubclassCtlColor(::GetParent(*dialog));
-      DarkMode::autoSubclassNotifyCustomDraw(::GetParent(*dialog), true);
-      DarkMode::autoSubclassNotifyCustomDraw(*dialog, true);
+      DarkMode::setDarkDlgNotifySafe(::GetParent(*dialog), true);
       DarkMode::autoSubclassCtlColor(*dialog);
+      DarkMode::autoSubclassNotifyCustomDraw(*dialog, true);
     }
   try { return BoolToBOOL(dialog->OnMessage(message, wParam, lParam)); }
   catch(...) { return TRUE; }

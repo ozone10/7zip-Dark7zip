@@ -12,8 +12,8 @@
 #include <uxtheme.h>
 #include <vssym32.h>
 
-#include <unordered_set>
 #include <mutex>
+#include <unordered_set>
 
 #if !defined(_DARKMODELIB_EXTERNAL_IATHOOK)
 #include "IatHook.h"
@@ -110,21 +110,21 @@ bool ptrFn(HMODULE handle, P& pointer, WORD index)
 	return ptrFn(handle, pointer, MAKEINTRESOURCEA(index));
 }
 
-using fnRtlGetNtVersionNumbers = void (WINAPI *)(LPDWORD major, LPDWORD minor, LPDWORD build);
-using fnSetWindowCompositionAttribute = BOOL (WINAPI *)(HWND hWnd, WINDOWCOMPOSITIONATTRIBDATA*);
+using fnRtlGetNtVersionNumbers = void (WINAPI*)(LPDWORD major, LPDWORD minor, LPDWORD build);
+using fnSetWindowCompositionAttribute = BOOL (WINAPI*)(HWND hWnd, WINDOWCOMPOSITIONATTRIBDATA*);
 // 1809 17763
-using fnShouldAppsUseDarkMode = bool (WINAPI *)(); // ordinal 132
-using fnAllowDarkModeForWindow = bool (WINAPI *)(HWND hWnd, bool allow); // ordinal 133
-using fnAllowDarkModeForApp = bool (WINAPI *)(bool allow); // ordinal 135, in 1809
-using fnFlushMenuThemes = void (WINAPI *)(); // ordinal 136
-using fnRefreshImmersiveColorPolicyState = void (WINAPI *)(); // ordinal 104
-using fnIsDarkModeAllowedForWindow = bool (WINAPI *)(HWND hWnd); // ordinal 137
-using fnGetIsImmersiveColorUsingHighContrast = bool (WINAPI *)(IMMERSIVE_HC_CACHE_MODE mode); // ordinal 106
-using fnOpenNcThemeData = HTHEME (WINAPI *)(HWND hWnd, LPCWSTR pszClassList); // ordinal 49
+using fnShouldAppsUseDarkMode = bool (WINAPI*)(); // ordinal 132
+using fnAllowDarkModeForWindow = bool (WINAPI*)(HWND hWnd, bool allow); // ordinal 133
+using fnAllowDarkModeForApp = bool (WINAPI*)(bool allow); // ordinal 135, in 1809
+using fnFlushMenuThemes = void (WINAPI*)(); // ordinal 136
+using fnRefreshImmersiveColorPolicyState = void (WINAPI*)(); // ordinal 104
+using fnIsDarkModeAllowedForWindow = bool (WINAPI*)(HWND hWnd); // ordinal 137
+using fnGetIsImmersiveColorUsingHighContrast = bool (WINAPI*)(IMMERSIVE_HC_CACHE_MODE mode); // ordinal 106
+using fnOpenNcThemeData = HTHEME (WINAPI*)(HWND hWnd, LPCWSTR pszClassList); // ordinal 49
 // 1903 18362
-using fnShouldSystemUseDarkMode = bool (WINAPI *)(); // ordinal 138
-using fnSetPreferredAppMode = PreferredAppMode (WINAPI *)(PreferredAppMode appMode); // ordinal 135, in 1903
-using fnIsDarkModeAllowedForApp = bool (WINAPI *)(); // ordinal 139
+using fnShouldSystemUseDarkMode = bool (WINAPI*)(); // ordinal 138
+using fnSetPreferredAppMode = PreferredAppMode (WINAPI*)(PreferredAppMode appMode); // ordinal 135, in 1903
+using fnIsDarkModeAllowedForApp = bool (WINAPI*)(); // ordinal 139
 
 static fnSetWindowCompositionAttribute _SetWindowCompositionAttribute = nullptr;
 static fnShouldAppsUseDarkMode _ShouldAppsUseDarkMode = nullptr;
@@ -175,7 +175,7 @@ void SetTitleBarThemeColor(HWND hWnd, BOOL dark)
 		SetPropW(hWnd, L"UseImmersiveDarkModeColors", reinterpret_cast<HANDLE>(static_cast<intptr_t>(dark)));
 	else if (_SetWindowCompositionAttribute)
 	{
-		WINDOWCOMPOSITIONATTRIBDATA data = { WCA_USEDARKMODECOLORS, &dark, sizeof(dark) };
+		WINDOWCOMPOSITIONATTRIBDATA data{ WCA_USEDARKMODECOLORS, &dark, sizeof(dark) };
 		_SetWindowCompositionAttribute(hWnd, &data);
 	}
 }
@@ -246,13 +246,15 @@ static bool IsWindowOrParentUsingDarkScrollBar(HWND hwnd)
 	HWND hwndRoot = GetAncestor(hwnd, GA_ROOT);
 
 	std::lock_guard<std::mutex> lock(g_darkScrollBarMutex);
-	if (g_darkScrollBarWindows.count(hwnd)) {
-		return true;
-	}
-	if (hwnd != hwndRoot && g_darkScrollBarWindows.count(hwndRoot)) {
+	if (g_darkScrollBarWindows.count(hwnd))
+	{
 		return true;
 	}
 
+	if (hwnd != hwndRoot && g_darkScrollBarWindows.count(hwndRoot))
+	{
+		return true;
+	}
 	return false;
 }
 
@@ -267,10 +269,12 @@ static void FixDarkScrollBar()
 			DWORD oldProtect = 0;
 			if (VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), PAGE_READWRITE, &oldProtect) && _OpenNcThemeData)
 			{
-				auto MyOpenThemeData = [](HWND hWnd, LPCWSTR classList) WINAPI_LAMBDA_RETURN(HTHEME) {
+				auto MyOpenThemeData = [](HWND hWnd, LPCWSTR classList) WINAPI_LAMBDA_RETURN(HTHEME)
+				{
 					if (wcscmp(classList, WC_SCROLLBAR) == 0)
 					{
-						if (IsWindowOrParentUsingDarkScrollBar(hWnd)) {
+						if (IsWindowOrParentUsingDarkScrollBar(hWnd))
+						{
 							hWnd = nullptr;
 							classList = L"Explorer::ScrollBar";
 						}
@@ -347,7 +351,7 @@ void InitDarkMode()
 					ptrFn(hUxtheme, _AllowDarkModeForApp, 135);
 				else
 					ptrFn(hUxtheme, _SetPreferredAppMode, 135);
-				
+
 				ptrFn(hUxtheme, _FlushMenuThemes, 136);
 				ptrFn(hUxtheme, _IsDarkModeAllowedForWindow, 137);
 
@@ -431,20 +435,20 @@ void SetMySysColor(int nIndex, COLORREF clr)
 
 static DWORD WINAPI MyGetSysColor(int nIndex)
 {
-	if( !(g_darkModeEnabled))
-			return GetSysColor(nIndex);
+	if (!g_darkModeEnabled)
+		return GetSysColor(nIndex);
 
 	switch (nIndex)
 	{
 		case COLOR_WINDOW:
 			return _clrWindow;
 
-		case COLOR_WINDOWTEXT: 
+		case COLOR_WINDOWTEXT:
 			return _clrText;
 
 		case COLOR_BTNFACE:
 			return _clrTGridlines;
-		
+
 		default:
 			return GetSysColor(nIndex);
 	}

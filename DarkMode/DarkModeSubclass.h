@@ -22,7 +22,9 @@
 
 #include <windows.h>
 
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_VISTA) && \
+	(defined(__x86_64__) || defined(_M_X64) || \
+	 defined(__arm64__) || defined(__arm64) || defined(_M_ARM64))
 
 namespace DarkMode
 {
@@ -81,9 +83,20 @@ namespace DarkMode
 		dark    = 2
 	};
 
-	int* getDarkModeLibVersion();
+	enum LibInfoType
+	{
+		featureCheck    = 0,
+		verMajor        = 1,
+		verMinor        = 2,
+		verRevision     = 3,
+		iathookExternal = 4,
+		iniConfigUsed   = 5,
+		maxValue        = 6
+	};
 
-	// enum DarkModeType { light = 0, dark = 1, windows = 2, classic = 3 }; values
+	int getLibInfo(LibInfoType libInfoType);
+
+	// enum DarkModeType { light = 0, dark = 1, classic = 3 }; values
 	void setDarkModeTypeConfig(int dmType);
 	// DWM_WINDOW_CORNER_PREFERENCE values
 	void setRoundCornerConfig(int roundCornerStyle);
@@ -94,6 +107,8 @@ namespace DarkMode
 
 	void initDarkMode(const wchar_t* iniName);
 	void initDarkMode();
+	// enum DarkModeType { light = 0, dark = 1, classic = 3 }; values
+	void setDarkMode(int dmType);
 
 	bool isEnabled();
 	bool isExperimentalActive();
@@ -218,7 +233,7 @@ namespace DarkMode
 	void autoSubclassWindowMenuBar(HWND hWnd);
 	void autoSubclassWindowSettingChange(HWND hWnd);
 
-	void setDarkTitleBarEx(HWND hWnd, bool win11Features);
+	void setDarkTitleBarEx(HWND hWnd, bool useWin11Features);
 	void setDarkTitleBar(HWND hWnd);
 	void setDarkExplorerTheme(HWND hWnd);
 	void setDarkScrollBar(HWND hWnd);
@@ -226,6 +241,9 @@ namespace DarkMode
 	void setDarkLineAbovePanelToolbar(HWND hWnd);
 	void setDarkListView(HWND hWnd);
 	void setDarkThemeExperimental(HWND hWnd, const wchar_t* themeClassName = L"Explorer");
+
+	void setDarkDlgSafe(HWND hWnd, bool useWin11Features = true);
+	void setDarkDlgNotifySafe(HWND hWnd, bool useWin11Features = true);
 
 	void disableVisualStyle(HWND hWnd, bool doDisable);
 	double calculatePerceivedLightness(COLORREF clr);
@@ -243,8 +261,8 @@ namespace DarkMode
 	LRESULT onCtlColorDlgStaticText(HDC hdc, bool isTextEnabled);
 	LRESULT onCtlColorDlgLinkText(HDC hdc, bool isTextEnabled = true);
 	LRESULT onCtlColorListbox(WPARAM wParam, LPARAM lParam);
-}
+} // namespace DarkMode
 
 #else
 #define _DARKMODELIB_NOT_USED
-#endif // (NTDDI_VERSION >= NTDDI_VISTA)
+#endif // (NTDDI_VERSION >= NTDDI_VISTA) && (x64 or arm64)

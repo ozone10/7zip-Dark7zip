@@ -355,17 +355,14 @@ HRESULT CApp::Create(HWND hwnd, const UString &mainPath, const UString &arcForma
     }
   }
 
-  DarkMode::setDarkTitleBarEx(hwnd, true);
+  DarkMode::setDarkDlgNotifySafe(hwnd, true);
   DarkMode::autoSubclassWindowMenuBar(hwnd);
-  DarkMode::autoSubclassCtlColor(hwnd);
-  DarkMode::autoSubclassNotifyCustomDraw(hwnd, true);
 
   for (i = 0; i < kNumPanelsMax; i++)
   {
-    DarkMode::autoSubclassNotifyCustomDraw(Panels[i], false);
     DarkMode::autoSubclassCtlColor(Panels[i]);
     DarkMode::autoSubclassCtlColor(Panels[i]._headerReBar);
-    DarkMode::autoSubclassCtlColor(Panels[i]._headerComboBox);
+    DarkMode::autoSubclassNotifyCustomDraw(Panels[i], false);
   }
 
   SetFocusedPanel(LastFocusedPanel);

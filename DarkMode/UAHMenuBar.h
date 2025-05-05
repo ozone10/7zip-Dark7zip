@@ -9,12 +9,12 @@
 //bool UAHDarkModeWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT* lr);
 
 // window messages related to menu bar drawing
-#define WM_UAHDESTROYWINDOW    0x0090	// handled by DefWindowProc
-#define WM_UAHDRAWMENU         0x0091	// lParam is UAHMENU
-#define WM_UAHDRAWMENUITEM     0x0092	// lParam is UAHDRAWMENUITEM
-#define WM_UAHINITMENU         0x0093	// handled by DefWindowProc
-#define WM_UAHMEASUREMENUITEM  0x0094	// lParam is UAHMEASUREMENUITEM
-#define WM_UAHNCPAINTMENUPOPUP 0x0095	// handled by DefWindowProc
+#define WM_UAHDESTROYWINDOW    0x0090 // handled by DefWindowProc
+#define WM_UAHDRAWMENU         0x0091 // lParam is UAHMENU
+#define WM_UAHDRAWMENUITEM     0x0092 // lParam is UAHDRAWMENUITEM
+#define WM_UAHINITMENU         0x0093 // handled by DefWindowProc
+#define WM_UAHMEASUREMENUITEM  0x0094 // lParam is UAHMEASUREMENUITEM
+#define WM_UAHNCPAINTMENUPOPUP 0x0095 // handled by DefWindowProc
 
 // describes the sizes of the menu bar or menu item
 typedef union tagUAHMENUITEMMETRICS
