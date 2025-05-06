@@ -22,9 +22,7 @@
 
 #include <windows.h>
 
-#if (NTDDI_VERSION >= NTDDI_VISTA) && \
-	(defined(__x86_64__) || defined(_M_X64) || \
-	 defined(__arm64__) || defined(__arm64) || defined(_M_ARM64))
+#if (NTDDI_VERSION >= NTDDI_VISTA)
 
 namespace DarkMode
 {
@@ -97,18 +95,18 @@ namespace DarkMode
 	int getLibInfo(LibInfoType libInfoType);
 
 	// enum DarkModeType { light = 0, dark = 1, classic = 3 }; values
-	void setDarkModeTypeConfig(int dmType);
+	void setDarkModeTypeConfig(UINT dmType);
 	// DWM_WINDOW_CORNER_PREFERENCE values
-	void setRoundCornerConfig(int roundCornerStyle);
+	void setRoundCornerConfig(UINT roundCornerStyle);
 	void setBorderColorConfig(COLORREF clr);
 	// DWM_SYSTEMBACKDROP_TYPE values
-	void setMicaConfig(int mica);
+	void setMicaConfig(UINT mica);
 	void setMicaExtendedConfig(bool extendMica);
 
 	void initDarkMode(const wchar_t* iniName);
 	void initDarkMode();
 	// enum DarkModeType { light = 0, dark = 1, classic = 3 }; values
-	void setDarkMode(int dmType);
+	void setDarkMode(UINT dmType);
 
 	bool isEnabled();
 	bool isExperimentalActive();
@@ -132,6 +130,7 @@ namespace DarkMode
 	// enhancements to DarkMode.h
 	void enableDarkScrollBarForWindowAndChildren(HWND hWnd);
 
+	// colors
 	void setDarkCustomColors(ColorTone colorTone);
 	ColorTone getColorTone();
 
@@ -209,30 +208,67 @@ namespace DarkMode
 
 	HPEN getHeaderEdgePen();
 
+	// paint helper
 	void paintRoundRect(HDC hdc, const RECT rect, const HPEN hpen, const HBRUSH hBrush, int width = 0, int height = 0);
 	inline void paintRoundFrameRect(HDC hdc, const RECT rect, const HPEN hpen, int width = 0, int height = 0);
 
-	void subclassButtonControl(HWND hWnd);
-	void subclassGroupboxControl(HWND hWnd);
-	bool subclassUpDownControl(HWND hWnd);
-	void subclassTabControlUpDown(HWND hWnd);
-	void subclassTabControl(HWND hWnd);
-	void subclassComboBoxControl(HWND hWnd);
-	void subclassComboboxExControl(HWND hWnd);
-	void subclassListViewControl(HWND hWnd);
-	void subclassHeaderControl(HWND hWnd);
-	void subclassStatusBarControl(HWND hWnd);
-	void subclassProgressBarControl(HWND hWnd);
-	void subclassStaticText(HWND hWnd);
+	// control subclassing
+	void setCheckboxOrRadioBtnCtrlSubclass(HWND hWnd);
+	void removeCheckboxOrRadioBtnCtrlSubclass(HWND hWnd);
 
-	void autoSubclassAndThemeChildControls(HWND hWndParent, bool subclass = true, bool theme = true);
-	void autoThemeChildControls(HWND hWndParent);
+	void setGroupboxCtrlSubclass(HWND hWnd);
+	void removeGroupboxCtrlSubclass(HWND hWnd);
 
-	void autoSubclassCtlColor(HWND hWnd);
-	void autoSubclassNotifyCustomDraw(HWND hWnd, bool subclassChildren = false);
-	void autoSubclassWindowMenuBar(HWND hWnd);
-	void autoSubclassWindowSettingChange(HWND hWnd);
+	void setUpDownCtrlSubclass(HWND hWnd);
+	void removeUpDownCtrlSubclass(HWND hWnd);
 
+	void setTabCtrlUpDownSubclass(HWND hWnd);
+	void removeTabCtrlUpDownSubclass(HWND hWnd);
+	void setTabCtrlSubclass(HWND hWnd);
+	void removeTabCtrlSubclass(HWND hWnd);
+
+	void setComboBoxCtrlSubclass(HWND hWnd);
+	void removeComboBoxCtrlSubclass(HWND hWnd);
+
+	void setComboBoxExCtrlSubclass(HWND hWnd);
+	void removeComboBoxExCtrlSubclass(HWND hWnd);
+
+	void setListViewCtrlSubclass(HWND hWnd);
+	void removeListViewCtrlSubclass(HWND hWnd);
+
+	void setHeaderCtrlSubclass(HWND hWnd);
+	void removeHeaderCtrlSubclass(HWND hWnd);
+
+	void setStatusBarCtrlSubclass(HWND hWnd);
+	void removeStatusBarCtrlSubclass(HWND hWnd);
+
+	void setProgressBarCtrlSubclass(HWND hWnd);
+	void removeProgressBarCtrlSubclass(HWND hWnd);
+
+	void setStaticTextCtrlSubclass(HWND hWnd);
+	void removeStaticTextCtrlSubclass(HWND hWnd);
+
+	// child subclassing
+	void setChildCtrlsSubclassAndTheme(HWND hParent, bool subclass = true, bool theme = true);
+	void setChildCtrlsTheme(HWND hParent);
+
+	// window, parent, and other subclassing
+	void setWindowEraseBgSubclass(HWND hWnd);
+	void removeWindowEraseBgSubclass(HWND hWnd);
+
+	void setWindowCtlColorSubclass(HWND hWnd);
+	void removeWindowCtlColorSubclass(HWND hWnd);
+
+	void setWindowNotifyCustomDrawSubclass(HWND hWnd, bool subclassChildren = false);
+	void removeWindowNotifyCustomDrawSubclass(HWND hWnd);
+
+	void setWindowMenuBarSubclass(HWND hWnd);
+	void removeWindowMenuBarSubclass(HWND hWnd);
+
+	void setWindowSettingChangeSubclass(HWND hWnd);
+	void removeWindowSettingChangeSubclass(HWND hWnd);
+
+	// theme and helper
 	void setDarkTitleBarEx(HWND hWnd, bool useWin11Features);
 	void setDarkTitleBar(HWND hWnd);
 	void setDarkExplorerTheme(HWND hWnd);
@@ -245,6 +281,7 @@ namespace DarkMode
 	void setDarkDlgSafe(HWND hWnd, bool useWin11Features = true);
 	void setDarkDlgNotifySafe(HWND hWnd, bool useWin11Features = true);
 
+	void enableThemeDialogTexture(HWND hWnd, bool theme);
 	void disableVisualStyle(HWND hWnd, bool doDisable);
 	double calculatePerceivedLightness(COLORREF clr);
 	void calculateTreeViewStyle();
@@ -253,7 +290,9 @@ namespace DarkMode
 	void setTreeViewStyle(HWND hWnd, bool force = false);
 	bool isThemeDark();
 	void setBorder(HWND hWnd, bool border = true, LONG_PTR borderStyle = WS_BORDER);
+	void setProgressBarClassicTheme(HWND hWnd);
 
+	// ctl color
 	LRESULT onCtlColor(HDC hdc);
 	LRESULT onCtlColorCtrl(HDC hdc);
 	LRESULT onCtlColorDlg(HDC hdc);
@@ -265,4 +304,4 @@ namespace DarkMode
 
 #else
 #define _DARKMODELIB_NOT_USED
-#endif // (NTDDI_VERSION >= NTDDI_VISTA) && (x64 or arm64)
+#endif // (NTDDI_VERSION >= NTDDI_VISTA)

@@ -355,14 +355,17 @@ HRESULT CApp::Create(HWND hwnd, const UString &mainPath, const UString &arcForma
     }
   }
 
+  DarkMode::setWindowEraseBgSubclass(hwnd);
   DarkMode::setDarkDlgNotifySafe(hwnd, true);
-  DarkMode::autoSubclassWindowMenuBar(hwnd);
+  DarkMode::setWindowMenuBarSubclass(hwnd);
 
   for (i = 0; i < kNumPanelsMax; i++)
   {
-    DarkMode::autoSubclassCtlColor(Panels[i]);
-    DarkMode::autoSubclassCtlColor(Panels[i]._headerReBar);
-    DarkMode::autoSubclassNotifyCustomDraw(Panels[i], false);
+    DarkMode::setWindowEraseBgSubclass(Panels[i]);
+    DarkMode::setWindowCtlColorSubclass(Panels[i]);
+    DarkMode::setWindowEraseBgSubclass(Panels[i]._headerReBar);
+    DarkMode::setWindowCtlColorSubclass(Panels[i]._headerReBar);
+    DarkMode::setWindowNotifyCustomDrawSubclass(Panels[i], false);
   }
 
   SetFocusedPanel(LastFocusedPanel);

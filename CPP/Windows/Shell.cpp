@@ -685,7 +685,7 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /* lp */, LP
   {
     case BFFM_INITIALIZED:
     {
-      DarkMode::setDarkDlgNotifySafe(hwnd, false);
+      DarkMode::setDarkDlgSafe(hwnd, false);
       SendMessage(hwnd, BFFM_SETSELECTION, TRUE, data);
       break;
     }
