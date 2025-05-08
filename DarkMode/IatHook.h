@@ -1,3 +1,6 @@
+// This file is a modified version of IatHook.h from the win32-darkmode project
+// https://github.com/ysc3839/win32-darkmode
+
 // This file contains code from
 // https://github.com/stevemk14ebr/PolyHook_2_0/blob/master/sources/IatHook.cpp
 // which is licensed under the MIT License.

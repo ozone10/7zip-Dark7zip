@@ -22,7 +22,9 @@
 
 #include <windows.h>
 
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_VISTA)/* && \
+	(defined(__x86_64__) || defined(_M_X64) || \
+	 defined(__arm64__) || defined(__arm64) || defined(_M_ARM64))*/
 
 namespace DarkMode
 {
@@ -119,18 +121,22 @@ namespace DarkMode
 	DWORD getWindowsBuildNumber();
 
 	// handle events
+
 	bool handleSettingChange(LPARAM lParam);
 	bool isDarkModeReg();
 
 	// from DarkMode.h
+
 	void setSysColor(int nIndex, COLORREF color);
 	bool hookSysColor();
 	void unhookSysColor();
 
 	// enhancements to DarkMode.h
+
 	void enableDarkScrollBarForWindowAndChildren(HWND hWnd);
 
 	// colors
+
 	void setDarkCustomColors(ColorTone colorTone);
 	ColorTone getColorTone();
 
@@ -209,10 +215,12 @@ namespace DarkMode
 	HPEN getHeaderEdgePen();
 
 	// paint helper
+
 	void paintRoundRect(HDC hdc, const RECT rect, const HPEN hpen, const HBRUSH hBrush, int width = 0, int height = 0);
 	inline void paintRoundFrameRect(HDC hdc, const RECT rect, const HPEN hpen, int width = 0, int height = 0);
 
 	// control subclassing
+
 	void setCheckboxOrRadioBtnCtrlSubclass(HWND hWnd);
 	void removeCheckboxOrRadioBtnCtrlSubclass(HWND hWnd);
 
@@ -249,10 +257,12 @@ namespace DarkMode
 	void removeStaticTextCtrlSubclass(HWND hWnd);
 
 	// child subclassing
+
 	void setChildCtrlsSubclassAndTheme(HWND hParent, bool subclass = true, bool theme = true);
 	void setChildCtrlsTheme(HWND hParent);
 
 	// window, parent, and other subclassing
+
 	void setWindowEraseBgSubclass(HWND hWnd);
 	void removeWindowEraseBgSubclass(HWND hWnd);
 
@@ -269,6 +279,7 @@ namespace DarkMode
 	void removeWindowSettingChangeSubclass(HWND hWnd);
 
 	// theme and helper
+
 	void setDarkTitleBarEx(HWND hWnd, bool useWin11Features);
 	void setDarkTitleBar(HWND hWnd);
 	void setDarkExplorerTheme(HWND hWnd);
@@ -281,7 +292,8 @@ namespace DarkMode
 	void setDarkDlgSafe(HWND hWnd, bool useWin11Features = true);
 	void setDarkDlgNotifySafe(HWND hWnd, bool useWin11Features = true);
 
-	void enableThemeDialogTexture(HWND hWnd, bool theme);
+	// only if g_dmType == DarkModeType::classic
+	inline void enableThemeDialogTexture(HWND hWnd, bool theme);
 	void disableVisualStyle(HWND hWnd, bool doDisable);
 	double calculatePerceivedLightness(COLORREF clr);
 	void calculateTreeViewStyle();
@@ -289,10 +301,13 @@ namespace DarkMode
 	TreeViewStyle getTreeViewStyle();
 	void setTreeViewStyle(HWND hWnd, bool force = false);
 	bool isThemeDark();
-	void setBorder(HWND hWnd, bool border = true, LONG_PTR borderStyle = WS_BORDER);
+	inline void redrawWindowFrame(HWND hWnd);
+	void setWindowStyle(HWND hWnd, bool setStyle, LONG_PTR styleFlag);
+	void setWindowExStyle(HWND hWnd, bool setExStyle, LONG_PTR exStyleFlag);
 	void setProgressBarClassicTheme(HWND hWnd);
 
 	// ctl color
+
 	LRESULT onCtlColor(HDC hdc);
 	LRESULT onCtlColorCtrl(HDC hdc);
 	LRESULT onCtlColorDlg(HDC hdc);
@@ -304,4 +319,4 @@ namespace DarkMode
 
 #else
 #define _DARKMODELIB_NOT_USED
-#endif // (NTDDI_VERSION >= NTDDI_VISTA)
+#endif // (NTDDI_VERSION >= NTDDI_VISTA) //&& (x64 or arm64)

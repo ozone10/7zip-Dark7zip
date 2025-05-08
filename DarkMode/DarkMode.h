@@ -1,3 +1,10 @@
+// MIT license
+// Copyright(c) 2024-2025 ozone10
+
+// Parts of code based on the win32-darkmode project
+// https://github.com/ysc3839/win32-darkmode
+// which is licensed under the MIT License. Copyright (c) 2019 Richard Yu
+
 #pragma once
 
 #include <windows.h>

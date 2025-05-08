@@ -2482,25 +2482,27 @@ namespace DarkMode
 				auto lpRect = reinterpret_cast<LPRECT>(lParam);
 				::InflateRect(lpRect, -(pBorderMetricsData->_xEdge), -(pBorderMetricsData->_yEdge));
 
-				const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
-				const bool hasVerScrollbar = (nStyle & WS_VSCROLL) == WS_VSCROLL;
-				if (hasVerScrollbar)
-				{
-					lpRect->right -= pBorderMetricsData->_xScroll;
-				}
+				break;
 
-				const bool hasHorScrollbar = (nStyle & WS_HSCROLL) == WS_HSCROLL;
-				if (hasHorScrollbar)
-				{
-					lpRect->bottom -= pBorderMetricsData->_yScroll;
-				}
+				//const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
+				//const bool hasVerScrollbar = (nStyle & WS_VSCROLL) == WS_VSCROLL;
+				//if (hasVerScrollbar)
+				//{
+				//	lpRect->right -= pBorderMetricsData->_xScroll;
+				//}
 
-				return 0;
+				//const bool hasHorScrollbar = (nStyle & WS_HSCROLL) == WS_HSCROLL;
+				//if (hasHorScrollbar)
+				//{
+				//	lpRect->bottom -= pBorderMetricsData->_yScroll;
+				//}
+
+				//return 0;
 			}
 
 			case WM_DPICHANGED:
 			{
-				::SetWindowPos(hWnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+				DarkMode::redrawWindowFrame(hWnd);
 				return 0;
 			}
 
@@ -2526,7 +2528,7 @@ namespace DarkMode
 				if (!pBorderMetricsData->_isHot)
 				{
 					pBorderMetricsData->_isHot = true;
-					::SetWindowPos(hWnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+					DarkMode::redrawWindowFrame(hWnd);
 				}
 				break;
 			}
@@ -2541,7 +2543,7 @@ namespace DarkMode
 				if (pBorderMetricsData->_isHot)
 				{
 					pBorderMetricsData->_isHot = false;
-					::SetWindowPos(hWnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+					DarkMode::redrawWindowFrame(hWnd);
 				}
 
 				TRACKMOUSEEVENT tme{};
@@ -2588,11 +2590,7 @@ namespace DarkMode
 		if (::GetWindowSubclass(hWnd, CustomBorderSubclass, g_customBorderSubclassID, nullptr) == TRUE)
 		{
 			const bool enableClientEdge = !DarkMode::isEnabled();
-			if (enableClientEdge != hasClientEdge)
-			{
-				::SetWindowLongPtr(hWnd, GWL_EXSTYLE, nExStyle ^ WS_EX_CLIENTEDGE);
-				::SetWindowPos(hWnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-			}
+			DarkMode::setWindowExStyle(hWnd, enableClientEdge, WS_EX_CLIENTEDGE);
 		}
 	}
 
@@ -3089,7 +3087,6 @@ namespace DarkMode
 				}
 				break;
 			}
-			break;
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -5212,7 +5209,7 @@ namespace DarkMode
 
 	void enableThemeDialogTexture(HWND hWnd, bool theme)
 	{
-		::EnableThemeDialogTexture(hWnd, theme && (g_dmType == DarkModeType::light) ? ETDT_ENABLETAB : ETDT_DISABLE);
+		::EnableThemeDialogTexture(hWnd, theme && (g_dmType == DarkModeType::classic) ? ETDT_ENABLETAB : ETDT_DISABLE);
 	}
 
 	void disableVisualStyle(HWND hWnd, bool doDisable)
@@ -5351,22 +5348,43 @@ namespace DarkMode
 		return g_treeViewStyle == TreeViewStyle::dark;
 	}
 
-	void setBorder(HWND hWnd, bool setBorder, LONG_PTR borderStyle)
+	void redrawWindowFrame(HWND hWnd)
 	{
-		auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
-		const bool hasBorder = (nStyle & borderStyle) == borderStyle;
+		::SetWindowPos(hWnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+	}
 
-		if (setBorder != hasBorder)
+	static int setWindowLongPtrStyle(HWND hWnd, bool setFlag, LONG_PTR dwFlag, int gwlIdx)
+	{
+		if ((gwlIdx != GWL_STYLE) && (gwlIdx != GWL_EXSTYLE))
+			return -1;
+
+		auto nStyle = ::GetWindowLongPtr(hWnd, gwlIdx);
+		const bool hasFlag = (nStyle & dwFlag) == dwFlag;
+
+		if (setFlag != hasFlag)
 		{
-			nStyle ^= borderStyle;
-			::SetWindowLongPtr(hWnd, GWL_STYLE, nStyle);
-			::SetWindowPos(hWnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+			nStyle ^= dwFlag;
+			::SetWindowLongPtr(hWnd, gwlIdx, nStyle);
+			return TRUE;
 		}
+		return FALSE;
+	}
+
+	void setWindowStyle(HWND hWnd, bool setStyle, LONG_PTR styleFlag)
+	{
+		if (DarkMode::setWindowLongPtrStyle(hWnd, setStyle, styleFlag, GWL_STYLE) == TRUE)
+			DarkMode::redrawWindowFrame(hWnd);
+	}
+
+	void setWindowExStyle(HWND hWnd, bool setExStyle, LONG_PTR exStyleFlag)
+	{
+		if (DarkMode::setWindowLongPtrStyle(hWnd, setExStyle, exStyleFlag, GWL_EXSTYLE) == TRUE)
+			DarkMode::redrawWindowFrame(hWnd);
 	}
 
 	void setProgressBarClassicTheme(HWND hWnd)
 	{
-		DarkMode::setBorder(hWnd, DarkMode::isEnabled(), WS_DLGFRAME);
+		DarkMode::setWindowStyle(hWnd, DarkMode::isEnabled(), WS_DLGFRAME);
 		DarkMode::disableVisualStyle(hWnd, DarkMode::isEnabled());
 		if (DarkMode::isEnabled())
 		{

@@ -4,7 +4,8 @@
 [![Build status](https://img.shields.io/github/actions/workflow/status/ozone10/7zip-Dark7zip/build_win.yml?logo=Github)](https://github.com/ozone10/7zip-Dark7zip/actions)
 [![Latest release](https://img.shields.io/github/v/release/ozone10/7zip-Dark7zip?include_prereleases)](https://github.com/ozone10/7zip-Dark7zip/releases/latest)
 [![Total downloads](https://img.shields.io/github/downloads/ozone10/7zip-Dark7zip/total.svg)](https://github.com/ozone10/7zip-Dark7zip/releases)
-[![License](https://img.shields.io/github/license/ozone10/7zip-Dark7zip?color=9cf)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+[![License](https://img.shields.io/github/license/ozone10/7zip-Dark7zip?color=green)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+[![License-MIT](https://img.shields.io/badge/license-MIT-green)](./LICENSE-MIT.md)
 [![PayPal.me](https://img.shields.io/badge/PayPal-me-blue.svg?maxAge=2592000)](https://paypal.me/ozone10/)
 ---
 
