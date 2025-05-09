@@ -808,7 +808,8 @@ namespace DarkMode
 		const auto cornerStyle = static_cast<DWM_WINDOW_CORNER_PREFERENCE>(roundCornerStyle);
 		if (cornerStyle > DWMWCP_ROUNDSMALL) // || cornerStyle < DWMWCP_DEFAULT) // should never be < 0
 			g_roundCorner = DWMWCP_DEFAULT;
-		g_roundCorner = cornerStyle;
+		else
+			g_roundCorner = cornerStyle;
 	}
 
 	void setBorderColorConfig(COLORREF clr)
@@ -824,7 +825,8 @@ namespace DarkMode
 		const auto micaType = static_cast<DWM_SYSTEMBACKDROP_TYPE>(mica);
 		if (micaType > DWMSBT_TABBEDWINDOW) // || micaType < DWMSBT_AUTO)  // should never be < 0
 			g_mica = DWMSBT_AUTO;
-		g_mica = micaType;
+		else
+			g_mica = micaType;
 	}
 
 	void setMicaExtendedConfig(bool extendMica)
@@ -837,12 +839,12 @@ namespace DarkMode
 
 	static void initOptions(const std::wstring& iniName = L"")
 	{
-		if (!iniName.empty() && iniName != L"")
+		if (!iniName.empty())
 		{
 			g_iniName = iniName;
 		}
 
-		if (g_iniName.empty() || g_iniName == L"")
+		if (g_iniName.empty())
 		{
 			return;
 		}
@@ -1010,7 +1012,7 @@ namespace DarkMode
 		if (DarkMode::isExperimentalSupported() && ::IsColorSchemeChangeMessage(lParam))
 		{
 			// ShouldAppsUseDarkMode() is not reliable from 1903+, use NppDarkMode::isDarkModeReg() instead
-			bool isDarkModeUsed = DarkMode::isDarkModeReg() && !IsHighContrast();
+			const bool isDarkModeUsed = DarkMode::isDarkModeReg() && !IsHighContrast();
 			if (DarkMode::isExperimentalActive() != isDarkModeUsed)
 			{
 				if (g_isInit)
@@ -1129,8 +1131,8 @@ namespace DarkMode
 
 		bool ensureBuffer(HDC hdc, const RECT& rcClient)
 		{
-			int width = rcClient.right - rcClient.left;
-			int height = rcClient.bottom - rcClient.top;
+			const int width = rcClient.right - rcClient.left;
+			const int height = rcClient.bottom - rcClient.top;
 
 			if (_szBuffer.cx != width || _szBuffer.cy != height)
 			{
@@ -1188,22 +1190,22 @@ namespace DarkMode
 	};
 
 	template <typename T, typename Param>
-	static int setSubclass(HWND hWnd, SUBCLASSPROC subclassProc, UINT_PTR subclassID, const Param& param)
+	static auto setSubclass(HWND hWnd, SUBCLASSPROC subclassProc, UINT_PTR subclassID, const Param& param) -> int
 	{
 		if (::GetWindowSubclass(hWnd, subclassProc, subclassID, nullptr) == FALSE)
 		{
-			DWORD_PTR pData = reinterpret_cast<DWORD_PTR>(new T(param));
+			auto pData = reinterpret_cast<DWORD_PTR>(new T(param));
 			return ::SetWindowSubclass(hWnd, subclassProc, subclassID, pData);
 		}
 		return -1;
 	}
 
 	template <typename T>
-	static int setSubclass(HWND hWnd, SUBCLASSPROC subclassProc, UINT_PTR subclassID)
+	static auto setSubclass(HWND hWnd, SUBCLASSPROC subclassProc, UINT_PTR subclassID) -> int
 	{
 		if (::GetWindowSubclass(hWnd, subclassProc, subclassID, nullptr) == FALSE)
 		{
-			DWORD_PTR pData = reinterpret_cast<DWORD_PTR>(new T());
+			auto pData = reinterpret_cast<DWORD_PTR>(new T());
 			return ::SetWindowSubclass(hWnd, subclassProc, subclassID, pData);
 		}
 		return -1;
@@ -1219,7 +1221,7 @@ namespace DarkMode
 	}
 
 	template <typename T = void>
-	static int removeSubclass(HWND hWnd, SUBCLASSPROC subclassProc, UINT_PTR subclassID)
+	static auto removeSubclass(HWND hWnd, SUBCLASSPROC subclassProc, UINT_PTR subclassID) -> int
 	{
 		T* pData = nullptr;
 
@@ -2340,7 +2342,7 @@ namespace DarkMode
 					case WM_CREATE:
 					{
 						auto hwndUpdown = reinterpret_cast<HWND>(lParam);
-						if (cmpWndClassName(hWnd, UPDOWN_CLASS))
+						if (cmpWndClassName(hwndUpdown, UPDOWN_CLASS))
 						{
 							DarkMode::setUpDownCtrlSubclass(hwndUpdown);
 							return 0;
@@ -3746,7 +3748,7 @@ namespace DarkMode
 
 		RECT rcFill{};
 		DarkMode::getProgressBarRects(hWnd, &rcClient, &rcFill);
-		::DrawThemeBackground(hTheme, hdc, PP_FILL, progressBarData._iStateID, &rcFill, NULL);
+		::DrawThemeBackground(hTheme, hdc, PP_FILL, progressBarData._iStateID, &rcFill, nullptr);
 		::FillRect(hdc, &rcClient, DarkMode::getCtrlBackgroundBrush());
 	}
 
@@ -4293,7 +4295,7 @@ namespace DarkMode
 					}
 
 					::FillRect(lptbcd->nmcd.hdc, &lptbcd->nmcd.rc, DarkMode::getDlgBackgroundBrush());
-					lr |= CDRF_NOTIFYITEMDRAW;
+					lr |= CDRF_NOTIFYITEMDRAW | CDRF_NOTIFYPOSTPAINT;
 				}
 
 				return lr;
@@ -4892,32 +4894,34 @@ namespace DarkMode
 				int iTextStateID = MBI_NORMAL;
 				int iBackgroundStateID = MBI_NORMAL;
 				{
-					if (pUDMI->dis.itemState & ODS_SELECTED)
+					if ((pUDMI->dis.itemState & ODS_SELECTED) == ODS_SELECTED)
 					{
 						// clicked
 						iTextStateID = MBI_PUSHED;
 						iBackgroundStateID = MBI_PUSHED;
 					}
-					else if (pUDMI->dis.itemState & ODS_HOTLIGHT)
+					else if ((pUDMI->dis.itemState & ODS_HOTLIGHT) == ODS_HOTLIGHT)
 					{
 						// hot tracking
-						iTextStateID = (pUDMI->dis.itemState & ODS_INACTIVE) ? MBI_DISABLEDHOT : MBI_HOT;
+						iTextStateID = ((pUDMI->dis.itemState & ODS_INACTIVE) == ODS_INACTIVE) ? MBI_DISABLEDHOT : MBI_HOT;
 						iBackgroundStateID = MBI_HOT;
 					}
-					else if ((pUDMI->dis.itemState & ODS_GRAYED) || (pUDMI->dis.itemState & ODS_DISABLED) || (pUDMI->dis.itemState & ODS_INACTIVE))
+					else if (((pUDMI->dis.itemState & ODS_GRAYED) == ODS_GRAYED)
+						|| ((pUDMI->dis.itemState & ODS_DISABLED) == ODS_DISABLED)
+						|| ((pUDMI->dis.itemState & ODS_INACTIVE) == ODS_INACTIVE))
 					{
 						// disabled / grey text / inactive
 						iTextStateID = MBI_DISABLED;
 						iBackgroundStateID = MBI_DISABLED;
 					}
-					else if (pUDMI->dis.itemState & ODS_DEFAULT)
+					else if ((pUDMI->dis.itemState & ODS_DEFAULT) == ODS_DEFAULT)
 					{
 						// normal display
 						iTextStateID = MBI_NORMAL;
 						iBackgroundStateID = MBI_NORMAL;
 					}
 
-					if (pUDMI->dis.itemState & ODS_NOACCEL)
+					if ((pUDMI->dis.itemState & ODS_NOACCEL) == ODS_NOACCEL)
 					{
 						dwFlags |= DT_HIDEPREFIX;
 					}
@@ -5476,8 +5480,10 @@ namespace DarkMode
 		const bool isComboBox = (nStyle & LBS_COMBOBOX) == LBS_COMBOBOX;
 		if ((!isComboBox || !DarkMode::isExperimentalActive()))
 		{
-			if (::IsWindowEnabled(hWnd))
+			if (::IsWindowEnabled(hWnd) == TRUE)
+			{
 				return DarkMode::onCtlColorCtrl(hdc);
+			}
 			return DarkMode::onCtlColorDlg(hdc);
 		}
 		return DarkMode::onCtlColor(hdc);

@@ -22,7 +22,7 @@
 
 #include <windows.h>
 
-#if (NTDDI_VERSION >= NTDDI_VISTA)/* && \
+#if (NTDDI_VERSION >= NTDDI_VISTA) /* && \
 	(defined(__x86_64__) || defined(_M_X64) || \
 	 defined(__arm64__) || defined(__arm64) || defined(_M_ARM64))*/
 
