@@ -16,8 +16,10 @@ extern bool g_darkModeEnabled;
 bool ShouldAppsUseDarkMode();
 bool AllowDarkModeForWindow(HWND hWnd, bool allow);
 bool IsHighContrast();
+#if defined(_DARKMODELIB_ALLOW_OLD_OS)
 void RefreshTitleBarThemeColor(HWND hWnd);
 void SetTitleBarThemeColor(HWND hWnd, BOOL dark);
+#endif
 bool IsColorSchemeChangeMessage(LPARAM lParam);
 bool IsColorSchemeChangeMessage(UINT message, LPARAM lParam);
 void AllowDarkModeForApp(bool allow);

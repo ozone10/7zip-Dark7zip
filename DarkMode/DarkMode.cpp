@@ -19,8 +19,8 @@
 
 #include "DarkMode.h"
 
+#include <VSStyle.h>
 #include <uxtheme.h>
-#include <vssym32.h>
 
 #include <mutex>
 #include <unordered_set>
@@ -47,6 +47,57 @@ extern PIMAGE_THUNK_DATA FindDelayLoadThunkInModule(void* moduleBase, const char
 #pragma warning(disable : 4191)
 #endif
 
+template <typename P>
+static auto loadFn(HMODULE handle, P& pointer, const char* name) -> bool
+{
+	if (auto proc = ::GetProcAddress(handle, name); proc != nullptr)
+	{
+		pointer = reinterpret_cast<P>(proc);
+		return true;
+	}
+	return false;
+}
+
+template <typename P>
+static auto loadFn(HMODULE handle, P& pointer, WORD index) -> bool
+{
+	return loadFn(handle, pointer, MAKEINTRESOURCEA(index));
+}
+
+struct ModuleHandle
+{
+	HMODULE hModule = nullptr;
+
+	explicit ModuleHandle(const wchar_t* moduleName)
+		: hModule(LoadLibraryEx(moduleName, nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32))
+	{
+	}
+
+	~ModuleHandle()
+	{
+		if (hModule != nullptr)
+		{
+			FreeLibrary(hModule);
+		}
+	}
+
+	ModuleHandle(const ModuleHandle&) = delete;
+	ModuleHandle& operator=(const ModuleHandle&) = delete;
+
+	ModuleHandle(ModuleHandle&&) = delete;
+	ModuleHandle& operator=(ModuleHandle&&) = delete;
+
+	[[nodiscard]] HMODULE get() const
+	{
+		return hModule;
+	}
+
+	[[nodiscard]] bool isLoaded() const
+	{
+		return hModule != nullptr;
+	}
+};
+
 enum IMMERSIVE_HC_CACHE_MODE
 {
 	IHCM_USE_CACHED_VALUE,
@@ -63,6 +114,7 @@ enum class PreferredAppMode
 	Max
 };
 
+#if defined(_DARKMODELIB_ALLOW_OLD_OS)
 enum WINDOWCOMPOSITIONATTRIB
 {
 	WCA_UNDEFINED = 0,
@@ -101,31 +153,18 @@ struct WINDOWCOMPOSITIONATTRIBDATA
 	PVOID pvData;
 	SIZE_T cbData;
 };
-
-template <typename P>
-static auto ptrFn(HMODULE handle, P& pointer, const char* name) -> bool
-{
-	auto ptr = reinterpret_cast<P>(::GetProcAddress(handle, name));
-	if (ptr != nullptr)
-	{
-		pointer = ptr;
-		return true;
-	}
-	return false;
-}
-
-template <typename P>
-static auto ptrFn(HMODULE handle, P& pointer, WORD index) -> bool
-{
-	return ptrFn(handle, pointer, MAKEINTRESOURCEA(index));
-}
+#endif
 
 using fnRtlGetNtVersionNumbers = void (WINAPI*)(LPDWORD major, LPDWORD minor, LPDWORD build);
+#if defined(_DARKMODELIB_ALLOW_OLD_OS)
 using fnSetWindowCompositionAttribute = BOOL (WINAPI*)(HWND hWnd, WINDOWCOMPOSITIONATTRIBDATA*);
+#endif
 // 1809 17763
 using fnShouldAppsUseDarkMode = bool (WINAPI*)(); // ordinal 132
 using fnAllowDarkModeForWindow = bool (WINAPI*)(HWND hWnd, bool allow); // ordinal 133
+#if defined(_DARKMODELIB_ALLOW_OLD_OS)
 using fnAllowDarkModeForApp = bool (WINAPI*)(bool allow); // ordinal 135, in 1809
+#endif
 using fnFlushMenuThemes = void (WINAPI*)(); // ordinal 136
 using fnRefreshImmersiveColorPolicyState = void (WINAPI*)(); // ordinal 104
 using fnIsDarkModeAllowedForWindow = bool (WINAPI*)(HWND hWnd); // ordinal 137
@@ -136,10 +175,14 @@ using fnOpenNcThemeData = HTHEME (WINAPI*)(HWND hWnd, LPCWSTR pszClassList); // 
 using fnSetPreferredAppMode = PreferredAppMode (WINAPI*)(PreferredAppMode appMode); // ordinal 135, in 1903
 //using fnIsDarkModeAllowedForApp = bool (WINAPI*)(); // ordinal 139
 
+#if defined(_DARKMODELIB_ALLOW_OLD_OS)
 static fnSetWindowCompositionAttribute _SetWindowCompositionAttribute = nullptr;
+#endif
 static fnShouldAppsUseDarkMode _ShouldAppsUseDarkMode = nullptr;
 static fnAllowDarkModeForWindow _AllowDarkModeForWindow = nullptr;
+#if defined(_DARKMODELIB_ALLOW_OLD_OS)
 static fnAllowDarkModeForApp _AllowDarkModeForApp = nullptr;
+#endif
 static fnFlushMenuThemes _FlushMenuThemes = nullptr;
 static fnRefreshImmersiveColorPolicyState _RefreshImmersiveColorPolicyState = nullptr;
 static fnIsDarkModeAllowedForWindow _IsDarkModeAllowedForWindow = nullptr;
@@ -178,8 +221,10 @@ bool IsHighContrast()
 	return false;
 }
 
+#if defined(_DARKMODELIB_ALLOW_OLD_OS)
 void SetTitleBarThemeColor(HWND hWnd, BOOL dark)
 {
+
 	if (g_buildNumber < 18362)
 		SetPropW(hWnd, L"UseImmersiveDarkModeColors", reinterpret_cast<HANDLE>(static_cast<intptr_t>(dark)));
 	else if (_SetWindowCompositionAttribute != nullptr)
@@ -202,11 +247,14 @@ void RefreshTitleBarThemeColor(HWND hWnd)
 
 	SetTitleBarThemeColor(hWnd, dark);
 }
+#endif
 
 bool IsColorSchemeChangeMessage(LPARAM lParam)
 {
 	bool isMsg = false;
-	if ((lParam != NULL) && (0 == lstrcmpi(reinterpret_cast<LPCWCH>(lParam), L"ImmersiveColorSet")) && _RefreshImmersiveColorPolicyState != nullptr)
+	if ((lParam != static_cast<LPARAM>(NULL))
+		&& (lstrcmpi(reinterpret_cast<LPCWCH>(lParam), L"ImmersiveColorSet") == 0)
+		&& _RefreshImmersiveColorPolicyState != nullptr)
 	{
 		_RefreshImmersiveColorPolicyState();
 		isMsg = true;
@@ -225,10 +273,12 @@ bool IsColorSchemeChangeMessage(UINT message, LPARAM lParam)
 
 void AllowDarkModeForApp(bool allow)
 {
-	if (_AllowDarkModeForApp != nullptr)
-		_AllowDarkModeForApp(allow);
-	else if (_SetPreferredAppMode != nullptr)
+	if (_SetPreferredAppMode != nullptr)
 		_SetPreferredAppMode(allow ? PreferredAppMode::ForceDark : PreferredAppMode::Default);
+#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+	else if (_AllowDarkModeForApp != nullptr)
+		_AllowDarkModeForApp(allow);
+#endif
 }
 
 static void FlushMenuThemes()
@@ -273,11 +323,11 @@ static bool IsWindowOrParentUsingDarkScrollBar(HWND hwnd)
 
 static void FixDarkScrollBar()
 {
-	HMODULE hComctl = LoadLibraryEx(L"comctl32.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
-	if (hComctl != nullptr)
+	ModuleHandle moduleComctl(L"comctl32.dll");
+	if (moduleComctl.isLoaded())
 	{
-		auto addr = FindDelayLoadThunkInModule(hComctl, "uxtheme.dll", 49); // OpenNcThemeData
-		if (addr)
+		auto* addr = FindDelayLoadThunkInModule(moduleComctl.get(), "uxtheme.dll", 49); // OpenNcThemeData
+		if (addr != nullptr)
 		{
 			DWORD oldProtect = 0;
 			if ((VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), PAGE_READWRITE, &oldProtect) == TRUE) && (_OpenNcThemeData != nullptr))
@@ -299,31 +349,46 @@ static void FixDarkScrollBar()
 				VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), oldProtect, &oldProtect);
 			}
 		}
-		FreeLibrary(hComctl);
 	}
 }
 
-static constexpr bool CheckBuildNumber(DWORD buildNumber)
-{
-	return (buildNumber == 17763 || // 1809
-		buildNumber == 18362 || // 1903
-		buildNumber == 18363 || // 1909
-		buildNumber == 19041 || // 2004
-		buildNumber == 19042 || // 20H2
-		buildNumber == 19043 || // 21H1
-		buildNumber == 19044 || // 21H2
-		(buildNumber > 19044 && buildNumber < 22000) || // Windows 10 any version > 21H2 
-		buildNumber >= 22000);  // Windows 11 builds
-}
+#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+static constexpr DWORD g_win10Build = 17763;
+#else
+static constexpr DWORD g_win10Build = 19045;
+#endif
+static constexpr DWORD g_win11Build = 22000;
 
 bool IsWindows10() // or later OS version
 {
-	return (g_buildNumber >= 17763);
+	return (g_buildNumber >= g_win10Build);
 }
 
 bool IsWindows11() // or later OS version
 {
-	return (g_buildNumber >= 22000);
+	return (g_buildNumber >= g_win11Build);
+}
+
+static constexpr bool CheckBuildNumber(DWORD buildNumber)
+{
+#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+	constexpr size_t nWin10Builds = 8;
+	// Windows 10 builds { 1809, 1903, 1909, 2004, 20H2, 21H1, 21H2, 22H2 }
+	constexpr DWORD win10Builds[nWin10Builds] = { 17763, 18362, 18363, 19041, 19042, 19043, 19044, 19045 };
+
+	// Windows 10 any version >= 22H2 and Windows 11
+	if ((buildNumber >= win10Builds[nWin10Builds - 1])) // || buildNumber > g_win11Build
+		return true;
+
+	for (size_t i = 0; i < nWin10Builds; ++i)
+	{
+		if (buildNumber == win10Builds[i])
+			return true;
+	}
+	return false;
+#else
+	return (buildNumber >= g_win10Build); //  || buildNumber > g_win11Build
+#endif
 }
 
 DWORD GetWindowsBuildNumber()
@@ -338,8 +403,8 @@ void InitDarkMode()
 		return;
 
 	fnRtlGetNtVersionNumbers RtlGetNtVersionNumbers = nullptr;
-	HMODULE hNtdll = GetModuleHandle(L"ntdll.dll");
-	if (hNtdll != nullptr && ptrFn(hNtdll, RtlGetNtVersionNumbers, "RtlGetNtVersionNumbers"))
+	HMODULE hNtdll = GetModuleHandleW(L"ntdll.dll");
+	if (hNtdll != nullptr && loadFn(hNtdll, RtlGetNtVersionNumbers, "RtlGetNtVersionNumbers"))
 	{
 		DWORD major = 0;
 		DWORD minor = 0;
@@ -347,37 +412,41 @@ void InitDarkMode()
 		g_buildNumber &= ~0xF0000000;
 		if (major == 10 && minor == 0 && CheckBuildNumber(g_buildNumber))
 		{
-			HMODULE hUxtheme = LoadLibraryEx(L"uxtheme.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
-			if (hUxtheme != nullptr)
+			ModuleHandle moduleUxtheme(L"uxtheme.dll");
+			if (moduleUxtheme.isLoaded())
 			{
+				HMODULE hUxtheme = moduleUxtheme.get();
+
 				bool ptrFnOrd135NotNullptr = false;
+#if defined(_DARKMODELIB_ALLOW_OLD_OS)
 				if (g_buildNumber < 18362)
-					ptrFnOrd135NotNullptr = ptrFn(hUxtheme, _AllowDarkModeForApp, 135);
+					ptrFnOrd135NotNullptr = loadFn(hUxtheme, _AllowDarkModeForApp, 135);
 				else
-					ptrFnOrd135NotNullptr = ptrFn(hUxtheme, _SetPreferredAppMode, 135);
+#endif
+					ptrFnOrd135NotNullptr = loadFn(hUxtheme, _SetPreferredAppMode, 135);
 
 				if (ptrFnOrd135NotNullptr &&
-					ptrFn(hUxtheme, _OpenNcThemeData, 49) &&
-					ptrFn(hUxtheme, _RefreshImmersiveColorPolicyState, 104) &&
-					ptrFn(hUxtheme, _ShouldAppsUseDarkMode, 132) &&
-					ptrFn(hUxtheme, _AllowDarkModeForWindow, 133) &&
-					ptrFn(hUxtheme, _FlushMenuThemes, 136) &&
-					ptrFn(hUxtheme, _IsDarkModeAllowedForWindow, 137))
+					loadFn(hUxtheme, _OpenNcThemeData, 49) &&
+					loadFn(hUxtheme, _RefreshImmersiveColorPolicyState, 104) &&
+					loadFn(hUxtheme, _ShouldAppsUseDarkMode, 132) &&
+					loadFn(hUxtheme, _AllowDarkModeForWindow, 133) &&
+					loadFn(hUxtheme, _FlushMenuThemes, 136) &&
+					loadFn(hUxtheme, _IsDarkModeAllowedForWindow, 137))
 				{
 					g_darkModeSupported = true;
 				}
 
-				ptrFn(hUxtheme, _GetIsImmersiveColorUsingHighContrast, 106);
-
+				loadFn(hUxtheme, _GetIsImmersiveColorUsingHighContrast, 106);
+#if defined(_DARKMODELIB_ALLOW_OLD_OS)
 				if (g_buildNumber < 19041)
 				{
 					HMODULE hUser32 = GetModuleHandleW(L"user32.dll");
 					if (hUser32 != nullptr)
 					{
-						ptrFn(hUser32, _SetWindowCompositionAttribute, "SetWindowCompositionAttribute");
+						loadFn(hUser32, _SetWindowCompositionAttribute, "SetWindowCompositionAttribute");
 					}
 				}
-
+#endif
 				isInit = true;
 			}
 		}
@@ -474,20 +543,19 @@ static auto ReplaceFunction(IMAGE_THUNK_DATA* addr, P newFunction) -> P
 
 bool HookSysColor()
 {
-	HMODULE hComctl = LoadLibraryEx(L"comctl32.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
-	if (hComctl != nullptr)
+	ModuleHandle moduleComctl(L"comctl32.dll");
+	if (moduleComctl.isLoaded())
 	{
 		if (_GetSysColor == nullptr || !g_isGetSysColorHooked)
 		{
-			auto addr = FindIatThunkInModule(hComctl, "user32.dll", "GetSysColor");
-			if (addr)
+			auto* addr = FindIatThunkInModule(moduleComctl.get(), "user32.dll", "GetSysColor");
+			if (addr != nullptr)
 			{
 				_GetSysColor = ReplaceFunction(addr, static_cast<fnGetSysColor>(MyGetSysColor));
 				g_isGetSysColorHooked = true;
 			}
 			else
 			{
-				FreeLibrary(hComctl);
 				return false;
 			}
 		}
@@ -497,7 +565,6 @@ bool HookSysColor()
 			++g_hookRef;
 		}
 
-		FreeLibrary(hComctl);
 		return true;
 	}
 	return false;
@@ -505,8 +572,8 @@ bool HookSysColor()
 
 void UnhookSysColor()
 {
-	HMODULE hComctl = LoadLibraryEx(L"comctl32.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
-	if (hComctl != nullptr)
+	ModuleHandle moduleComctl(L"comctl32.dll");
+	if (moduleComctl.isLoaded())
 	{
 		if (g_isGetSysColorHooked)
 		{
@@ -517,7 +584,7 @@ void UnhookSysColor()
 
 			if (g_hookRef == 0)
 			{
-				auto* addr = FindIatThunkInModule(hComctl, "user32.dll", "GetSysColor");
+				auto* addr = FindIatThunkInModule(moduleComctl.get(), "user32.dll", "GetSysColor");
 				if (addr != nullptr)
 				{
 					ReplaceFunction(addr, _GetSysColor);
@@ -525,7 +592,5 @@ void UnhookSysColor()
 				}
 			}
 		}
-
-		FreeLibrary(hComctl);
 	}
 }

@@ -91,7 +91,8 @@ namespace DarkMode
 		verRevision     = 3,
 		iathookExternal = 4,
 		iniConfigUsed   = 5,
-		maxValue        = 6
+		allowOldOS      = 6,
+		maxValue        = 7
 	};
 
 	int getLibInfo(LibInfoType libInfoType);
