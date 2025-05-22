@@ -253,7 +253,7 @@ bool IsColorSchemeChangeMessage(LPARAM lParam)
 {
 	bool isMsg = false;
 	if ((lParam != static_cast<LPARAM>(NULL))
-		&& (lstrcmpi(reinterpret_cast<LPCWCH>(lParam), L"ImmersiveColorSet") == 0)
+		&& (lstrcmpiW(reinterpret_cast<LPCWSTR>(lParam), L"ImmersiveColorSet") == 0)
 		&& _RefreshImmersiveColorPolicyState != nullptr)
 	{
 		_RefreshImmersiveColorPolicyState();
@@ -387,7 +387,7 @@ static constexpr bool CheckBuildNumber(DWORD buildNumber)
 	}
 	return false;
 #else
-	return (buildNumber >= g_win10Build); //  || buildNumber > g_win11Build
+	return (buildNumber >= g_win10Build); // || buildNumber > g_win11Build
 #endif
 }
 
@@ -415,7 +415,7 @@ void InitDarkMode()
 			ModuleHandle moduleUxtheme(L"uxtheme.dll");
 			if (moduleUxtheme.isLoaded())
 			{
-				HMODULE hUxtheme = moduleUxtheme.get();
+				const HMODULE& hUxtheme = moduleUxtheme.get();
 
 				bool ptrFnOrd135NotNullptr = false;
 #if defined(_DARKMODELIB_ALLOW_OLD_OS)
