@@ -22,9 +22,9 @@
 
 #include <windows.h>
 
-#if (NTDDI_VERSION >= NTDDI_VISTA) /* && \
-	(defined(__x86_64__) || defined(_M_X64) || \
-	 defined(__arm64__) || defined(__arm64) || defined(_M_ARM64))*/
+#if (NTDDI_VERSION >= NTDDI_VISTA) /*\
+	&& (defined(__x86_64__) || defined(_M_X64)\
+	|| defined(__arm64__) || defined(__arm64) || defined(_M_ARM64))*/
 
 namespace DarkMode
 {
@@ -282,14 +282,18 @@ namespace DarkMode
 
 	// theme and helper
 
+	void enableSysLinkCtrlCtlColor(HWND hWnd);
+
 	void setDarkTitleBarEx(HWND hWnd, bool useWin11Features);
 	void setDarkTitleBar(HWND hWnd);
 	void setDarkExplorerTheme(HWND hWnd);
 	void setDarkScrollBar(HWND hWnd);
 	void setDarkTooltips(HWND hWnd, ToolTipsType type = ToolTipsType::tooltip);
 	void setDarkLineAbovePanelToolbar(HWND hWnd);
+	void setDarkHeader(HWND hWnd);
 	void setDarkListView(HWND hWnd);
 	void setDarkThemeExperimental(HWND hWnd, const wchar_t* themeClassName = L"Explorer");
+	void setDarkRichEdit(HWND hWnd);
 
 	void setDarkDlgSafe(HWND hWnd, bool useWin11Features = true);
 	void setDarkDlgNotifySafe(HWND hWnd, bool useWin11Features = true);
