@@ -22,6 +22,8 @@
 #include "MenuPage.h"
 #include "MenuPageRes.h"
 
+#include "../../../../DarkMode/DarkModeSubclass.h"
+
 
 using namespace NWindows;
 using namespace NContextMenuFlags;
@@ -282,6 +284,8 @@ bool CMenuPage::OnInit()
 
   _listView.SetColumnWidthAuto(0);
   _initMode = false;
+
+  DarkMode::setDarkListviewCheckboxes(_listView);
 
   return CPropertyPage::OnInit();
 }

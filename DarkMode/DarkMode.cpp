@@ -35,14 +35,6 @@ extern PIMAGE_THUNK_DATA FindDelayLoadThunkInModule(void* moduleBase, const char
 extern PIMAGE_THUNK_DATA FindDelayLoadThunkInModule(void* moduleBase, const char* dllName, uint16_t ordinal);
 #endif
 
-#if defined(__GNUC__) && (__GNUC__ > 8)
-#define WINAPI_LAMBDA_RETURN(return_t) -> return_t WINAPI
-#elif defined(__GNUC__)
-#define WINAPI_LAMBDA_RETURN(return_t) WINAPI -> return_t
-#else
-#define WINAPI_LAMBDA_RETURN(return_t) -> return_t
-#endif
-
 #if defined(_MSC_VER) && _MSC_VER >= 1800
 #pragma warning(disable : 4191)
 #endif
@@ -68,10 +60,17 @@ struct ModuleHandle
 {
 	HMODULE hModule = nullptr;
 
+	ModuleHandle() = delete;
+
 	explicit ModuleHandle(const wchar_t* moduleName)
 		: hModule(LoadLibraryEx(moduleName, nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32))
-	{
-	}
+	{}
+
+	ModuleHandle(const ModuleHandle&) = delete;
+	ModuleHandle& operator=(const ModuleHandle&) = delete;
+
+	ModuleHandle(ModuleHandle&&) = delete;
+	ModuleHandle& operator=(ModuleHandle&&) = delete;
 
 	~ModuleHandle()
 	{
@@ -80,12 +79,6 @@ struct ModuleHandle
 			FreeLibrary(hModule);
 		}
 	}
-
-	ModuleHandle(const ModuleHandle&) = delete;
-	ModuleHandle& operator=(const ModuleHandle&) = delete;
-
-	ModuleHandle(ModuleHandle&&) = delete;
-	ModuleHandle& operator=(ModuleHandle&&) = delete;
 
 	[[nodiscard]] HMODULE get() const
 	{
@@ -321,6 +314,19 @@ static bool IsWindowOrParentUsingDarkScrollBar(HWND hwnd)
 	return false;
 }
 
+static HTHEME WINAPI MyOpenNcThemeData(HWND hWnd, LPCWSTR pszClassList)
+{
+	if (wcscmp(pszClassList, WC_SCROLLBAR) == 0)
+	{
+		if (IsWindowOrParentUsingDarkScrollBar(hWnd))
+		{
+			hWnd = nullptr;
+			pszClassList = L"Explorer::ScrollBar";
+		}
+	}
+	return _OpenNcThemeData(hWnd, pszClassList);
+};
+
 static void FixDarkScrollBar()
 {
 	ModuleHandle moduleComctl(L"comctl32.dll");
@@ -332,20 +338,7 @@ static void FixDarkScrollBar()
 			DWORD oldProtect = 0;
 			if ((VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), PAGE_READWRITE, &oldProtect) == TRUE) && (_OpenNcThemeData != nullptr))
 			{
-				auto MyOpenThemeData = [](HWND hWnd, LPCWSTR classList) WINAPI_LAMBDA_RETURN(HTHEME)
-				{
-					if (wcscmp(classList, WC_SCROLLBAR) == 0)
-					{
-						if (IsWindowOrParentUsingDarkScrollBar(hWnd))
-						{
-							hWnd = nullptr;
-							classList = L"Explorer::ScrollBar";
-						}
-					}
-					return _OpenNcThemeData(hWnd, classList);
-				};
-
-				addr->u1.Function = reinterpret_cast<uintptr_t>(static_cast<fnOpenNcThemeData>(MyOpenThemeData));
+				addr->u1.Function = reinterpret_cast<uintptr_t>(static_cast<fnOpenNcThemeData>(MyOpenNcThemeData));
 				VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), oldProtect, &oldProtect);
 			}
 		}
@@ -425,13 +418,13 @@ void InitDarkMode()
 #endif
 					ptrFnOrd135NotNullptr = loadFn(hUxtheme, _SetPreferredAppMode, 135);
 
-				if (ptrFnOrd135NotNullptr &&
-					loadFn(hUxtheme, _OpenNcThemeData, 49) &&
-					loadFn(hUxtheme, _RefreshImmersiveColorPolicyState, 104) &&
-					loadFn(hUxtheme, _ShouldAppsUseDarkMode, 132) &&
-					loadFn(hUxtheme, _AllowDarkModeForWindow, 133) &&
-					loadFn(hUxtheme, _FlushMenuThemes, 136) &&
-					loadFn(hUxtheme, _IsDarkModeAllowedForWindow, 137))
+				if (ptrFnOrd135NotNullptr
+					&& loadFn(hUxtheme, _OpenNcThemeData, 49)
+					&& loadFn(hUxtheme, _RefreshImmersiveColorPolicyState, 104)
+					&& loadFn(hUxtheme, _ShouldAppsUseDarkMode, 132)
+					&& loadFn(hUxtheme, _AllowDarkModeForWindow, 133)
+					&& loadFn(hUxtheme, _FlushMenuThemes, 136)
+					&& loadFn(hUxtheme, _IsDarkModeAllowedForWindow, 137))
 				{
 					g_darkModeSupported = true;
 				}
@@ -551,7 +544,7 @@ bool HookSysColor()
 			auto* addr = FindIatThunkInModule(moduleComctl.get(), "user32.dll", "GetSysColor");
 			if (addr != nullptr)
 			{
-				_GetSysColor = ReplaceFunction(addr, static_cast<fnGetSysColor>(MyGetSysColor));
+				_GetSysColor = ReplaceFunction<fnGetSysColor>(addr, MyGetSysColor);
 				g_isGetSysColorHooked = true;
 			}
 			else
