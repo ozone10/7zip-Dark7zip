@@ -40,6 +40,18 @@ extern PIMAGE_THUNK_DATA FindDelayLoadThunkInModule(void* moduleBase, const char
 #endif
 
 template <typename P>
+static auto ReplaceFunction(IMAGE_THUNK_DATA* addr, P newFunction) -> P
+{
+	DWORD oldProtect = 0;
+	if (VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), PAGE_READWRITE, &oldProtect) == FALSE)
+		return nullptr;
+	uintptr_t oldFunction = addr->u1.Function;
+	addr->u1.Function = reinterpret_cast<uintptr_t>(newFunction);
+	VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), oldProtect, &oldProtect);
+	return reinterpret_cast<P>(oldFunction);
+}
+
+template <typename P>
 static auto loadFn(HMODULE handle, P& pointer, const char* name) -> bool
 {
 	if (auto proc = ::GetProcAddress(handle, name); proc != nullptr)
@@ -56,10 +68,12 @@ static auto loadFn(HMODULE handle, P& pointer, WORD index) -> bool
 	return loadFn(handle, pointer, MAKEINTRESOURCEA(index));
 }
 
-struct ModuleHandle
+class ModuleHandle
 {
+private:
 	HMODULE hModule = nullptr;
 
+public:
 	ModuleHandle() = delete;
 
 	explicit ModuleHandle(const wchar_t* moduleName)
@@ -257,9 +271,9 @@ bool IsColorSchemeChangeMessage(LPARAM lParam)
 	return isMsg;
 }
 
-bool IsColorSchemeChangeMessage(UINT message, LPARAM lParam)
+bool IsColorSchemeChangeMessage(UINT uMsg, LPARAM lParam)
 {
-	if (message == WM_SETTINGCHANGE)
+	if (uMsg == WM_SETTINGCHANGE)
 		return IsColorSchemeChangeMessage(lParam);
 	return false;
 }
@@ -287,29 +301,29 @@ static void FlushMenuThemes()
 static std::unordered_set<HWND> g_darkScrollBarWindows;
 static std::mutex g_darkScrollBarMutex;
 
-void EnableDarkScrollBarForWindowAndChildren(HWND hwnd)
+void EnableDarkScrollBarForWindowAndChildren(HWND hWnd)
 {
 	std::lock_guard<std::mutex> lock(g_darkScrollBarMutex);
-	g_darkScrollBarWindows.insert(hwnd);
+	g_darkScrollBarWindows.insert(hWnd);
 }
 
-static bool IsWindowOrParentUsingDarkScrollBar(HWND hwnd)
+static bool IsWindowOrParentUsingDarkScrollBar(HWND hWnd)
 {
-	HWND hwndRoot = GetAncestor(hwnd, GA_ROOT);
+	HWND hRoot = GetAncestor(hWnd, GA_ROOT);
 
 	std::lock_guard<std::mutex> lock(g_darkScrollBarMutex);
-	auto hasElement = [](const auto& container, HWND hwndToCheck) -> bool {
+	auto hasElement = [](const auto& container, HWND hWndToCheck) -> bool {
 #if (defined(_MSC_VER) && (_MSVC_LANG >= 202002L)) || (__cplusplus >= 202002L)
-		return container.contains(hwndToCheck);
+		return container.contains(hWndToCheck);
 #else
-		return container.count(hwndToCheck) != 0;
+		return container.count(hWndToCheck) != 0;
 #endif
 		};
 
-	if (hasElement(g_darkScrollBarWindows, hwnd))
+	if (hasElement(g_darkScrollBarWindows, hWnd))
 		return true;
 
-	if (hwnd != hwndRoot && hasElement(g_darkScrollBarWindows, hwndRoot))
+	if (hWnd != hRoot && hasElement(g_darkScrollBarWindows, hRoot))
 		return true;
 	return false;
 }
@@ -323,24 +337,24 @@ static HTHEME WINAPI MyOpenNcThemeData(HWND hWnd, LPCWSTR pszClassList)
 			hWnd = nullptr;
 			pszClassList = L"Explorer::ScrollBar";
 		}
+		else if (g_darkModeEnabled)
+		{
+			hWnd = nullptr;
+			pszClassList = L"DarkMode_Explorer::ScrollBar";
+		}
 	}
 	return _OpenNcThemeData(hWnd, pszClassList);
 };
 
 static void FixDarkScrollBar()
 {
-	ModuleHandle moduleComctl(L"comctl32.dll");
+	const ModuleHandle moduleComctl(L"comctl32.dll");
 	if (moduleComctl.isLoaded())
 	{
 		auto* addr = FindDelayLoadThunkInModule(moduleComctl.get(), "uxtheme.dll", 49); // OpenNcThemeData
-		if (addr != nullptr)
+		if (addr != nullptr && _OpenNcThemeData != nullptr)
 		{
-			DWORD oldProtect = 0;
-			if ((VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), PAGE_READWRITE, &oldProtect) == TRUE) && (_OpenNcThemeData != nullptr))
-			{
-				addr->u1.Function = reinterpret_cast<uintptr_t>(static_cast<fnOpenNcThemeData>(MyOpenNcThemeData));
-				VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), oldProtect, &oldProtect);
-			}
+			ReplaceFunction<fnOpenNcThemeData>(addr, MyOpenNcThemeData);
 		}
 	}
 }
@@ -405,7 +419,7 @@ void InitDarkMode()
 		g_buildNumber &= ~0xF0000000;
 		if (major == 10 && minor == 0 && CheckBuildNumber(g_buildNumber))
 		{
-			ModuleHandle moduleUxtheme(L"uxtheme.dll");
+			const ModuleHandle moduleUxtheme(L"uxtheme.dll");
 			if (moduleUxtheme.isLoaded())
 			{
 				const HMODULE& hUxtheme = moduleUxtheme.get();
@@ -522,21 +536,9 @@ static DWORD WINAPI MyGetSysColor(int nIndex)
 	}
 }
 
-template <typename P>
-static auto ReplaceFunction(IMAGE_THUNK_DATA* addr, P newFunction) -> P
-{
-	DWORD oldProtect = 0;
-	if (VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), PAGE_READWRITE, &oldProtect) == FALSE)
-		return nullptr;
-	uintptr_t oldFunction = addr->u1.Function;
-	addr->u1.Function = reinterpret_cast<uintptr_t>(newFunction);
-	VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), oldProtect, &oldProtect);
-	return reinterpret_cast<P>(oldFunction);
-}
-
 bool HookSysColor()
 {
-	ModuleHandle moduleComctl(L"comctl32.dll");
+	const ModuleHandle moduleComctl(L"comctl32.dll");
 	if (moduleComctl.isLoaded())
 	{
 		if (_GetSysColor == nullptr || !g_isGetSysColorHooked)
@@ -565,7 +567,7 @@ bool HookSysColor()
 
 void UnhookSysColor()
 {
-	ModuleHandle moduleComctl(L"comctl32.dll");
+	const ModuleHandle moduleComctl(L"comctl32.dll");
 	if (moduleComctl.isLoaded())
 	{
 		if (g_isGetSysColorHooked)

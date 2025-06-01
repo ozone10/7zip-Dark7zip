@@ -21,9 +21,9 @@ void RefreshTitleBarThemeColor(HWND hWnd);
 void SetTitleBarThemeColor(HWND hWnd, BOOL dark);
 #endif
 bool IsColorSchemeChangeMessage(LPARAM lParam);
-bool IsColorSchemeChangeMessage(UINT message, LPARAM lParam);
+bool IsColorSchemeChangeMessage(UINT uMsg, LPARAM lParam);
 void AllowDarkModeForApp(bool allow);
-void EnableDarkScrollBarForWindowAndChildren(HWND hwnd);
+void EnableDarkScrollBarForWindowAndChildren(HWND hWnd);
 void InitDarkMode();
 void SetDarkMode(bool useDarkMode, bool fixDarkScrollbar);
 bool IsWindows10();
