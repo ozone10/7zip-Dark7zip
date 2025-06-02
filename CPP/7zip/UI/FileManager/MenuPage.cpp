@@ -285,7 +285,7 @@ bool CMenuPage::OnInit()
   _listView.SetColumnWidthAuto(0);
   _initMode = false;
 
-  DarkMode::setDarkListviewCheckboxes(_listView);
+  DarkMode::setDarkListViewCheckboxes(_listView);
 
   return CPropertyPage::OnInit();
 }

@@ -62,9 +62,11 @@ Replace 7z original files (e.g. `C:\Program Files\7-Zip\`) with files from downl
 
 - [main]
   - mode - determine which sections color "key=value" pairs will be used and theming of title bar, buttons, scrollbars, and tooltips
-      - 0 - use light mode 
-      - 1 - use dark mode, default value
-      - 2 - follow system settings
+      - 0 - use light mode
+      - 1 - use dark mode, default value in system with dark mode enabled
+      - 2 - follow system settings, use light mode in system with light mode enabled
+      - 3 - use classic style, default value in system with light mode enabled, disable almost every custom GUI styles and colors
+      - 4 - follow system settings, use classic style in system with light mode enabled
 
 - [dark]
   - tone - set default colors for [dark.colors] sections, there are no tones for light mode

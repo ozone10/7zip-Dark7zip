@@ -13,22 +13,22 @@ extern bool g_darkModeSupported;
 extern bool g_darkModeEnabled;
 
 
-bool ShouldAppsUseDarkMode();
+[[nodiscard]] bool ShouldAppsUseDarkMode();
 bool AllowDarkModeForWindow(HWND hWnd, bool allow);
-bool IsHighContrast();
+[[nodiscard]] bool IsHighContrast();
 #if defined(_DARKMODELIB_ALLOW_OLD_OS)
 void RefreshTitleBarThemeColor(HWND hWnd);
 void SetTitleBarThemeColor(HWND hWnd, BOOL dark);
 #endif
-bool IsColorSchemeChangeMessage(LPARAM lParam);
-bool IsColorSchemeChangeMessage(UINT uMsg, LPARAM lParam);
+[[nodiscard]] bool IsColorSchemeChangeMessage(LPARAM lParam);
+[[nodiscard]] bool IsColorSchemeChangeMessage(UINT uMsg, LPARAM lParam);
 void AllowDarkModeForApp(bool allow);
 void EnableDarkScrollBarForWindowAndChildren(HWND hWnd);
 void InitDarkMode();
 void SetDarkMode(bool useDarkMode, bool fixDarkScrollbar);
-bool IsWindows10();
-bool IsWindows11();
-DWORD GetWindowsBuildNumber();
+[[nodiscard]] bool IsWindows10();
+[[nodiscard]] bool IsWindows11();
+[[nodiscard]] DWORD GetWindowsBuildNumber();
 
 void SetMySysColor(int nIndex, COLORREF clr);
 bool HookSysColor();

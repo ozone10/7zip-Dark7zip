@@ -72,8 +72,7 @@ namespace DarkMode
 		blue        = 3,
 		purple      = 4,
 		cyan        = 5,
-		olive       = 6,
-		customized  = 32
+		olive       = 6
 	};
 
 	enum class TreeViewStyle
@@ -96,36 +95,37 @@ namespace DarkMode
 		maxValue        = 8
 	};
 
-	int getLibInfo(LibInfoType libInfoType);
+	[[nodiscard]] int getLibInfo(LibInfoType libInfoType);
 
 	// enum DarkModeType { light = 0, dark = 1, classic = 3 }; values
-	void setDarkModeTypeConfig(UINT dmType);
+	void initDarkModeConfig(UINT dmType);
 	// DWM_WINDOW_CORNER_PREFERENCE values
 	void setRoundCornerConfig(UINT roundCornerStyle);
 	void setBorderColorConfig(COLORREF clr);
 	// DWM_SYSTEMBACKDROP_TYPE values
 	void setMicaConfig(UINT mica);
 	void setMicaExtendedConfig(bool extendMica);
+	// enum DarkModeType { light = 0, dark = 1, classic = 3 }; values
+	void setDarkModeConfig(UINT dmType);
+	void setDarkModeConfig();
 
 	void initDarkMode(const wchar_t* iniName);
 	void initDarkMode();
-	// enum DarkModeType { light = 0, dark = 1, classic = 3 }; values
-	void setDarkMode(UINT dmType);
 
-	bool isEnabled();
-	bool isExperimentalActive();
-	bool isExperimentalSupported();
+	[[nodiscard]] bool isEnabled();
+	[[nodiscard]] bool isExperimentalActive();
+	[[nodiscard]] bool isExperimentalSupported();
 
-	bool isWindowsModeEnabled();
+	[[nodiscard]] bool isWindowsModeEnabled();
 
-	bool isWindows10();
-	bool isWindows11();
-	DWORD getWindowsBuildNumber();
+	[[nodiscard]] bool isWindows10();
+	[[nodiscard]] bool isWindows11();
+	[[nodiscard]] DWORD getWindowsBuildNumber();
 
 	// handle events
 
 	bool handleSettingChange(LPARAM lParam);
-	bool isDarkModeReg();
+	[[nodiscard]] bool isDarkModeReg();
 
 	// from DarkMode.h
 
@@ -139,8 +139,8 @@ namespace DarkMode
 
 	// colors
 
-	void setDarkCustomColors(ColorTone colorTone);
-	ColorTone getColorTone();
+	void setToneColors(ColorTone colorTone);
+	[[nodiscard]] ColorTone getColorTone();
 
 	COLORREF setBackgroundColor(COLORREF clrNew);
 	COLORREF setCtrlBackgroundColor(COLORREF clrNew);
@@ -157,38 +157,38 @@ namespace DarkMode
 	COLORREF setHotEdgeColor(COLORREF clrNew);
 	COLORREF setDisabledEdgeColor(COLORREF clrNew);
 
-	void changeCustomTheme(const Colors& colors);
-	void updateBrushesAndPens();
+	void setThemeColors(Colors colors);
+	void updateThemeBrushesAndPens();
 
-	COLORREF getBackgroundColor();
-	COLORREF getCtrlBackgroundColor();
-	COLORREF getHotBackgroundColor();
-	COLORREF getDlgBackgroundColor();
-	COLORREF getErrorBackgroundColor();
+	[[nodiscard]] COLORREF getBackgroundColor();
+	[[nodiscard]] COLORREF getCtrlBackgroundColor();
+	[[nodiscard]] COLORREF getHotBackgroundColor();
+	[[nodiscard]] COLORREF getDlgBackgroundColor();
+	[[nodiscard]] COLORREF getErrorBackgroundColor();
 
-	COLORREF getTextColor();
-	COLORREF getDarkerTextColor();
-	COLORREF getDisabledTextColor();
-	COLORREF getLinkTextColor();
+	[[nodiscard]] COLORREF getTextColor();
+	[[nodiscard]] COLORREF getDarkerTextColor();
+	[[nodiscard]] COLORREF getDisabledTextColor();
+	[[nodiscard]] COLORREF getLinkTextColor();
 
-	COLORREF getEdgeColor();
-	COLORREF getHotEdgeColor();
-	COLORREF getDisabledEdgeColor();
+	[[nodiscard]] COLORREF getEdgeColor();
+	[[nodiscard]] COLORREF getHotEdgeColor();
+	[[nodiscard]] COLORREF getDisabledEdgeColor();
 
-	HBRUSH getBackgroundBrush();
-	HBRUSH getDlgBackgroundBrush();
-	HBRUSH getCtrlBackgroundBrush();
-	HBRUSH getHotBackgroundBrush();
-	HBRUSH getErrorBackgroundBrush();
+	[[nodiscard]] HBRUSH getBackgroundBrush();
+	[[nodiscard]] HBRUSH getDlgBackgroundBrush();
+	[[nodiscard]] HBRUSH getCtrlBackgroundBrush();
+	[[nodiscard]] HBRUSH getHotBackgroundBrush();
+	[[nodiscard]] HBRUSH getErrorBackgroundBrush();
 
-	HBRUSH getEdgeBrush();
-	HBRUSH getHotEdgeBrush();
-	HBRUSH getDisabledEdgeBrush();
+	[[nodiscard]] HBRUSH getEdgeBrush();
+	[[nodiscard]] HBRUSH getHotEdgeBrush();
+	[[nodiscard]] HBRUSH getDisabledEdgeBrush();
 
-	HPEN getDarkerTextPen();
-	HPEN getEdgePen();
-	HPEN getHotEdgePen();
-	HPEN getDisabledEdgePen();
+	[[nodiscard]] HPEN getDarkerTextPen();
+	[[nodiscard]] HPEN getEdgePen();
+	[[nodiscard]] HPEN getHotEdgePen();
+	[[nodiscard]] HPEN getDisabledEdgePen();
 
 	COLORREF setViewBackgroundColor(COLORREF clrNew);
 	COLORREF setViewTextColor(COLORREF clrNew);
@@ -197,24 +197,27 @@ namespace DarkMode
 	COLORREF setHeaderBackgroundColor(COLORREF clrNew);
 	COLORREF setHeaderHotBackgroundColor(COLORREF clrNew);
 	COLORREF setHeaderTextColor(COLORREF clrNew);
+	COLORREF setHeaderEdgeColor(COLORREF clrNew);
 
-	void updateBrushesAndPensView();
+	void setViewColors(ColorsView colors);
+	void updateViewBrushesAndPens();
 
-	COLORREF getViewBackgroundColor();
-	COLORREF getViewTextColor();
-	COLORREF getViewGridlinesColor();
+	[[nodiscard]] COLORREF getViewBackgroundColor();
+	[[nodiscard]] COLORREF getViewTextColor();
+	[[nodiscard]] COLORREF getViewGridlinesColor();
 
-	COLORREF getHeaderBackgroundColor();
-	COLORREF getHeaderHotBackgroundColor();
-	COLORREF getHeaderTextColor();
+	[[nodiscard]] COLORREF getHeaderBackgroundColor();
+	[[nodiscard]] COLORREF getHeaderHotBackgroundColor();
+	[[nodiscard]] COLORREF getHeaderTextColor();
+	[[nodiscard]] COLORREF getHeaderEdgeColor();
 
-	HBRUSH getViewBackgroundBrush();
-	HBRUSH getViewGridlinesBrush();
+	[[nodiscard]] HBRUSH getViewBackgroundBrush();
+	[[nodiscard]] HBRUSH getViewGridlinesBrush();
 
-	HBRUSH getHeaderBackgroundBrush();
-	HBRUSH getHeaderHotBackgroundBrush();
+	[[nodiscard]] HBRUSH getHeaderBackgroundBrush();
+	[[nodiscard]] HBRUSH getHeaderHotBackgroundBrush();
 
-	HPEN getHeaderEdgePen();
+	[[nodiscard]] HPEN getHeaderEdgePen();
 
 	// paint helper
 
@@ -292,7 +295,7 @@ namespace DarkMode
 	void setDarkLineAbovePanelToolbar(HWND hWnd);
 	void setDarkHeader(HWND hWnd);
 	void setDarkListView(HWND hWnd);
-	void setDarkListviewCheckboxes(HWND hWnd);
+	void setDarkListViewCheckboxes(HWND hWnd);
 	void setDarkThemeExperimental(HWND hWnd, const wchar_t* themeClassName = L"Explorer");
 	void setDarkRichEdit(HWND hWnd);
 
@@ -302,12 +305,12 @@ namespace DarkMode
 	// only if g_dmType == DarkModeType::classic
 	inline void enableThemeDialogTexture(HWND hWnd, bool theme);
 	void disableVisualStyle(HWND hWnd, bool doDisable);
-	double calculatePerceivedLightness(COLORREF clr);
+	[[nodiscard]] double calculatePerceivedLightness(COLORREF clr);
 	void calculateTreeViewStyle();
 	void updatePrevTreeViewStyle();
-	TreeViewStyle getTreeViewStyle();
+	[[nodiscard]] TreeViewStyle getTreeViewStyle();
 	void setTreeViewStyle(HWND hWnd, bool force = false);
-	bool isThemeDark();
+	[[nodiscard]] bool isThemeDark();
 	inline void redrawWindowFrame(HWND hWnd);
 	void setWindowStyle(HWND hWnd, bool setStyle, LONG_PTR styleFlag);
 	void setWindowExStyle(HWND hWnd, bool setExStyle, LONG_PTR exStyleFlag);
@@ -317,13 +320,13 @@ namespace DarkMode
 
 	// ctl color
 
-	LRESULT onCtlColor(HDC hdc);
-	LRESULT onCtlColorCtrl(HDC hdc);
-	LRESULT onCtlColorDlg(HDC hdc);
-	LRESULT onCtlColorError(HDC hdc);
-	LRESULT onCtlColorDlgStaticText(HDC hdc, bool isTextEnabled);
-	LRESULT onCtlColorDlgLinkText(HDC hdc, bool isTextEnabled = true);
-	LRESULT onCtlColorListbox(WPARAM wParam, LPARAM lParam);
+	[[nodiscard]] LRESULT onCtlColor(HDC hdc);
+	[[nodiscard]] LRESULT onCtlColorCtrl(HDC hdc);
+	[[nodiscard]] LRESULT onCtlColorDlg(HDC hdc);
+	[[nodiscard]] LRESULT onCtlColorError(HDC hdc);
+	[[nodiscard]] LRESULT onCtlColorDlgStaticText(HDC hdc, bool isTextEnabled);
+	[[nodiscard]] LRESULT onCtlColorDlgLinkText(HDC hdc, bool isTextEnabled = true);
+	[[nodiscard]] LRESULT onCtlColorListbox(WPARAM wParam, LPARAM lParam);
 
 	// hook callback dialog procedure for font, color chooser,... dialogs
 
