@@ -19,8 +19,8 @@
 
 #include "DarkMode.h"
 
-#include <VSStyle.h>
 #include <uxtheme.h>
+#include <vsstyle.h>
 
 #include <mutex>
 #include <unordered_set>
@@ -70,9 +70,6 @@ static auto loadFn(HMODULE handle, P& pointer, WORD index) -> bool
 
 class ModuleHandle
 {
-private:
-	HMODULE hModule = nullptr;
-
 public:
 	ModuleHandle() = delete;
 
@@ -103,6 +100,9 @@ public:
 	{
 		return hModule != nullptr;
 	}
+
+private:
+	HMODULE hModule = nullptr;
 };
 
 enum IMMERSIVE_HC_CACHE_MODE

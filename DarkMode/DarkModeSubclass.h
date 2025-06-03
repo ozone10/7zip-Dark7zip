@@ -77,9 +77,9 @@ namespace DarkMode
 
 	enum class TreeViewStyle
 	{
-		classic = 0,
-		light   = 1,
-		dark    = 2
+		classic,
+		light,
+		dark
 	};
 
 	enum LibInfoType
