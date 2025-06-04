@@ -52,7 +52,12 @@
 
 #include "Version.h"
 
-#ifdef __GNUC__
+#if defined(_MSC_VER)
+#pragma comment(lib, "dwmapi.lib")
+#pragma comment(lib, "uxtheme.lib")
+#pragma comment(lib, "Comctl32.lib")
+#pragma comment(lib, "Gdi32.lib")
+#elif defined(__GNUC__)
 #include <cstdint>
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
 constexpr int CP_DROPDOWNITEM = 9; // for some reason mingw use only enum up to 8
@@ -73,13 +78,6 @@ constexpr int CP_DROPDOWNITEM = 9; // for some reason mingw use only enum up to 
 //#ifndef WM_GETDPISCALEDSIZE
 //#define WM_GETDPISCALEDSIZE 0x02E4
 //#endif
-
-#ifdef _MSC_VER
-#pragma comment(lib, "dwmapi.lib")
-#pragma comment(lib, "uxtheme.lib")
-#pragma comment(lib, "Comctl32.lib")
-#pragma comment(lib, "Gdi32.lib")
-#endif
 
 static constexpr COLORREF HEXRGB(DWORD rrggbb)
 {
@@ -107,20 +105,23 @@ static bool cmpWndClassName(HWND hWnd, const wchar_t* classNameToCmp)
 #if !defined(_DARKMODELIB_NO_INI_CONFIG)
 static std::wstring getIniPath(const std::wstring& iniFilename)
 {
-	wchar_t buffer[MAX_PATH]{};
-	::GetModuleFileName(nullptr, buffer, MAX_PATH);
-
-	wchar_t* lastSlash = wcsrchr(buffer, L'\\');
-	if (lastSlash != nullptr)
+	std::array<wchar_t, MAX_PATH> buffer{};
+	const auto strLen = static_cast<size_t>(::GetModuleFileNameW(nullptr, buffer.data(), MAX_PATH));
+	if (strLen == 0)
 	{
-		*lastSlash = L'\0';
-		std::wstring iniPath(buffer);
-		iniPath += L"\\";
-		iniPath += iniFilename;
-		iniPath += L".ini";
-		return iniPath;
+		return L"";
 	}
-	return L"";
+
+	wchar_t* lastSlash = std::wcsrchr(buffer.data(), L'\\');
+	if (lastSlash == nullptr)
+	{
+		return L"";
+	}
+
+	*lastSlash = L'\0';
+	std::wstring iniPath(buffer.data());
+	iniPath += L"\\" + iniFilename + L".ini";
+	return iniPath;
 }
 
 static bool fileExists(const std::wstring& filePath)
@@ -172,24 +173,24 @@ static bool setClrFromIni(const std::wstring& sectionName, const std::wstring& k
 
 namespace DarkMode
 {
-	int getLibInfo(LibInfoType libInfoType)
+	int getLibInfo(LibInfo libInfoType)
 	{
 		switch (libInfoType)
 		{
-			case LibInfoType::maxValue:
-			case LibInfoType::featureCheck:
-				return static_cast<int>(LibInfoType::maxValue);
+			case LibInfo::maxValue:
+			case LibInfo::featureCheck:
+				return static_cast<int>(LibInfo::maxValue);
 
-			case LibInfoType::verMajor:
+			case LibInfo::verMajor:
 				return DM_VERSION_MAJOR;
 
-			case LibInfoType::verMinor:
+			case LibInfo::verMinor:
 				return DM_VERSION_MINOR;
 
-			case LibInfoType::verRevision:
+			case LibInfo::verRevision:
 				return DM_VERSION_REVISION;
 
-			case LibInfoType::iathookExternal:
+			case LibInfo::iathookExternal:
 			{
 #if defined(_DARKMODELIB_EXTERNAL_IATHOOK)
 				return TRUE;
@@ -198,7 +199,7 @@ namespace DarkMode
 #endif
 			}
 
-			case LibInfoType::iniConfigUsed:
+			case LibInfo::iniConfigUsed:
 			{
 #if !defined(_DARKMODELIB_NO_INI_CONFIG)
 				return TRUE;
@@ -207,7 +208,7 @@ namespace DarkMode
 #endif
 			}
 
-			case LibInfoType::allowOldOS:
+			case LibInfo::allowOldOS:
 			{
 #if defined(_DARKMODELIB_ALLOW_OLD_OS)
 				return TRUE;
@@ -216,7 +217,7 @@ namespace DarkMode
 #endif
 			}
 
-			case LibInfoType::useDlgProcCtl:
+			case LibInfo::useDlgProcCtl:
 			{
 #if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS)
 				return TRUE;
@@ -224,10 +225,8 @@ namespace DarkMode
 				return FALSE;
 #endif
 			}
-
-			default:
-				return -1;
 		}
+		return -1; // should never happen
 	}
 
 	enum class DarkModeType : std::uint8_t
@@ -261,7 +260,7 @@ namespace DarkMode
 		settingChange   = 17
 	};
 
-	enum class WinModeType : std::uint8_t
+	enum class WinMode : std::uint8_t
 	{
 		disabled,
 		light,
@@ -283,7 +282,7 @@ namespace DarkMode
 		TreeViewStyle _treeViewStyle = TreeViewStyle::classic;
 		bool _micaExtend = false;
 		DarkModeType _dmType = DarkModeType::dark;
-		WinModeType _windowsModeType = WinModeType::disabled;
+		WinMode _windowsMode = WinMode::disabled;
 		bool _isInit = false;
 		bool _isInitExperimental = false;
 
@@ -293,7 +292,7 @@ namespace DarkMode
 #endif
 	} g_dmCfg;
 
-	// range to determine when it should be better to use classic style
+	// range to determine when it should be better to use classic style for tree view
 	constexpr double MiddleGrayRange = 2.0;
 
 	static struct
@@ -590,44 +589,43 @@ namespace DarkMode
 
 			switch (_tone)
 			{
-				case DarkMode::ColorTone::red:
+				case ColorTone::red:
 				{
 					_colors = darkRedColors;
 					break;
 				}
 
-				case DarkMode::ColorTone::green:
+				case ColorTone::green:
 				{
 					_colors = darkGreenColors;
 					break;
 				}
 
-				case DarkMode::ColorTone::blue:
+				case ColorTone::blue:
 				{
 					_colors = darkBlueColors;
 					break;
 				}
 
-				case DarkMode::ColorTone::purple:
+				case ColorTone::purple:
 				{
 					_colors = darkPurpleColors;
 					break;
 				}
 
-				case DarkMode::ColorTone::cyan:
+				case ColorTone::cyan:
 				{
 					_colors = darkCyanColors;
 					break;
 				}
 
-				case DarkMode::ColorTone::olive:
+				case ColorTone::olive:
 				{
 					_colors = darkOliveColors;
 					break;
 				}
 
-				case DarkMode::ColorTone::black:
-				default:
+				case ColorTone::black:
 				{
 					_colors = darkColors;
 					break;
@@ -889,28 +887,28 @@ namespace DarkMode
 			case 0:
 			{
 				g_dmCfg._dmType = DarkModeType::light;
-				g_dmCfg._windowsModeType = WinModeType::disabled;
+				g_dmCfg._windowsMode = WinMode::disabled;
 				break;
 			}
 
 			case 2:
 			{
 				g_dmCfg._dmType = DarkMode::isDarkModeReg() ? DarkModeType::dark : DarkModeType::light;
-				g_dmCfg._windowsModeType = WinModeType::light;
+				g_dmCfg._windowsMode = WinMode::light;
 				break;
 			}
 
 			case 3:
 			{
 				g_dmCfg._dmType = DarkModeType::classic;
-				g_dmCfg._windowsModeType = WinModeType::disabled;
+				g_dmCfg._windowsMode = WinMode::disabled;
 				break;
 			}
 
 			case 4:
 			{
 				g_dmCfg._dmType = DarkMode::isDarkModeReg() ? DarkModeType::dark : DarkModeType::classic;
-				g_dmCfg._windowsModeType = WinModeType::classic;
+				g_dmCfg._windowsMode = WinMode::classic;
 				break;
 			}
 
@@ -918,7 +916,7 @@ namespace DarkMode
 			default:
 			{
 				g_dmCfg._dmType = DarkModeType::dark;
-				g_dmCfg._windowsModeType = WinModeType::disabled;
+				g_dmCfg._windowsMode = WinMode::disabled;
 				break;
 			}
 		}
@@ -1182,7 +1180,7 @@ namespace DarkMode
 
 	bool isWindowsModeEnabled()
 	{
-		return g_dmCfg._windowsModeType != WinModeType::disabled;
+		return g_dmCfg._windowsMode != WinMode::disabled;
 	}
 
 	bool isWindows10()
@@ -1608,7 +1606,7 @@ namespace DarkMode
 		::GetThemeBackgroundContentRect(hTheme, hdc, iPartID, iStateID, &rcClient, &rcText);
 
 		RECT rcBackground{ rcClient };
-		if ((dtFlags & DT_SINGLELINE) == DT_SINGLELINE)
+		if (!isMultiline)
 		{
 			rcBackground.top += (rcText.bottom - rcText.top - szBox.cy) / 2;
 		}
@@ -1856,7 +1854,7 @@ namespace DarkMode
 		const auto& hTheme = buttonData._themeData.getHTheme();
 
 		const bool isDisabled = ::IsWindowEnabled(hWnd) == FALSE;
-		const int iPartID = BP_GROUPBOX;
+		constexpr int iPartID = BP_GROUPBOX;
 		const int iStateID = isDisabled ? GBS_DISABLED : GBS_NORMAL;
 
 		bool isFontCreated = false;
@@ -1936,7 +1934,7 @@ namespace DarkMode
 
 			DWORD dtFlags = isCenter ? DT_CENTER : DT_LEFT;
 
-			if (::SendMessage(hWnd, WM_QUERYUISTATE, 0, 0) != static_cast<LRESULT>(NULL))
+			if (::SendMessage(hWnd, WM_QUERYUISTATE, 0, 0) != 0) // NULL
 			{
 				dtFlags |= DT_HIDEPREFIX;
 			}
@@ -2212,7 +2210,7 @@ namespace DarkMode
 			}
 
 			DarkMode::paintRoundRect(hdc, rect, hPen, hBrush, roundness, roundness);
-			};
+		};
 
 		paintUpDownBtn(upDownData._rcPrev, isHotPrev);
 		paintUpDownBtn(upDownData._rcNext, isHotNext);
@@ -2458,8 +2456,20 @@ namespace DarkMode
 					// would be better, than getCtrlBackgroundBrush(),
 					// however default getBackgroundBrush() has same color
 					// as getDlgBackgroundBrush()
-					HBRUSH hBrush = isSelectedTab ? DarkMode::getDlgBackgroundBrush() : (isHot ? DarkMode::getHotBackgroundBrush() : DarkMode::getCtrlBackgroundBrush());
-					::FillRect(hdc, &rcItem, hBrush);
+					auto getBrush = [&]() -> HBRUSH {
+						if (isSelectedTab)
+						{
+							return DarkMode::getDlgBackgroundBrush();
+						}
+
+						if (isHot)
+						{
+							return DarkMode::getHotBackgroundBrush();
+						}
+						return DarkMode::getCtrlBackgroundBrush();
+					};
+
+					::FillRect(hdc, &rcItem, getBrush());
 					::SetTextColor(hdc, (isHot || isSelectedTab) ? DarkMode::getTextColor() : DarkMode::getDarkerTextColor());
 				}
 
@@ -2934,7 +2944,20 @@ namespace DarkMode
 		RECT rcArrow{ cbi.rcButton };
 		rcArrow.left -= 1;
 
-		HBRUSH hBrush = isDisabled ? DarkMode::getDlgBackgroundBrush() : (isHot ? DarkMode::getHotBackgroundBrush() : DarkMode::getCtrlBackgroundBrush());
+		auto getBrush = [&]() -> HBRUSH {
+			if (isDisabled)
+			{
+				return DarkMode::getDlgBackgroundBrush();
+			}
+
+			if (isHot)
+			{
+				return DarkMode::getHotBackgroundBrush();
+			}
+			return DarkMode::getCtrlBackgroundBrush();
+		};
+
+		HBRUSH hBrush = getBrush();
 
 		// CBS_DROPDOWN and CBS_SIMPLE text is handled by parent by WM_CTLCOLOREDIT
 		if (comboboxData._cbStyle == CBS_DROPDOWNLIST)
@@ -2942,7 +2965,7 @@ namespace DarkMode
 			// erase background on item change
 			::FillRect(hdc, &rcClient, hBrush);
 
-			auto index = static_cast<int>(::SendMessage(hWnd, CB_GETCURSEL, 0, 0));
+			const auto index = static_cast<int>(::SendMessage(hWnd, CB_GETCURSEL, 0, 0));
 			if (index != CB_ERR)
 			{
 				const auto bufferLen = static_cast<size_t>(::SendMessage(hWnd, CB_GETLBTEXTLEN, static_cast<WPARAM>(index), 0));
@@ -3006,8 +3029,20 @@ namespace DarkMode
 			}
 			else
 			{
-				const COLORREF clrText = isDisabled ? DarkMode::getDisabledTextColor() : (isHot ? DarkMode::getTextColor() : DarkMode::getDarkerTextColor());
-				::SetTextColor(hdc, clrText);
+				auto getTextClr = [&]() -> COLORREF {
+					if (isDisabled)
+					{
+						return DarkMode::getDisabledTextColor();
+					}
+
+					if (isHot)
+					{
+						return DarkMode::getTextColor();
+					}
+					return DarkMode::getDarkerTextColor();
+				};
+
+				::SetTextColor(hdc, getTextClr());
 				::DrawText(hdc, L"˅", -1, &rcArrow, DT_NOPREFIX | DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
 			}
 		}
@@ -3422,7 +3457,6 @@ namespace DarkMode
 								return CDRF_DODEFAULT;
 						}
 					}
-					break;
 				}
 				break;
 			}
@@ -4086,7 +4120,7 @@ namespace DarkMode
 		}
 	}
 
-	static void paintProgressBar(HWND hWnd, HDC hdc, ProgressBarData& progressBarData)
+	static void paintProgressBar(HWND hWnd, HDC hdc, const ProgressBarData& progressBarData)
 	{
 		const auto& hTheme = progressBarData._themeData.getHTheme();
 
@@ -4842,7 +4876,7 @@ namespace DarkMode
 				const LONG paddingLeft = DarkMode::isThemeDark() ? 1 : 0;
 				const LONG paddingRight = DarkMode::isThemeDark() ? 2 : 1;
 
-				LVITEMINDEX lvii{ static_cast<int>(lplvcd->nmcd.dwItemSpec), 0 };
+				const LVITEMINDEX lvii{ static_cast<int>(lplvcd->nmcd.dwItemSpec), 0 };
 				RECT rcSubitem{
 					lplvcd->nmcd.rc.left
 					, lplvcd->nmcd.rc.top
@@ -5749,7 +5783,7 @@ namespace DarkMode
 				return colorChannel / 12.92;
 			}
 			return std::pow(((colorChannel + 0.055) / 1.055), 2.4);
-			};
+		};
 
 		const double r = linearValue(static_cast<double>(GetRValue(clr)));
 		const double g = linearValue(static_cast<double>(GetGValue(clr)));
@@ -6028,13 +6062,10 @@ namespace DarkMode
 
 	UINT_PTR CALLBACK HookDlgProc(HWND hWnd, UINT uMsg, WPARAM /*wParam*/, LPARAM /*lParam*/)
 	{
-		switch (uMsg)
+		if (uMsg == WM_INITDIALOG)
 		{
-			case WM_INITDIALOG:
-			{
-				DarkMode::setDarkDlgSafe(hWnd);
-				return TRUE;
-			}
+			DarkMode::setDarkDlgSafe(hWnd);
+			return TRUE;
 		}
 		return FALSE;
 	}

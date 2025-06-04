@@ -82,7 +82,7 @@ namespace DarkMode
 		dark
 	};
 
-	enum LibInfoType
+	enum LibInfo
 	{
 		featureCheck    = 0,
 		verMajor        = 1,
@@ -95,7 +95,7 @@ namespace DarkMode
 		maxValue        = 8
 	};
 
-	[[nodiscard]] int getLibInfo(LibInfoType libInfoType);
+	[[nodiscard]] int getLibInfo(LibInfo libInfoType);
 
 	// enum DarkModeType { light = 0, dark = 1, classic = 3 }; values
 	void initDarkModeConfig(UINT dmType);

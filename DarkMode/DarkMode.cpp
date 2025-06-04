@@ -37,6 +37,8 @@ extern PIMAGE_THUNK_DATA FindDelayLoadThunkInModule(void* moduleBase, const char
 
 #if defined(_MSC_VER) && _MSC_VER >= 1800
 #pragma warning(disable : 4191)
+#elif defined(__GNUC__)
+#include <cwchar>
 #endif
 
 template <typename P>
@@ -45,7 +47,7 @@ static auto ReplaceFunction(IMAGE_THUNK_DATA* addr, P newFunction) -> P
 	DWORD oldProtect = 0;
 	if (VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), PAGE_READWRITE, &oldProtect) == FALSE)
 		return nullptr;
-	uintptr_t oldFunction = addr->u1.Function;
+	const uintptr_t oldFunction = addr->u1.Function;
 	addr->u1.Function = reinterpret_cast<uintptr_t>(newFunction);
 	VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), oldProtect, &oldProtect);
 	return reinterpret_cast<P>(oldFunction);
@@ -259,7 +261,7 @@ void RefreshTitleBarThemeColor(HWND hWnd)
 bool IsColorSchemeChangeMessage(LPARAM lParam)
 {
 	bool isMsg = false;
-	if ((lParam != static_cast<LPARAM>(NULL))
+	if ((lParam != 0) // NULL
 		&& (lstrcmpiW(reinterpret_cast<LPCWSTR>(lParam), L"ImmersiveColorSet") == 0)
 		&& _RefreshImmersiveColorPolicyState != nullptr)
 	{
@@ -318,33 +320,31 @@ static bool IsWindowOrParentUsingDarkScrollBar(HWND hWnd)
 #else
 		return container.count(hWndToCheck) != 0;
 #endif
-		};
+	};
 
 	if (hasElement(g_darkScrollBarWindows, hWnd))
 		return true;
 
-	if (hWnd != hRoot && hasElement(g_darkScrollBarWindows, hRoot))
-		return true;
-	return false;
+	return (hWnd != hRoot && hasElement(g_darkScrollBarWindows, hRoot));
 }
 
 static HTHEME WINAPI MyOpenNcThemeData(HWND hWnd, LPCWSTR pszClassList)
 {
-	if (wcscmp(pszClassList, WC_SCROLLBAR) == 0)
+	if (std::wcscmp(pszClassList, WC_SCROLLBAR) == 0)
 	{
 		if (IsWindowOrParentUsingDarkScrollBar(hWnd))
 		{
 			hWnd = nullptr;
 			pszClassList = L"Explorer::ScrollBar";
 		}
-		else if (g_darkModeEnabled)
-		{
-			hWnd = nullptr;
-			pszClassList = L"DarkMode_Explorer::ScrollBar";
-		}
+		//else if (g_darkModeEnabled)
+		//{
+		//	hWnd = nullptr;
+		//	pszClassList = L"DarkMode_Explorer::ScrollBar";
+		//}
 	}
 	return _OpenNcThemeData(hWnd, pszClassList);
-};
+}
 
 static void FixDarkScrollBar()
 {

@@ -20,12 +20,12 @@ template <typename T>
 constexpr T DataDirectoryFromModuleBase(void* moduleBase, size_t entryID)
 {
 	auto dosHdr = static_cast<PIMAGE_DOS_HEADER>(moduleBase);
-	auto ntHdr = RVA2VA<PIMAGE_NT_HEADERS>(moduleBase, dosHdr->e_lfanew);
+	auto ntHdr = RVA2VA<PIMAGE_NT_HEADERS>(moduleBase, static_cast<DWORD>(dosHdr->e_lfanew));
 	auto dataDir = ntHdr->OptionalHeader.DataDirectory;
 	return RVA2VA<T>(moduleBase, dataDir[entryID].VirtualAddress);
 }
 
-PIMAGE_THUNK_DATA FindAddressByName(void* moduleBase, PIMAGE_THUNK_DATA impName, PIMAGE_THUNK_DATA impAddr, const char* funcName)
+inline PIMAGE_THUNK_DATA FindAddressByName(void* moduleBase, PIMAGE_THUNK_DATA impName, PIMAGE_THUNK_DATA impAddr, const char* funcName)
 {
 	for (; impName->u1.Ordinal; ++impName, ++impAddr)
 	{
@@ -40,7 +40,7 @@ PIMAGE_THUNK_DATA FindAddressByName(void* moduleBase, PIMAGE_THUNK_DATA impName,
 	return nullptr;
 }
 
-PIMAGE_THUNK_DATA FindAddressByOrdinal(void* /*moduleBase*/, PIMAGE_THUNK_DATA impName, PIMAGE_THUNK_DATA impAddr, uint16_t ordinal)
+inline PIMAGE_THUNK_DATA FindAddressByOrdinal(void* /*moduleBase*/, PIMAGE_THUNK_DATA impName, PIMAGE_THUNK_DATA impAddr, uint16_t ordinal)
 {
 	for (; impName->u1.Ordinal; ++impName, ++impAddr)
 	{
@@ -50,7 +50,7 @@ PIMAGE_THUNK_DATA FindAddressByOrdinal(void* /*moduleBase*/, PIMAGE_THUNK_DATA i
 	return nullptr;
 }
 
-PIMAGE_THUNK_DATA FindIatThunkInModule(void* moduleBase, const char* dllName, const char* funcName)
+inline PIMAGE_THUNK_DATA FindIatThunkInModule(void* moduleBase, const char* dllName, const char* funcName)
 {
 	auto imports = DataDirectoryFromModuleBase<PIMAGE_IMPORT_DESCRIPTOR>(moduleBase, IMAGE_DIRECTORY_ENTRY_IMPORT);
 	for (; imports->Name; ++imports)
@@ -65,7 +65,7 @@ PIMAGE_THUNK_DATA FindIatThunkInModule(void* moduleBase, const char* dllName, co
 	return nullptr;
 }
 
-PIMAGE_THUNK_DATA FindDelayLoadThunkInModule(void* moduleBase, const char* dllName, const char* funcName)
+inline PIMAGE_THUNK_DATA FindDelayLoadThunkInModule(void* moduleBase, const char* dllName, const char* funcName)
 {
 	auto imports = DataDirectoryFromModuleBase<PIMAGE_DELAYLOAD_DESCRIPTOR>(moduleBase, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT);
 	for (; imports->DllNameRVA; ++imports)
@@ -80,7 +80,7 @@ PIMAGE_THUNK_DATA FindDelayLoadThunkInModule(void* moduleBase, const char* dllNa
 	return nullptr;
 }
 
-PIMAGE_THUNK_DATA FindDelayLoadThunkInModule(void* moduleBase, const char* dllName, uint16_t ordinal)
+inline PIMAGE_THUNK_DATA FindDelayLoadThunkInModule(void* moduleBase, const char* dllName, uint16_t ordinal)
 {
 	auto imports = DataDirectoryFromModuleBase<PIMAGE_DELAYLOAD_DESCRIPTOR>(moduleBase, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT);
 	for (; imports->DllNameRVA; ++imports)
