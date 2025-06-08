@@ -26,6 +26,13 @@
 	&& (defined(__x86_64__) || defined(_M_X64)\
 	|| defined(__arm64__) || defined(__arm64) || defined(_M_ARM64))*/
 
+#if defined(_MSC_VER)
+#pragma comment(lib, "dwmapi.lib")
+#pragma comment(lib, "uxtheme.lib")
+#pragma comment(lib, "Comctl32.lib")
+#pragma comment(lib, "Gdi32.lib")
+#endif
+
 namespace DarkMode
 {
 	struct Colors

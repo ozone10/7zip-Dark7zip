@@ -379,9 +379,9 @@ bool IsWindows11() // or later OS version
 static constexpr bool CheckBuildNumber(DWORD buildNumber)
 {
 #if defined(_DARKMODELIB_ALLOW_OLD_OS)
-	constexpr size_t nWin10Builds = 8;
+	static constexpr size_t nWin10Builds = 8;
 	// Windows 10 builds { 1809, 1903, 1909, 2004, 20H2, 21H1, 21H2, 22H2 }
-	constexpr DWORD win10Builds[nWin10Builds] = { 17763, 18362, 18363, 19041, 19042, 19043, 19044, 19045 };
+	static constexpr DWORD win10Builds[nWin10Builds] = { 17763, 18362, 18363, 19041, 19042, 19043, 19044, 19045 };
 
 	// Windows 10 any version >= 22H2 and Windows 11
 	if ((buildNumber >= win10Builds[nWin10Builds - 1])) // || buildNumber > g_win11Build

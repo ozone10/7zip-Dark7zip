@@ -52,15 +52,10 @@
 
 #include "Version.h"
 
-#if defined(_MSC_VER)
-#pragma comment(lib, "dwmapi.lib")
-#pragma comment(lib, "uxtheme.lib")
-#pragma comment(lib, "Comctl32.lib")
-#pragma comment(lib, "Gdi32.lib")
-#elif defined(__GNUC__)
+#if defined(__GNUC__)
 #include <cstdint>
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
-constexpr int CP_DROPDOWNITEM = 9; // for some reason mingw use only enum up to 8
+static constexpr int CP_DROPDOWNITEM = 9; // for some reason mingw use only enum up to 8
 #endif
 
 #ifndef WM_DPICHANGED
@@ -91,7 +86,7 @@ static constexpr COLORREF HEXRGB(DWORD rrggbb)
 
 static std::wstring getWndClassName(HWND hWnd)
 {
-	constexpr int strLen = 32;
+	static constexpr int strLen = 32;
 	std::wstring className(strLen, L'\0');
 	className.resize(static_cast<size_t>(::GetClassNameW(hWnd, className.data(), strLen)));
 	return className;
@@ -132,7 +127,7 @@ static bool fileExists(const std::wstring& filePath)
 
 static bool setClrFromIni(const std::wstring& sectionName, const std::wstring& keyName, const std::wstring& iniFilePath, COLORREF* clr)
 {
-	constexpr size_t maxStrLen = 6;
+	static constexpr size_t maxStrLen = 6;
 	std::wstring buffer(maxStrLen + 1, L'\0');
 
 	const auto len = static_cast<size_t>(::GetPrivateProfileStringW(
@@ -293,7 +288,7 @@ namespace DarkMode
 	} g_dmCfg;
 
 	// range to determine when it should be better to use classic style for tree view
-	constexpr double MiddleGrayRange = 2.0;
+	static constexpr double MiddleGrayRange = 2.0;
 
 	static struct
 	{
@@ -432,7 +427,7 @@ namespace DarkMode
 		HEXRGB(0x484848)    // disabledEdgeColor
 	};
 
-	constexpr DWORD offsetEdge = HEXRGB(0x1C1C1C);
+	static constexpr DWORD offsetEdge = HEXRGB(0x1C1C1C);
 
 	// red tone
 	static constexpr DWORD offsetRed = HEXRGB(0x100000);
@@ -1269,7 +1264,7 @@ namespace DarkMode
 		DarkMode::paintRoundRect(hdc, rect, hpen, static_cast<HBRUSH>(::GetStockObject(NULL_BRUSH)), width, height);
 	}
 
-	constexpr int Win11CornerRoundness = 4;
+	static constexpr int Win11CornerRoundness = 4;
 
 	class ThemeData
 	{
@@ -1737,7 +1732,7 @@ namespace DarkMode
 		}
 	}
 
-	constexpr auto ButtonSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::button);
+	static constexpr auto ButtonSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::button);
 
 	static LRESULT CALLBACK ButtonSubclass(
 		HWND hWnd,
@@ -1854,7 +1849,7 @@ namespace DarkMode
 		const auto& hTheme = buttonData._themeData.getHTheme();
 
 		const bool isDisabled = ::IsWindowEnabled(hWnd) == FALSE;
-		constexpr int iPartID = BP_GROUPBOX;
+		static constexpr int iPartID = BP_GROUPBOX;
 		const int iStateID = isDisabled ? GBS_DISABLED : GBS_NORMAL;
 
 		bool isFontCreated = false;
@@ -1949,7 +1944,7 @@ namespace DarkMode
 		}
 	}
 
-	constexpr auto GroupboxSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::groupbox);
+	static constexpr auto GroupboxSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::groupbox);
 
 	static LRESULT CALLBACK GroupboxSubclass(
 		HWND hWnd,
@@ -2138,7 +2133,7 @@ namespace DarkMode
 			}
 			else
 			{
-				constexpr LONG offset = 2;
+				static constexpr LONG offset = 2;
 
 				RECT rcArrowTop{
 					_rcClient.left + offset, _rcClient.top,
@@ -2218,7 +2213,7 @@ namespace DarkMode
 		auto hFont = reinterpret_cast<HFONT>(::SendMessage(hWnd, WM_GETFONT, 0, 0));
 		auto holdFont = static_cast<HFONT>(::SelectObject(hdc, hFont));
 
-		constexpr UINT dtFlags = DT_NOPREFIX | DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP;
+		static constexpr UINT dtFlags = DT_NOPREFIX | DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP;
 		const COLORREF clrText = isDisabled ? DarkMode::getDisabledTextColor() : DarkMode::getDarkerTextColor();
 
 		const LONG offset = upDownData._isHorizontal ? 1 : 0;
@@ -2233,7 +2228,7 @@ namespace DarkMode
 		::SelectObject(hdc, holdFont);
 	}
 
-	constexpr auto UpDownSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::upDown);
+	static constexpr auto UpDownSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::upDown);
 
 	static LRESULT CALLBACK UpDownSubclass(
 		HWND hWnd,
@@ -2517,7 +2512,7 @@ namespace DarkMode
 		::SelectObject(hdc, holdPen);
 	}
 
-	constexpr auto TabPaintSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::tabPaint);
+	static constexpr auto TabPaintSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::tabPaint);
 
 	static LRESULT CALLBACK TabPaintSubclass(
 		HWND hWnd,
@@ -2620,7 +2615,7 @@ namespace DarkMode
 		DarkMode::removeSubclass<BufferData>(hWnd, TabPaintSubclass, TabPaintSubclassID);
 	}
 
-	constexpr auto TabUpDownSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::tabUpDown);
+	static constexpr auto TabUpDownSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::tabUpDown);
 
 	static LRESULT CALLBACK TabUpDownSubclass(
 		HWND hWnd,
@@ -2705,7 +2700,7 @@ namespace DarkMode
 		bool _isHot = false;
 	};
 
-	constexpr auto CustomBorderSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::customBorder);
+	static constexpr auto CustomBorderSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::customBorder);
 
 	static LRESULT CALLBACK CustomBorderSubclass(
 		HWND hWnd,
@@ -2975,7 +2970,7 @@ namespace DarkMode
 				RECT rcText{ cbi.rcItem };
 				::InflateRect(&rcText, -2, 0);
 
-				constexpr DWORD dtFlags = DT_NOPREFIX | DT_LEFT | DT_VCENTER | DT_SINGLELINE;
+				static constexpr DWORD dtFlags = DT_NOPREFIX | DT_LEFT | DT_VCENTER | DT_SINGLELINE;
 				if (hasTheme)
 				{
 					DTTOPTS dtto{};
@@ -3092,7 +3087,7 @@ namespace DarkMode
 		::SelectObject(hdc, holdPen);
 	}
 
-	constexpr auto ComboBoxSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::comboBox);
+	static constexpr auto ComboBoxSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::comboBox);
 
 	static LRESULT CALLBACK ComboBoxSubclass(
 		HWND hWnd,
@@ -3264,7 +3259,7 @@ namespace DarkMode
 		}
 	}
 
-	constexpr auto ComboBoxExSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::comboBoxEx);
+	static constexpr auto ComboBoxExSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::comboBoxEx);
 
 	static LRESULT CALLBACK ComboboxExSubclass(
 		HWND hWnd,
@@ -3367,7 +3362,7 @@ namespace DarkMode
 		}
 	}
 
-	constexpr auto ListViewSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::listView);
+	static constexpr auto ListViewSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::listView);
 
 	static LRESULT CALLBACK ListViewSubclass(
 		HWND hWnd,
@@ -3654,7 +3649,7 @@ namespace DarkMode
 		::SelectObject(hdc, holdPen);
 	}
 
-	constexpr auto HeaderSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::header);
+	static constexpr auto HeaderSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::header);
 
 	static LRESULT CALLBACK HeaderSubclass(
 		HWND hWnd,
@@ -3954,7 +3949,7 @@ namespace DarkMode
 		::SelectObject(hdc, holdPen);
 	}
 
-	constexpr auto StatusBarSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::statusBar);
+	static constexpr auto StatusBarSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::statusBar);
 
 	static LRESULT CALLBACK StatusBarSubclass(
 		HWND hWnd,
@@ -4138,7 +4133,7 @@ namespace DarkMode
 		::FillRect(hdc, &rcClient, DarkMode::getCtrlBackgroundBrush());
 	}
 
-	constexpr auto ProgressBarSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::progress);
+	static constexpr auto ProgressBarSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::progress);
 
 	static LRESULT CALLBACK ProgressBarSubclass(
 		HWND hWnd,
@@ -4301,7 +4296,7 @@ namespace DarkMode
 		{}
 	};
 
-	constexpr auto StaticTextSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::staticText);
+	static constexpr auto StaticTextSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::staticText);
 
 	static LRESULT CALLBACK StaticTextSubclass(
 		HWND hWnd,
@@ -4544,7 +4539,7 @@ namespace DarkMode
 #endif
 	}
 
-	constexpr auto WindowEraseBgSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::eraseBg);
+	static constexpr auto WindowEraseBgSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::eraseBg);
 
 	static LRESULT CALLBACK WindowEraseBgSubclass(
 		HWND hWnd,
@@ -4589,7 +4584,7 @@ namespace DarkMode
 		DarkMode::removeSubclass(hWnd, WindowEraseBgSubclass, WindowEraseBgSubclassID);
 	}
 
-	constexpr auto WindowCtlColorSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::ctlColor);
+	static constexpr auto WindowCtlColorSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::ctlColor);
 
 	static LRESULT CALLBACK WindowCtlColorSubclass(
 		HWND hWnd,
@@ -5109,7 +5104,7 @@ namespace DarkMode
 			::SetTextColor(lpnmcd->hdc, isHot ? DarkMode::getTextColor() : DarkMode::getDarkerTextColor());
 			::SetBkMode(lpnmcd->hdc, TRANSPARENT);
 
-			constexpr auto dtFlags = DT_NOPREFIX | DT_CENTER | DT_TOP | DT_SINGLELINE | DT_NOCLIP;
+			static constexpr UINT dtFlags = DT_NOPREFIX | DT_CENTER | DT_TOP | DT_SINGLELINE | DT_NOCLIP;
 			::DrawText(lpnmcd->hdc, L"»", -1, &rbBand.rcChevronLocation, dtFlags);
 
 			retVal = CDRF_SKIPDEFAULT;
@@ -5134,7 +5129,7 @@ namespace DarkMode
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	constexpr auto WindowNotifySubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::notify);
+	static constexpr auto WindowNotifySubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::notify);
 
 	static LRESULT CALLBACK WindowNotifySubclass(
 		HWND hWnd,
@@ -5252,7 +5247,7 @@ namespace DarkMode
 		::ReleaseDC(hWnd, hdc);
 	}
 
-	constexpr auto WindowMenuBarSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::menuBar);
+	static constexpr auto WindowMenuBarSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::menuBar);
 
 	static LRESULT CALLBACK WindowMenuBarSubclass(
 		HWND hWnd,
@@ -5448,7 +5443,7 @@ namespace DarkMode
 		DarkMode::removeSubclass<ThemeData>(hWnd, WindowMenuBarSubclass, WindowMenuBarSubclassID);
 	}
 
-	constexpr auto WindowSettingChangeSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::settingChange);
+	static constexpr auto WindowSettingChangeSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::settingChange);
 
 	static LRESULT CALLBACK WindowSettingChangeSubclass(
 		HWND hWnd,
@@ -5503,8 +5498,8 @@ namespace DarkMode
 
 	void setDarkTitleBarEx(HWND hWnd, bool useWin11Features)
 	{
-		constexpr DWORD win10Build2004 = 19041;
-		constexpr DWORD win11Mica = 22621;
+		static constexpr DWORD win10Build2004 = 19041;
+		static constexpr DWORD win11Mica = 22621;
 		if (DarkMode::getWindowsBuildNumber() >= win10Build2004)
 		{
 			const BOOL useDark = DarkMode::isExperimentalActive() ? TRUE : FALSE;
@@ -5519,7 +5514,7 @@ namespace DarkMode
 				{
 					if (g_dmCfg._micaExtend && g_dmCfg._mica != DWMSBT_AUTO && !DarkMode::isWindowsModeEnabled() && (g_dmCfg._dmType == DarkModeType::dark))
 					{
-						constexpr MARGINS margins{ -1, 0, 0, 0 };
+						static constexpr MARGINS margins{ -1, 0, 0, 0 };
 						::DwmExtendFrameIntoClientArea(hWnd, &margins);
 					}
 
@@ -5797,7 +5792,7 @@ namespace DarkMode
 
 	void calculateTreeViewStyle()
 	{
-		constexpr double middle = 50.0;
+		static constexpr double middle = 50.0;
 		const COLORREF bgColor = DarkMode::getViewBackgroundColor();
 
 		if (g_tvCfg._background != bgColor || g_tvCfg._lightness == middle)
