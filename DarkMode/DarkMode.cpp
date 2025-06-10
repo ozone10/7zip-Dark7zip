@@ -1,9 +1,10 @@
 // MIT license
 // Copyright(c) 2024-2025 ozone10
 
-// Parts of code based on the win32-darkmode project
+// This file contains parts of code from the win32-darkmode project
 // https://github.com/ysc3839/win32-darkmode
-// which is licensed under the MIT License. Copyright (c) 2019 Richard Yu
+// which is licensed under the MIT License.
+// See LICENSE-win32-darkmode for more information.
 
 #include "StdAfx.h"
 
@@ -46,7 +47,10 @@ static auto ReplaceFunction(IMAGE_THUNK_DATA* addr, P newFunction) -> P
 {
 	DWORD oldProtect = 0;
 	if (VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), PAGE_READWRITE, &oldProtect) == FALSE)
+	{
 		return nullptr;
+	}
+
 	const uintptr_t oldFunction = addr->u1.Function;
 	addr->u1.Function = reinterpret_cast<uintptr_t>(newFunction);
 	VirtualProtect(addr, sizeof(IMAGE_THUNK_DATA), oldProtect, &oldProtect);
@@ -217,7 +221,9 @@ bool ShouldAppsUseDarkMode()
 bool AllowDarkModeForWindow(HWND hWnd, bool allow)
 {
 	if (g_darkModeSupported && (_AllowDarkModeForWindow != nullptr))
+	{
 		return _AllowDarkModeForWindow(hWnd, allow);
+	}
 	return false;
 }
 
@@ -226,7 +232,9 @@ bool IsHighContrast()
 	HIGHCONTRASTW highContrast{};
 	highContrast.cbSize = sizeof(HIGHCONTRASTW);
 	if (SystemParametersInfoW(SPI_GETHIGHCONTRAST, sizeof(HIGHCONTRASTW), &highContrast, FALSE) == TRUE)
+	{
 		return (highContrast.dwFlags & HCF_HIGHCONTRASTON) == HCF_HIGHCONTRASTON;
+	}
 	return false;
 }
 
@@ -268,25 +276,35 @@ bool IsColorSchemeChangeMessage(LPARAM lParam)
 		_RefreshImmersiveColorPolicyState();
 		isMsg = true;
 	}
+
 	if (_GetIsImmersiveColorUsingHighContrast != nullptr)
+	{
 		_GetIsImmersiveColorUsingHighContrast(IHCM_REFRESH);
+	}
+
 	return isMsg;
 }
 
 bool IsColorSchemeChangeMessage(UINT uMsg, LPARAM lParam)
 {
 	if (uMsg == WM_SETTINGCHANGE)
+	{
 		return IsColorSchemeChangeMessage(lParam);
+	}
 	return false;
 }
 
 void AllowDarkModeForApp(bool allow)
 {
 	if (_SetPreferredAppMode != nullptr)
+	{
 		_SetPreferredAppMode(allow ? PreferredAppMode::ForceDark : PreferredAppMode::Default);
+	}
 #if defined(_DARKMODELIB_ALLOW_OLD_OS)
 	else if (_AllowDarkModeForApp != nullptr)
+	{
 		_AllowDarkModeForApp(allow);
+	}
 #endif
 }
 
@@ -305,7 +323,7 @@ static std::mutex g_darkScrollBarMutex;
 
 void EnableDarkScrollBarForWindowAndChildren(HWND hWnd)
 {
-	std::lock_guard<std::mutex> lock(g_darkScrollBarMutex);
+	const std::lock_guard<std::mutex> lock(g_darkScrollBarMutex);
 	g_darkScrollBarWindows.insert(hWnd);
 }
 
@@ -313,7 +331,7 @@ static bool IsWindowOrParentUsingDarkScrollBar(HWND hWnd)
 {
 	HWND hRoot = GetAncestor(hWnd, GA_ROOT);
 
-	std::lock_guard<std::mutex> lock(g_darkScrollBarMutex);
+	const std::lock_guard<std::mutex> lock(g_darkScrollBarMutex);
 	auto hasElement = [](const auto& container, HWND hWndToCheck) -> bool {
 #if (defined(_MSC_VER) && (_MSVC_LANG >= 202002L)) || (__cplusplus >= 202002L)
 		return container.contains(hWndToCheck);
@@ -323,8 +341,9 @@ static bool IsWindowOrParentUsingDarkScrollBar(HWND hWnd)
 	};
 
 	if (hasElement(g_darkScrollBarWindows, hWnd))
+	{
 		return true;
-
+	}
 	return (hWnd != hRoot && hasElement(g_darkScrollBarWindows, hRoot));
 }
 
@@ -352,7 +371,7 @@ static void FixDarkScrollBar()
 	if (moduleComctl.isLoaded())
 	{
 		auto* addr = FindDelayLoadThunkInModule(moduleComctl.get(), "uxtheme.dll", 49); // OpenNcThemeData
-		if (addr != nullptr && _OpenNcThemeData != nullptr)
+		if (addr != nullptr) // && _OpenNcThemeData != nullptr) // checked in InitDarkMode
 		{
 			ReplaceFunction<fnOpenNcThemeData>(addr, MyOpenNcThemeData);
 		}
@@ -385,12 +404,16 @@ static constexpr bool CheckBuildNumber(DWORD buildNumber)
 
 	// Windows 10 any version >= 22H2 and Windows 11
 	if ((buildNumber >= win10Builds[nWin10Builds - 1])) // || buildNumber > g_win11Build
+	{
 		return true;
+	}
 
 	for (size_t i = 0; i < nWin10Builds; ++i)
 	{
 		if (buildNumber == win10Builds[i])
+		{
 			return true;
+		}
 	}
 	return false;
 #else
@@ -407,7 +430,9 @@ void InitDarkMode()
 {
 	static bool isInit = false;
 	if (isInit)
+	{
 		return;
+	}
 
 	fnRtlGetNtVersionNumbers RtlGetNtVersionNumbers = nullptr;
 	HMODULE hNtdll = GetModuleHandleW(L"ntdll.dll");
@@ -511,28 +536,40 @@ void SetMySysColor(int nIndex, COLORREF clr)
 		}
 
 		default:
+		{
 			break;
+		}
 	}
 }
 
 static DWORD WINAPI MyGetSysColor(int nIndex)
 {
 	if (!g_darkModeEnabled)
+	{
 		return GetSysColor(nIndex);
+	}
 
 	switch (nIndex)
 	{
 		case COLOR_WINDOW:
+		{
 			return g_clrWindow;
+		}
 
 		case COLOR_WINDOWTEXT:
+		{
 			return g_clrText;
+		}
 
 		case COLOR_BTNFACE:
+		{
 			return g_clrTGridlines;
+		}
 
 		default:
+		{
 			return GetSysColor(nIndex);
+		}
 	}
 }
 

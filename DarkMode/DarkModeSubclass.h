@@ -73,13 +73,14 @@ namespace DarkMode
 
 	enum class ColorTone
 	{
-		black       = 0,
-		red         = 1,
-		green       = 2,
-		blue        = 3,
-		purple      = 4,
-		cyan        = 5,
-		olive       = 6
+		black   = 0,
+		red     = 1,
+		green   = 2,
+		blue    = 3,
+		purple  = 4,
+		cyan    = 5,
+		olive   = 6,
+		max     = 7
 	};
 
 	enum class TreeViewStyle
@@ -339,80 +340,80 @@ namespace DarkMode
 
 	UINT_PTR CALLBACK HookDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-// Below is copy of Windows 7 new choose font dialog template from Font.dlg.
-// Using hook will force ChooseFont function to use older template.
-// Workaround is to use modified template (remove CBS_OWNERDRAWFIXED
-// from size and script comboboxes) copied from Font.dlg. Other comboboxes
-// use custom owner draw, which are needed to show visuals for selected font.
-// Same for "AaBbYyZz" text which has NOT WS_VISIBLE.
-// This workaround will however remove automatic system translation for caption
-// and static texts.
-//
-// Usage example:
+	// Below is copy of Windows 7 new choose font dialog template from Font.dlg.
+	// Using hook will force ChooseFont function to use older template.
+	// Workaround is to use modified template (remove CBS_OWNERDRAWFIXED
+	// from size and script comboboxes) copied from Font.dlg. Other comboboxes
+	// use custom owner draw, which are needed to show visuals for selected font.
+	// Same for "AaBbYyZz" text which has NOT WS_VISIBLE.
+	// This workaround will however remove automatic system translation for caption
+	// and static texts.
+	//
+	// Usage example:
 
-//#define IDD_DARK_FONT_DIALOG 1000 // usually in resource.h or other header
+	//#define IDD_DARK_FONT_DIALOG 1000 // usually in resource.h or other header
 
-//CHOOSEFONT cf{};
-//// some user code
-//cf.Flags |= CF_ENABLEHOOK | CF_ENABLETEMPLATE;
-//cf.lpfnHook = static_cast<LPCFHOOKPROC>(DarkMode::HookDlgProc);
-//cf.hInstance = GetModuleHandle(nullptr);
-//cf.lpTemplateName = MAKEINTRESOURCE(IDD_DARK_FONT_DIALOG);
+	//CHOOSEFONT cf{};
+	//// some user code
+	//cf.Flags |= CF_ENABLEHOOK | CF_ENABLETEMPLATE;
+	//cf.lpfnHook = static_cast<LPCFHOOKPROC>(DarkMode::HookDlgProc);
+	//cf.hInstance = GetModuleHandle(nullptr);
+	//cf.lpTemplateName = MAKEINTRESOURCE(IDD_DARK_FONT_DIALOG);
 
-// in rc file
+	// in rc file
 
-//IDD_DARK_FONT_DIALOG DIALOG 13, 54, 243, 234
-//STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU |
-//      DS_3DLOOK
-//CAPTION "Font"
-//FONT 9, "Segoe UI"
-//BEGIN
-//    LTEXT           "&Font:", stc1, 7, 7, 98, 9
-//    COMBOBOX        cmb1, 7, 16, 98, 76,
-//                    CBS_SIMPLE | CBS_AUTOHSCROLL | CBS_DISABLENOSCROLL |
-//                    CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS |
-//                    CBS_OWNERDRAWFIXED
-//
-//    LTEXT           "Font st&yle:", stc2, 114, 7, 74, 9
-//    COMBOBOX        cmb2, 114, 16, 74, 76,
-//                    CBS_SIMPLE | CBS_AUTOHSCROLL | CBS_DISABLENOSCROLL |
-//                    WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS |
-//                    CBS_OWNERDRAWFIXED
-//
-//    LTEXT           "&Size:", stc3, 198, 7, 36, 9
-//    COMBOBOX        cmb3, 198, 16, 36, 76,
-//                    CBS_SIMPLE | CBS_AUTOHSCROLL | CBS_DISABLENOSCROLL |
-//                    CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS |
-//                    CBS_OWNERDRAWFIXED // remove CBS_OWNERDRAWFIXED
-//
-//    GROUPBOX        "Effects", grp1, 7, 97, 98, 76, WS_GROUP
-//    AUTOCHECKBOX    "Stri&keout", chx1, 13, 111, 90, 10, WS_TABSTOP
-//    AUTOCHECKBOX    "&Underline", chx2, 13, 127, 90, 10
-//
-//    LTEXT           "&Color:", stc4, 13, 144, 89, 9
-//    COMBOBOX        cmb4, 13, 155, 85, 100,
-//                    CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL |
-//                    CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
-//
-//    GROUPBOX        "Sample", grp2, 114, 97, 120, 43, WS_GROUP
-//    CTEXT           "AaBbYyZz", stc5, 116, 106, 117, 33,
-//                    SS_NOPREFIX | NOT WS_VISIBLE
-//    LTEXT           "", stc6, 7, 178, 227, 20, SS_NOPREFIX | NOT WS_GROUP
-//
-//    LTEXT           "Sc&ript:", stc7, 114, 145, 118, 9
-//    COMBOBOX        cmb5, 114, 155, 120, 30, CBS_DROPDOWNLIST |
-//                    CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_HASSTRINGS | // remove CBS_OWNERDRAWFIXED
-//                    WS_BORDER | WS_VSCROLL | WS_TABSTOP
-//    
-//    CONTROL         "<A>Show more fonts</A>", IDC_MANAGE_LINK, "SysLink", 
-//                    WS_TABSTOP, 7, 199, 227, 9 
-//
-//    DEFPUSHBUTTON   "OK", IDOK, 141, 215, 45, 14, WS_GROUP
-//    PUSHBUTTON      "Cancel", IDCANCEL, 190, 215, 45, 14, WS_GROUP
-//    PUSHBUTTON      "&Apply", psh3, 92, 215, 45, 14, WS_GROUP
-//    PUSHBUTTON      "&Help", pshHelp, 43, 215, 45, 14, WS_GROUP
-//
-//END
+	//IDD_DARK_FONT_DIALOG DIALOG 13, 54, 243, 234
+	//STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU |
+	//      DS_3DLOOK
+	//CAPTION "Font"
+	//FONT 9, "Segoe UI"
+	//BEGIN
+	//    LTEXT           "&Font:", stc1, 7, 7, 98, 9
+	//    COMBOBOX        cmb1, 7, 16, 98, 76,
+	//                    CBS_SIMPLE | CBS_AUTOHSCROLL | CBS_DISABLENOSCROLL |
+	//                    CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS |
+	//                    CBS_OWNERDRAWFIXED
+	//
+	//    LTEXT           "Font st&yle:", stc2, 114, 7, 74, 9
+	//    COMBOBOX        cmb2, 114, 16, 74, 76,
+	//                    CBS_SIMPLE | CBS_AUTOHSCROLL | CBS_DISABLENOSCROLL |
+	//                    WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS |
+	//                    CBS_OWNERDRAWFIXED
+	//
+	//    LTEXT           "&Size:", stc3, 198, 7, 36, 9
+	//    COMBOBOX        cmb3, 198, 16, 36, 76,
+	//                    CBS_SIMPLE | CBS_AUTOHSCROLL | CBS_DISABLENOSCROLL |
+	//                    CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS |
+	//                    CBS_OWNERDRAWFIXED // remove CBS_OWNERDRAWFIXED
+	//
+	//    GROUPBOX        "Effects", grp1, 7, 97, 98, 76, WS_GROUP
+	//    AUTOCHECKBOX    "Stri&keout", chx1, 13, 111, 90, 10, WS_TABSTOP
+	//    AUTOCHECKBOX    "&Underline", chx2, 13, 127, 90, 10
+	//
+	//    LTEXT           "&Color:", stc4, 13, 144, 89, 9
+	//    COMBOBOX        cmb4, 13, 155, 85, 100,
+	//                    CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL |
+	//                    CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+	//
+	//    GROUPBOX        "Sample", grp2, 114, 97, 120, 43, WS_GROUP
+	//    CTEXT           "AaBbYyZz", stc5, 116, 106, 117, 33,
+	//                    SS_NOPREFIX | NOT WS_VISIBLE
+	//    LTEXT           "", stc6, 7, 178, 227, 20, SS_NOPREFIX | NOT WS_GROUP
+	//
+	//    LTEXT           "Sc&ript:", stc7, 114, 145, 118, 9
+	//    COMBOBOX        cmb5, 114, 155, 120, 30, CBS_DROPDOWNLIST |
+	//                    CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_HASSTRINGS | // remove CBS_OWNERDRAWFIXED
+	//                    WS_BORDER | WS_VSCROLL | WS_TABSTOP
+	//
+	//    CONTROL         "<A>Show more fonts</A>", IDC_MANAGE_LINK, "SysLink",
+	//                    WS_TABSTOP, 7, 199, 227, 9
+	//
+	//    DEFPUSHBUTTON   "OK", IDOK, 141, 215, 45, 14, WS_GROUP
+	//    PUSHBUTTON      "Cancel", IDCANCEL, 190, 215, 45, 14, WS_GROUP
+	//    PUSHBUTTON      "&Apply", psh3, 92, 215, 45, 14, WS_GROUP
+	//    PUSHBUTTON      "&Help", pshHelp, 43, 215, 45, 14, WS_GROUP
+	//
+	//END
 } // namespace DarkMode
 
 #else

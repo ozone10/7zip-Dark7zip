@@ -37,7 +37,6 @@
 
 #include <dwmapi.h>
 #include <richedit.h>
-#include <shlwapi.h>
 #include <uxtheme.h>
 #include <vssym32.h>
 #include <windowsx.h>
@@ -54,7 +53,7 @@
 
 #if defined(__GNUC__)
 #include <cstdint>
-#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+static constexpr DWORD DWMWA_USE_IMMERSIVE_DARK_MODE 20
 static constexpr int CP_DROPDOWNITEM = 9; // for some reason mingw use only enum up to 8
 #endif
 
@@ -155,7 +154,8 @@ static bool setClrFromIni(const std::wstring& sectionName, const std::wstring& k
 
 	try
 	{
-		*clr = HEXRGB(std::stoul(buffer, nullptr, 16));
+		static constexpr int baseHex = 16;
+		*clr = HEXRGB(std::stoul(buffer, nullptr, baseHex));
 	}
 	catch (const std::exception&)
 	{
@@ -621,6 +621,7 @@ namespace DarkMode
 				}
 
 				case ColorTone::black:
+				case ColorTone::max:
 				{
 					_colors = darkColors;
 					break;
@@ -930,9 +931,11 @@ namespace DarkMode
 		}
 	}
 
+	static constexpr DWORD DwmwaClrDefaultRGBCheck = 0x00FFFFFF;
+
 	void setBorderColorConfig(COLORREF clr)
 	{
-		if (clr == 0xFFFFFF)
+		if (clr == DwmwaClrDefaultRGBCheck)
 		{
 			g_dmCfg._borderColor = DWMWA_COLOR_DEFAULT;
 		}
@@ -968,10 +971,10 @@ namespace DarkMode
 			return;
 		}
 
-		std::wstring iniPath = getIniPath(iniName);
+		const std::wstring iniPath = getIniPath(iniName);
 		if (fileExists(iniPath))
 		{
-			DarkMode::initDarkModeConfig(::GetPrivateProfileInt(L"main", L"mode", 1, iniPath.c_str()));
+			DarkMode::initDarkModeConfig(::GetPrivateProfileIntW(L"main", L"mode", 1, iniPath.c_str()));
 			if (g_dmCfg._dmType == DarkModeType::classic)
 			{
 				DarkMode::setViewBackgroundColor(::GetSysColor(COLOR_WINDOW));
@@ -981,27 +984,27 @@ namespace DarkMode
 
 			const bool useDark = g_dmCfg._dmType == DarkModeType::dark;
 
-			std::wstring sectionBase = useDark ? L"dark" : L"light";
-			std::wstring sectionColorsView = sectionBase + L".colors.view";
-			std::wstring sectionColors = sectionBase + L".colors";
+			const std::wstring sectionBase = useDark ? L"dark" : L"light";
+			const std::wstring sectionColorsView = sectionBase + L".colors.view";
+			const std::wstring sectionColors = sectionBase + L".colors";
 
-			DarkMode::setMicaConfig(::GetPrivateProfileInt(sectionBase.c_str(), L"mica", 0, iniPath.c_str()));
-			DarkMode::setRoundCornerConfig(::GetPrivateProfileInt(sectionBase.c_str(), L"roundCorner", 0, iniPath.c_str()));
+			DarkMode::setMicaConfig(::GetPrivateProfileIntW(sectionBase.c_str(), L"mica", 0, iniPath.c_str()));
+			DarkMode::setRoundCornerConfig(::GetPrivateProfileIntW(sectionBase.c_str(), L"roundCorner", 0, iniPath.c_str()));
 			setClrFromIni(sectionBase, L"borderColor", iniPath, &g_dmCfg._borderColor);
-			if (g_dmCfg._borderColor == 0xFFFFFF)
+			if (g_dmCfg._borderColor == DwmwaClrDefaultRGBCheck)
 			{
 				g_dmCfg._borderColor = DWMWA_COLOR_DEFAULT;
 			}
 
 			if (useDark)
 			{
-				UINT tone = ::GetPrivateProfileInt(sectionBase.c_str(), L"tone", 0, iniPath.c_str());
-				if (tone > 6)
+				UINT tone = ::GetPrivateProfileIntW(sectionBase.c_str(), L"tone", 0, iniPath.c_str());
+				if (tone >= static_cast<UINT>(ColorTone::max))
 				{
 					tone = 0;
 				}
 
-				DarkMode::getTheme().setToneColors(static_cast<DarkMode::ColorTone>(tone));
+				DarkMode::getTheme().setToneColors(static_cast<ColorTone>(tone));
 				DarkMode::getThemeView()._clrView = DarkMode::darkColorsView;
 				DarkMode::getThemeView()._clrView.headerBackground = DarkMode::getTheme()._colors.background;
 				DarkMode::getThemeView()._clrView.headerHotBackground = DarkMode::getTheme()._colors.hotBackground;
@@ -1009,7 +1012,7 @@ namespace DarkMode
 
 				if (!DarkMode::isWindowsModeEnabled())
 				{
-					g_dmCfg._micaExtend = (::GetPrivateProfileInt(sectionBase.c_str(), L"micaExtend", 0, iniPath.c_str()) == 1);
+					g_dmCfg._micaExtend = (::GetPrivateProfileIntW(sectionBase.c_str(), L"micaExtend", 0, iniPath.c_str()) == 1);
 				}
 			}
 			else
@@ -1054,11 +1057,6 @@ namespace DarkMode
 			}
 		}
 	}
-
-	//static void initOptions()
-	//{
-	//	initOptions(L"");
-	//}
 #endif // !defined(_DARKMODELIB_NO_INI_CONFIG)
 
 	static void initExperimentalDarkMode()
@@ -1624,7 +1622,7 @@ namespace DarkMode
 		{
 			dtto.dwFlags |= DTT_CALCRECT;
 			::DrawThemeTextEx(hTheme, hdc, iPartID, iStateID, buffer.c_str(), -1, dtFlags | DT_CALCRECT, &rcText, &dtto);
-			RECT rcFocus{ rcText.left - 1, rcText.top, rcText.right + 1, rcText.bottom + 1 };
+			const RECT rcFocus{ rcText.left - 1, rcText.top, rcText.right + 1, rcText.bottom + 1 };
 			::DrawFocusRect(hdc, &rcFocus);
 		}
 
@@ -1660,8 +1658,10 @@ namespace DarkMode
 				else if ((nState & BST_HOT) == BST_HOT)         { iStateID = CBS_UNCHECKEDHOT; }
 				else                                            { iStateID = CBS_UNCHECKEDNORMAL; }
 
-				if ((nState & BST_CHECKED) == BST_CHECKED)      { iStateID += 4; }
-				else if ((nState & BST_INDETERMINATE) == BST_INDETERMINATE) { iStateID += 8; }
+				static constexpr int checkedOffset = 4;
+				static constexpr int mixedOffset = 8;
+				if ((nState & BST_CHECKED) == BST_CHECKED)      { iStateID += checkedOffset; }
+				else if ((nState & BST_INDETERMINATE) == BST_INDETERMINATE) { iStateID += mixedOffset; }
 
 				break;
 			}
@@ -2118,12 +2118,12 @@ namespace DarkMode
 		{
 			if (_isHorizontal)
 			{
-				RECT rcArrowLeft{
+				const RECT rcArrowLeft{
 					_rcClient.left, _rcClient.top,
 					_rcClient.right - ((_rcClient.right - _rcClient.left) / 2) - 1, _rcClient.bottom
 				};
 
-				RECT rcArrowRight{
+				const RECT rcArrowRight{
 					rcArrowLeft.right + 1, _rcClient.top,
 					_rcClient.right, _rcClient.bottom
 				};
@@ -2135,12 +2135,12 @@ namespace DarkMode
 			{
 				static constexpr LONG offset = 2;
 
-				RECT rcArrowTop{
+				const RECT rcArrowTop{
 					_rcClient.left + offset, _rcClient.top,
 					_rcClient.right, _rcClient.bottom - ((_rcClient.bottom - _rcClient.top) / 2)
 				};
 
-				RECT rcArrowBottom{
+				const RECT rcArrowBottom{
 					_rcClient.left + offset, rcArrowTop.bottom,
 					_rcClient.right, _rcClient.bottom
 				};
@@ -2700,6 +2700,48 @@ namespace DarkMode
 		bool _isHot = false;
 	};
 
+	static void ncPaintCustomBorder(HWND hWnd, const BorderMetricsData& borderMetricsData)
+	{
+		HDC hdc = ::GetWindowDC(hWnd);
+		RECT rcClient{};
+		::GetClientRect(hWnd, &rcClient);
+		rcClient.right += (2 * borderMetricsData._xEdge);
+
+		const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
+		const bool hasVerScrollbar = (nStyle & WS_VSCROLL) == WS_VSCROLL;
+		if (hasVerScrollbar)
+		{
+			rcClient.right += borderMetricsData._xScroll;
+		}
+
+		rcClient.bottom += (2 * borderMetricsData._yEdge);
+
+		const bool hasHorScrollbar = (nStyle & WS_HSCROLL) == WS_HSCROLL;
+		if (hasHorScrollbar)
+		{
+			rcClient.bottom += borderMetricsData._yScroll;
+		}
+
+		HPEN hPen = ::CreatePen(PS_SOLID, 1, (::IsWindowEnabled(hWnd) == TRUE) ? DarkMode::getBackgroundColor() : DarkMode::getDlgBackgroundColor());
+		RECT rcInner{ rcClient };
+		::InflateRect(&rcInner, -1, -1);
+		DarkMode::paintRoundFrameRect(hdc, rcInner, hPen);
+		::DeleteObject(hPen);
+
+		POINT ptCursor{};
+		::GetCursorPos(&ptCursor);
+		::ScreenToClient(hWnd, &ptCursor);
+
+		const bool isHot = ::PtInRect(&rcClient, ptCursor) == TRUE;
+		const bool hasFocus = ::GetFocus() == hWnd;
+
+		HPEN hEnabledPen = ((borderMetricsData._isHot && isHot) || hasFocus ? DarkMode::getHotEdgePen() : DarkMode::getEdgePen());
+
+		DarkMode::paintRoundFrameRect(hdc, rcClient, (::IsWindowEnabled(hWnd) == TRUE) ? hEnabledPen : DarkMode::getDisabledEdgePen());
+
+		::ReleaseDC(hWnd, hdc);
+	}
+
 	static constexpr auto CustomBorderSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::customBorder);
 
 	static LRESULT CALLBACK CustomBorderSubclass(
@@ -2731,44 +2773,7 @@ namespace DarkMode
 
 				::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 
-				HDC hdc = ::GetWindowDC(hWnd);
-				RECT rcClient{};
-				::GetClientRect(hWnd, &rcClient);
-				rcClient.right += (2 * pBorderMetricsData->_xEdge);
-
-				const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
-				const bool hasVerScrollbar = (nStyle & WS_VSCROLL) == WS_VSCROLL;
-				if (hasVerScrollbar)
-				{
-					rcClient.right += pBorderMetricsData->_xScroll;
-				}
-
-				rcClient.bottom += (2 * pBorderMetricsData->_yEdge);
-
-				const bool hasHorScrollbar = (nStyle & WS_HSCROLL) == WS_HSCROLL;
-				if (hasHorScrollbar)
-				{
-					rcClient.bottom += pBorderMetricsData->_yScroll;
-				}
-
-				HPEN hPen = ::CreatePen(PS_SOLID, 1, (::IsWindowEnabled(hWnd) == TRUE) ? DarkMode::getBackgroundColor() : DarkMode::getDlgBackgroundColor());
-				RECT rcInner{ rcClient };
-				::InflateRect(&rcInner, -1, -1);
-				DarkMode::paintRoundFrameRect(hdc, rcInner, hPen);
-				::DeleteObject(hPen);
-
-				POINT ptCursor{};
-				::GetCursorPos(&ptCursor);
-				::ScreenToClient(hWnd, &ptCursor);
-
-				const bool isHot = ::PtInRect(&rcClient, ptCursor) == TRUE;
-				const bool hasFocus = ::GetFocus() == hWnd;
-
-				HPEN hEnabledPen = ((pBorderMetricsData->_isHot && isHot) || hasFocus ? DarkMode::getHotEdgePen() : DarkMode::getEdgePen());
-
-				DarkMode::paintRoundFrameRect(hdc, rcClient, (::IsWindowEnabled(hWnd) == TRUE) ? hEnabledPen : DarkMode::getDisabledEdgePen());
-
-				::ReleaseDC(hWnd, hdc);
+				DarkMode::ncPaintCustomBorder(hWnd, *pBorderMetricsData);
 
 				return 0;
 			}
@@ -3019,7 +3024,7 @@ namespace DarkMode
 		{
 			if (hasTheme)
 			{
-				RECT rcThemedArrow{ rcArrow.left, rcArrow.top - 1, rcArrow.right, rcArrow.bottom - 1 };
+				const RECT rcThemedArrow{ rcArrow.left, rcArrow.top - 1, rcArrow.right, rcArrow.bottom - 1 };
 				::DrawThemeBackground(hTheme, hdc, CP_DROPDOWNBUTTONRIGHT, isDisabled ? CBXSR_DISABLED : CBXSR_NORMAL, &rcThemedArrow, nullptr);
 			}
 			else
@@ -3063,8 +3068,8 @@ namespace DarkMode
 			if (comboboxData._cbStyle == CBS_DROPDOWN)
 			{
 				const std::array<POINT, 2> edge{ {
-					{rcArrow.left - 1, rcArrow.top},
-					{rcArrow.left - 1, rcArrow.bottom}
+					{ rcArrow.left - 1, rcArrow.top },
+					{ rcArrow.left - 1, rcArrow.bottom }
 				} };
 				::Polyline(hdc, edge.data(), static_cast<int>(edge.size()));
 
@@ -3612,8 +3617,8 @@ namespace DarkMode
 			}
 
 			const std::array<POINT, 2> edge{ {
-				{edgeX, rcItem.top},
-				{edgeX, rcItem.bottom}
+				{ edgeX, rcItem.top },
+				{ edgeX, rcItem.bottom }
 			} };
 			::Polyline(hdc, edge.data(), static_cast<int>(edge.size()));
 
@@ -3627,8 +3632,11 @@ namespace DarkMode
 				dtFlags |= DT_CENTER;
 			}
 
-			rcItem.left += 6;
-			rcItem.right -= 8;
+			static constexpr LONG lOffset = 6;
+			static constexpr LONG rOffset = 8;
+
+			rcItem.left += lOffset;
+			rcItem.right -= rOffset;
 
 			if (headerData._isPressed && isOnItem)
 			{
@@ -3885,8 +3893,8 @@ namespace DarkMode
 			if (drawEdge && (i < iLastDiv))
 			{
 				const std::array<POINT, 2> edges{ {
-					{rcPart.right - borders.between, rcPart.top + 1},
-					{rcPart.right - borders.between, rcPart.bottom - 3}
+					{ rcPart.right - borders.between, rcPart.top + 1 },
+					{ rcPart.right - borders.between, rcPart.bottom - 3 }
 				} };
 				::Polyline(hdc, edges.data(), static_cast<int>(edges.size()));
 			}
@@ -4402,7 +4410,7 @@ namespace DarkMode
 	static BOOL CALLBACK DarkEnumChildProc(HWND hWnd, LPARAM lParam)
 	{
 		const auto& p = *reinterpret_cast<DarkModeParams*>(lParam);
-		std::wstring className = getWndClassName(hWnd);
+		const std::wstring className = getWndClassName(hWnd);
 
 		if (className == WC_BUTTON)
 		{
@@ -4640,7 +4648,7 @@ namespace DarkMode
 
 				auto hChild = reinterpret_cast<HWND>(lParam);
 				const bool isChildEnabled = ::IsWindowEnabled(hChild) == TRUE;
-				std::wstring className = getWndClassName(hChild);
+				const std::wstring className = getWndClassName(hChild);
 
 				auto hdc = reinterpret_cast<HDC>(wParam);
 
@@ -5156,7 +5164,7 @@ namespace DarkMode
 				}
 
 				auto* lpnmhdr = reinterpret_cast<LPNMHDR>(lParam);
-				std::wstring className = getWndClassName(lpnmhdr->hwndFrom);
+				const std::wstring className = getWndClassName(lpnmhdr->hwndFrom);
 
 				switch (lpnmhdr->code)
 				{
@@ -5633,7 +5641,7 @@ namespace DarkMode
 		SIZE szBox{};
 		::GetThemePartSize(hTheme, hdc, BP_CHECKBOX, CBS_UNCHECKEDNORMAL, nullptr, TS_DRAW, &szBox);
 
-		RECT rcBox{ 0, 0, szBox.cx, szBox.cy };
+		const RECT rcBox{ 0, 0, szBox.cx, szBox.cy };
 
 		auto hImgList = ListView_GetImageList(hWnd, LVSIL_STATE);
 		if (hImgList == nullptr)
@@ -5773,21 +5781,43 @@ namespace DarkMode
 	{
 		auto linearValue = [](double colorChannel) -> double {
 			colorChannel /= 255.0;
-			if (colorChannel <= 0.04045)
+
+			static constexpr double treshhold = 0.04045;
+			static constexpr double lowScalingFactor = 12.92;
+			static constexpr double gammaOffset = 0.055;
+			static constexpr double gammaScalingFactor = 1.055;
+			static constexpr double gammaExp = 2.4;
+
+			if (colorChannel <= treshhold)
 			{
-				return colorChannel / 12.92;
+				return colorChannel / lowScalingFactor;
 			}
-			return std::pow(((colorChannel + 0.055) / 1.055), 2.4);
+			return std::pow(((colorChannel + gammaOffset) / gammaScalingFactor), gammaExp);
 		};
 
 		const double r = linearValue(static_cast<double>(GetRValue(clr)));
 		const double g = linearValue(static_cast<double>(GetGValue(clr)));
 		const double b = linearValue(static_cast<double>(GetBValue(clr)));
 
-		const double luminance = (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
+		static constexpr double rWeight = 0.2126;
+		static constexpr double gWeight = 0.7152;
+		static constexpr double bWeight = 0.0722;
 
-		const double lightness = (luminance <= 216.0 / 24389.0) ? (luminance * 24389.0 / 27.0) : ((std::pow(luminance, (1.0 / 3.0)) * 116.0) - 16.0);
-		return lightness;
+		const double luminance = (rWeight * r) + (gWeight * g) + (bWeight * b);
+
+		static constexpr double cieEpsilon = 216.0 / 24389.0;
+		static constexpr double cieKappa = 24389.0 / 27.0;
+		static constexpr double oneThird = 1.0 / 3.0;
+		static constexpr double scalingFactor = 116.0;
+		static constexpr double offset = 16.0;
+
+		// calculate lightness
+
+		if (luminance <= cieEpsilon)
+		{
+			return (luminance * cieKappa);
+		}
+		return ((std::pow(luminance, oneThird) * scalingFactor) - offset);
 	}
 
 	void calculateTreeViewStyle()
@@ -5822,8 +5852,7 @@ namespace DarkMode
 
 	TreeViewStyle getTreeViewStyle()
 	{
-		const auto style = g_dmCfg._treeViewStyle;
-		return style;
+		return g_dmCfg._treeViewStyle;
 	}
 
 	void setTreeViewStyle(HWND hWnd, bool force)
@@ -5950,7 +5979,8 @@ namespace DarkMode
 		if (DarkMode::isEnabled())
 		{
 			::SendMessage(hWnd, PBM_SETBKCOLOR, 0, static_cast<LPARAM>(DarkMode::getBackgroundColor()));
-			::SendMessage(hWnd, PBM_SETBARCOLOR, 0, static_cast<LPARAM>(HEXRGB(0x06B025)));
+			static constexpr COLORREF greenFill = HEXRGB(0x06B025);
+			::SendMessage(hWnd, PBM_SETBARCOLOR, 0, static_cast<LPARAM>(greenFill));
 		}
 	}
 
