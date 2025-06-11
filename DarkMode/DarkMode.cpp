@@ -270,7 +270,7 @@ bool IsColorSchemeChangeMessage(LPARAM lParam)
 {
 	bool isMsg = false;
 	if ((lParam != 0) // NULL
-		&& (lstrcmpiW(reinterpret_cast<LPCWSTR>(lParam), L"ImmersiveColorSet") == 0)
+		&& (_wcsicmp(reinterpret_cast<LPCWSTR>(lParam), L"ImmersiveColorSet") == 0)
 		&& _RefreshImmersiveColorPolicyState != nullptr)
 	{
 		_RefreshImmersiveColorPolicyState();

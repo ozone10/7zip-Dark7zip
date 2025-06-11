@@ -145,8 +145,8 @@ micaExtend = 0
 
 [dark.colors]
 background =            "202020"
-backgroundCtrl =        "404040"
-backgroundHot =         "404040"
+backgroundCtrl =        "383838"
+backgroundHot =         "454545"
 backgroundDlg =         "202020"
 text =                  "E0E0E0"
 textItem =              "C0C0C0"
@@ -156,11 +156,11 @@ edgeHot =               "9B9B9B"
 edgeDisabled =          "484848"
 
 [dark.colors.view]
-backgroundView =        "293134"
-textView =              "E0E2E4"
+backgroundView =        "3F3F3F"
+textView =              "DCDCDC"
 gridlines =             "646464"
 backgroundHeader =      "202020"
-backgroundHotHeader =   "404040"
+backgroundHotHeader =   "454545"
 textHeader =            "C0C0C0"
 edgeHeader =            "646464"
 

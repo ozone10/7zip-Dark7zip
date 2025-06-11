@@ -21,9 +21,9 @@ inline constexpr T RVA2VA(T1 base, T2 rva)
 template <typename T>
 inline constexpr T DataDirectoryFromModuleBase(void* moduleBase, size_t entryID)
 {
-	auto* dosHdr = static_cast<PIMAGE_DOS_HEADER>(moduleBase);
-	auto* ntHdr = RVA2VA<PIMAGE_NT_HEADERS>(moduleBase, static_cast<DWORD>(dosHdr->e_lfanew));
-	auto* dataDir = ntHdr->OptionalHeader.DataDirectory;
+	const auto* dosHdr = static_cast<PIMAGE_DOS_HEADER>(moduleBase);
+	const auto* ntHdr = RVA2VA<PIMAGE_NT_HEADERS>(moduleBase, static_cast<DWORD>(dosHdr->e_lfanew));
+	const auto* dataDir = ntHdr->OptionalHeader.DataDirectory;
 	return RVA2VA<T>(moduleBase, dataDir[entryID].VirtualAddress);
 }
 
@@ -36,7 +36,7 @@ inline PIMAGE_THUNK_DATA FindAddressByName(void* moduleBase, PIMAGE_THUNK_DATA i
 			continue;
 		}
 
-		auto* import = RVA2VA<PIMAGE_IMPORT_BY_NAME>(moduleBase, impName->u1.AddressOfData);
+		const auto* import = RVA2VA<PIMAGE_IMPORT_BY_NAME>(moduleBase, impName->u1.AddressOfData);
 		if (strcmp(reinterpret_cast<const char*>(import->Name), funcName) != 0)
 		{
 			continue;

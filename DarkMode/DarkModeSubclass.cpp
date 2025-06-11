@@ -53,7 +53,7 @@
 
 #if defined(__GNUC__)
 #include <cstdint>
-static constexpr DWORD DWMWA_USE_IMMERSIVE_DARK_MODE 20
+//static constexpr DWORD DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
 static constexpr int CP_DROPDOWNITEM = 9; // for some reason mingw use only enum up to 8
 #endif
 
@@ -311,7 +311,7 @@ namespace DarkMode
 
 		Brushes() = delete;
 
-		explicit Brushes(const Colors& colors)
+		explicit Brushes(const Colors& colors) noexcept
 			: _background(::CreateSolidBrush(colors.background))
 			, _ctrlBackground(::CreateSolidBrush(colors.ctrlBackground))
 			, _hotBackground(::CreateSolidBrush(colors.hotBackground))
@@ -375,7 +375,7 @@ namespace DarkMode
 
 		Pens() = delete;
 
-		explicit Pens(const Colors& colors)
+		explicit Pens(const Colors& colors) noexcept
 			: _darkerText(::CreatePen(PS_SOLID, 1, colors.darkerText))
 			, _edge(::CreatePen(PS_SOLID, 1, colors.edge))
 			, _hotEdge(::CreatePen(PS_SOLID, 1, colors.hotEdge))
@@ -554,13 +554,13 @@ namespace DarkMode
 	class Theme
 	{
 	public:
-		Theme()
+		Theme() noexcept
 			: _colors(darkColors)
 			, _brushes(darkColors)
 			, _pens(darkColors)
 		{}
 
-		explicit Theme(const Colors& colors)
+		explicit Theme(const Colors& colors) noexcept
 			: _colors(colors)
 			, _brushes(colors)
 			, _pens(colors)
@@ -697,7 +697,7 @@ namespace DarkMode
 
 		BrushesAndPensView() = delete;
 
-		explicit BrushesAndPensView(const ColorsView& colors)
+		explicit BrushesAndPensView(const ColorsView& colors) noexcept
 			: _background(::CreateSolidBrush(colors.background))
 			, _gridlines(::CreateSolidBrush(colors.gridlines))
 			, _headerBackground(::CreateSolidBrush(colors.headerBackground))
@@ -743,12 +743,12 @@ namespace DarkMode
 	class ThemeView
 	{
 	public:
-		ThemeView()
+		ThemeView() noexcept
 			: _clrView(darkColorsView)
 			, _hbrPnView(darkColorsView)
 		{}
 
-		explicit ThemeView(const ColorsView& colorsView)
+		explicit ThemeView(const ColorsView& colorsView) noexcept
 			: _clrView(colorsView)
 			, _hbrPnView(colorsView)
 		{}
@@ -782,7 +782,7 @@ namespace DarkMode
 		return tView;
 	}
 
-	inline static COLORREF setNewColor(COLORREF* clrOld, COLORREF clrNew)
+	static COLORREF setNewColor(COLORREF* clrOld, COLORREF clrNew)
 	{
 		const auto clrTmp = *clrOld;
 		*clrOld = clrNew;
@@ -1293,7 +1293,7 @@ namespace DarkMode
 			return _hTheme != nullptr;
 		}
 
-		void closeTheme()
+		void closeTheme() noexcept
 		{
 			if (_hTheme != nullptr)
 			{
@@ -1345,7 +1345,7 @@ namespace DarkMode
 			return _hMemDC != nullptr && _hMemBmp != nullptr;
 		}
 
-		void releaseBuffer()
+		void releaseBuffer() noexcept
 		{
 			if (_hMemDC != nullptr)
 			{
@@ -1377,7 +1377,7 @@ namespace DarkMode
 	public:
 		FontData() = default;
 
-		explicit FontData(HFONT hFont)
+		explicit FontData(HFONT hFont) noexcept
 			: _hFont(hFont)
 		{}
 
@@ -1392,23 +1392,23 @@ namespace DarkMode
 			FontData::destroyFont();
 		}
 
-		void setFont(HFONT newFont)
+		void setFont(HFONT newFont) noexcept
 		{
 			FontData::destroyFont();
 			_hFont = newFont;
 		}
 
-		[[nodiscard]] const HFONT& getFont() const
+		[[nodiscard]] const HFONT& getFont() const noexcept
 		{
 			return _hFont;
 		}
 
-		[[nodiscard]] bool hasFont() const
+		[[nodiscard]] bool hasFont() const noexcept
 		{
 			return _hFont != nullptr;
 		}
 
-		void destroyFont()
+		void destroyFont() noexcept
 		{
 			if (FontData::hasFont())
 			{
@@ -1830,6 +1830,11 @@ namespace DarkMode
 				}
 				break;
 			}
+
+			default:
+			{
+				break;
+			}
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -2017,6 +2022,11 @@ namespace DarkMode
 			case WM_ENABLE:
 			{
 				::RedrawWindow(hWnd, nullptr, nullptr, RDW_INVALIDATE);
+				break;
+			}
+
+			default:
+			{
 				break;
 			}
 		}
@@ -2259,7 +2269,7 @@ namespace DarkMode
 					break;
 				}
 
-				auto hdc = reinterpret_cast<HDC>(wParam);
+				const auto* hdc = reinterpret_cast<HDC>(wParam);
 				if (hdc != hMemDC)
 				{
 					return FALSE;
@@ -2358,6 +2368,11 @@ namespace DarkMode
 
 				break;
 			}
+
+			default:
+			{
+				break;
+			}
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -2405,9 +2420,15 @@ namespace DarkMode
 		::GetCursorPos(&ptCursor);
 		::ScreenToClient(hWnd, &ptCursor);
 
-		const int nTabs = TabCtrl_GetItemCount(hWnd);
+		bool hasFocusRect = false;
+		if (::GetFocus() == hWnd)
+		{
+			const auto uiState = static_cast<DWORD>(::SendMessage(hWnd, WM_QUERYUISTATE, 0, 0));
+			hasFocusRect = ((uiState & UISF_HIDEFOCUS) != UISF_HIDEFOCUS);
+		}
 
 		const int iSelTab = TabCtrl_GetCurSel(hWnd);
+		const int nTabs = TabCtrl_GetItemCount(hWnd);
 		for (int i = 0; i < nTabs; ++i)
 		{
 			RECT rcItem{};
@@ -2495,7 +2516,14 @@ namespace DarkMode
 				}
 
 				::DrawText(hdc, label.c_str(), -1, &rcText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
 				::FrameRect(hdc, &rcFrame, DarkMode::getEdgeBrush());
+
+				if (isSelectedTab && hasFocusRect)
+				{
+					::InflateRect(&rcFrame, -2, -1);
+					::DrawFocusRect(hdc, &rcFrame);
+				}
 
 				::SelectClipRgn(hdc, holdClip);
 				::DeleteObject(hClip);
@@ -2542,7 +2570,7 @@ namespace DarkMode
 					break;
 				}
 
-				auto hdc = reinterpret_cast<HDC>(wParam);
+				const auto* hdc = reinterpret_cast<HDC>(wParam);
 				if (hdc != hMemDC)
 				{
 					return FALSE;
@@ -2601,6 +2629,20 @@ namespace DarkMode
 				::EndPaint(hWnd, &ps);
 				return 0;
 			}
+
+			case WM_UPDATEUISTATE:
+			{
+				if ((HIWORD(wParam) & (UISF_HIDEACCEL | UISF_HIDEFOCUS)) != 0)
+				{
+					::InvalidateRect(hWnd, nullptr, FALSE);
+				}
+				break;
+			}
+
+			default:
+			{
+				break;
+			}
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -2648,8 +2690,18 @@ namespace DarkMode
 						}
 						break;
 					}
+
+					default:
+					{
+						break;
+					}
 				}
 				return 0;
+			}
+
+			default:
+			{
+				break;
 			}
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
@@ -2861,6 +2913,11 @@ namespace DarkMode
 				::TrackMouseEvent(&tme);
 				break;
 			}
+
+			default:
+			{
+				break;
+			}
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -2908,7 +2965,7 @@ namespace DarkMode
 
 		LONG_PTR _cbStyle = CBS_SIMPLE;
 
-		ComboboxData() = default;
+		ComboboxData() = delete;
 
 		explicit ComboboxData(LONG_PTR cbStyle)
 			: _cbStyle(cbStyle)
@@ -3124,7 +3181,7 @@ namespace DarkMode
 					break;
 				}
 
-				auto hdc = reinterpret_cast<HDC>(wParam);
+				const auto* hdc = reinterpret_cast<HDC>(wParam);
 				if (pComboboxData->_cbStyle != CBS_DROPDOWN && hdc != hMemDC)
 				{
 					return FALSE;
@@ -3207,6 +3264,11 @@ namespace DarkMode
 			case WM_THEMECHANGED:
 			{
 				themeData.closeTheme();
+				break;
+			}
+
+			default:
+			{
 				break;
 			}
 		}
@@ -3344,6 +3406,11 @@ namespace DarkMode
 				}
 				break;
 			}
+
+			default:
+			{
+				break;
+			}
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -3454,10 +3521,22 @@ namespace DarkMode
 							}
 
 							default:
+							{
 								return CDRF_DODEFAULT;
+							}
 						}
 					}
+
+					default:
+					{
+						break;
+					}
 				}
+				break;
+			}
+
+			default:
+			{
 				break;
 			}
 		}
@@ -3509,7 +3588,7 @@ namespace DarkMode
 		bool _hasBtnStyle = true;
 		bool _isPressed = false;
 
-		HeaderData() = default;
+		HeaderData() = delete;
 
 		explicit HeaderData(bool hasBtnStyle)
 			: _hasBtnStyle(hasBtnStyle)
@@ -3689,7 +3768,7 @@ namespace DarkMode
 					break;
 				}
 
-				auto hdc = reinterpret_cast<HDC>(wParam);
+				const auto* hdc = reinterpret_cast<HDC>(wParam);
 				if (hdc != hMemDC)
 				{
 					return FALSE;
@@ -3821,6 +3900,11 @@ namespace DarkMode
 				::InvalidateRect(hWnd, nullptr, TRUE);
 
 				return retVal;
+			}
+
+			default:
+			{
+				break;
 			}
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
@@ -3988,7 +4072,7 @@ namespace DarkMode
 					break;
 				}
 
-				auto hdc = reinterpret_cast<HDC>(wParam);
+				const auto* hdc = reinterpret_cast<HDC>(wParam);
 				if (hdc != hMemDC)
 				{
 					return FALSE;
@@ -4063,6 +4147,11 @@ namespace DarkMode
 				}
 				break;
 			}
+
+			default:
+			{
+				break;
+			}
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -4098,8 +4187,6 @@ namespace DarkMode
 		BufferData _bufferData;
 
 		int _iStateID = PBFS_PARTIAL; // PBFS_PARTIAL for cyan color
-
-		ProgressBarData() = default;
 	};
 
 	static void getProgressBarRects(HWND hWnd, RECT* rcEmpty, RECT* rcFilled)
@@ -4173,7 +4260,7 @@ namespace DarkMode
 					break;
 				}
 
-				auto hdc = reinterpret_cast<HDC>(wParam);
+				const auto* hdc = reinterpret_cast<HDC>(wParam);
 				if (hdc != hMemDC)
 				{
 					return FALSE;
@@ -4261,7 +4348,17 @@ namespace DarkMode
 						pProgressBarData->_iStateID = PBFS_PAUSED; // yellow
 						break;
 					}
+
+					default:
+					{
+						break;
+					}
 				}
+				break;
+			}
+
+			default:
+			{
 				break;
 			}
 		}
@@ -4347,6 +4444,11 @@ namespace DarkMode
 				}
 
 				return 0;
+			}
+
+			default:
+			{
+				break;
 			}
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
@@ -4578,6 +4680,11 @@ namespace DarkMode
 				::FillRect(reinterpret_cast<HDC>(wParam), &rcClient, DarkMode::getDlgBackgroundBrush());
 				return TRUE;
 			}
+
+			default:
+			{
+				break;
+			}
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -4682,6 +4789,11 @@ namespace DarkMode
 					break;
 				}
 				return TRUE;
+			}
+
+			default:
+			{
+				break;
 			}
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
@@ -4839,7 +4951,9 @@ namespace DarkMode
 			}
 
 			default:
+			{
 				break;
+			}
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -4879,7 +4993,7 @@ namespace DarkMode
 				const LONG paddingLeft = DarkMode::isThemeDark() ? 1 : 0;
 				const LONG paddingRight = DarkMode::isThemeDark() ? 2 : 1;
 
-				const LVITEMINDEX lvii{ static_cast<int>(lplvcd->nmcd.dwItemSpec), 0 };
+				LVITEMINDEX lvii{ static_cast<int>(lplvcd->nmcd.dwItemSpec), 0 };
 				RECT rcSubitem{
 					lplvcd->nmcd.rc.left
 					, lplvcd->nmcd.rc.top
@@ -4949,7 +5063,9 @@ namespace DarkMode
 			}
 
 			default:
+			{
 				break;
+			}
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -5020,7 +5136,9 @@ namespace DarkMode
 			}
 
 			default:
+			{
 				break;
+			}
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -5066,13 +5184,17 @@ namespace DarkMode
 					}
 
 					default:
+					{
 						break;
+					}
 				}
 				break;
 			}
 
 			default:
+			{
 				break;
+			}
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -5132,7 +5254,9 @@ namespace DarkMode
 			}
 
 			default:
+			{
 				break;
+			}
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -5198,8 +5322,15 @@ namespace DarkMode
 					}
 
 					default:
+					{
 						break;
+					}
 				}
+				break;
+			}
+
+			default:
+			{
 				break;
 			}
 		}
@@ -5409,6 +5540,11 @@ namespace DarkMode
 						dttopts.crText = DarkMode::getDisabledTextColor();
 						break;
 					}
+
+					default:
+					{
+						break;
+					}
 				}
 
 				::DrawThemeTextEx(hTheme, pUDMI->um.hdc, MENU_BARITEM, iTextStateID, buffer.c_str(), static_cast<int>(mii.cch), dwFlags, &pUDMI->dis.rcItem, &dttopts);
@@ -5436,6 +5572,11 @@ namespace DarkMode
 				const LRESULT retVal = ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 				DarkMode::drawUAHMenuNCBottomLine(hWnd);
 				return retVal;
+			}
+
+			default:
+			{
+				break;
 			}
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
@@ -5478,6 +5619,11 @@ namespace DarkMode
 					DarkMode::setChildCtrlsTheme(hWnd);
 					::RedrawWindow(hWnd, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN | RDW_UPDATENOW);
 				}
+				break;
+			}
+
+			default:
+			{
 				break;
 			}
 		}
