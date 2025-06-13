@@ -1,5 +1,7 @@
+// SPDX-License-Identifier: MIT
+
+// Copyright (c) 2021 adzm / Adam D. Walling
 // MIT license, see LICENSE-UAHMenuBar
-// Copyright(c) 2021 adzm / Adam D. Walling
 
 #pragma once
 #include <windows.h>

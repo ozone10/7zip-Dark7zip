@@ -1,17 +1,20 @@
-// Copyright (C)2024-2025 ozone10
+// SPDX-License-Identifier: GPL-3.0-or-later
 
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// at your option any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+/*
+ * Copyright (c) 2024-2025 ozone10
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
 
 // Based on Notepad++ dark mode code, original by adzm / Adam D. Walling
 // with modification from Notepad++ team.
@@ -62,7 +65,7 @@ namespace DarkMode
 		COLORREF headerEdge = 0;
 	};
 
-	enum class ToolTipsType
+	enum class ToolTipsType : unsigned char // std::uint8_t
 	{
 		tooltip,
 		toolbar,
@@ -71,7 +74,7 @@ namespace DarkMode
 		tabbar
 	};
 
-	enum class ColorTone
+	enum class ColorTone : unsigned char // std::uint8_t
 	{
 		black   = 0,
 		red     = 1,
@@ -80,27 +83,27 @@ namespace DarkMode
 		purple  = 4,
 		cyan    = 5,
 		olive   = 6,
-		max     = 7
+		max     = 7 // don't use, for internal checks
 	};
 
-	enum class TreeViewStyle
+	enum class TreeViewStyle : unsigned char // std::uint8_t
 	{
 		classic,
 		light,
 		dark
 	};
 
-	enum LibInfo
+	enum class LibInfo : unsigned char // std::uint8_t
 	{
-		featureCheck    = 0,
-		verMajor        = 1,
-		verMinor        = 2,
-		verRevision     = 3,
-		iathookExternal = 4,
-		iniConfigUsed   = 5,
-		allowOldOS      = 6,
-		useDlgProcCtl   = 7,
-		maxValue        = 8
+		featureCheck,
+		verMajor,
+		verMinor,
+		verRevision,
+		iathookExternal,
+		iniConfigUsed,
+		allowOldOS,
+		useDlgProcCtl,
+		maxValue // don't use, for internal checks
 	};
 
 	[[nodiscard]] int getLibInfo(LibInfo libInfoType);

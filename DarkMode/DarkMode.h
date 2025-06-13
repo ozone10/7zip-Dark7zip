@@ -1,5 +1,7 @@
+// SPDX-License-Identifier: MIT
+
+// Copyright (c) 2024-2025 ozone10
 // MIT license
-// Copyright(c) 2024-2025 ozone10
 
 // This file contains parts of code from the win32-darkmode project
 // https://github.com/ysc3839/win32-darkmode
@@ -26,7 +28,7 @@ void SetTitleBarThemeColor(HWND hWnd, BOOL dark);
 void AllowDarkModeForApp(bool allow);
 void EnableDarkScrollBarForWindowAndChildren(HWND hWnd);
 void InitDarkMode();
-void SetDarkMode(bool useDarkMode, bool fixDarkScrollbar);
+void SetDarkMode(bool useDark, bool fixDarkScrollbar);
 [[nodiscard]] bool IsWindows10();
 [[nodiscard]] bool IsWindows11();
 [[nodiscard]] DWORD GetWindowsBuildNumber();

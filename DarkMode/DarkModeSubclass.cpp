@@ -1,17 +1,20 @@
-﻿// Copyright (C)2024-2025 ozone10
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
 
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// at your option any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
+/*
+ * Copyright (c) 2024-2025 ozone10
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
 
 
 // Based on Notepad++ dark mode code, original by adzm / Adam D. Walling
@@ -174,16 +177,24 @@ namespace DarkMode
 		{
 			case LibInfo::maxValue:
 			case LibInfo::featureCheck:
+			{
 				return static_cast<int>(LibInfo::maxValue);
+			}
 
 			case LibInfo::verMajor:
+			{
 				return DM_VERSION_MAJOR;
+			}
 
 			case LibInfo::verMinor:
+			{
 				return DM_VERSION_MINOR;
+			}
 
 			case LibInfo::verRevision:
+			{
 				return DM_VERSION_REVISION;
+			}
 
 			case LibInfo::iathookExternal:
 			{
@@ -233,28 +244,6 @@ namespace DarkMode
 		classic = 3
 	};
 
-	enum class SubclassID : std::uint8_t
-	{
-		button          = 42,
-		groupbox        = 1,
-		upDown          = 2,
-		tabPaint        = 3,
-		tabUpDown       = 4,
-		customBorder    = 5,
-		comboBox        = 6,
-		comboBoxEx      = 7,
-		listView        = 8,
-		header          = 9,
-		statusBar       = 10,
-		progress        = 11,
-		eraseBg         = 12,
-		ctlColor        = 13,
-		staticText      = 14,
-		notify          = 15,
-		menuBar         = 16,
-		settingChange   = 17
-	};
-
 	enum class WinMode : std::uint8_t
 	{
 		disabled,
@@ -262,12 +251,33 @@ namespace DarkMode
 		classic
 	};
 
+	static constexpr UINT_PTR kButtonSubclassID                 = 42;
+	static constexpr UINT_PTR kGroupboxSubclassID               = 1;
+	static constexpr UINT_PTR kUpDownSubclassID                 = 2;
+	static constexpr UINT_PTR kTabPaintSubclassID               = 3;
+	static constexpr UINT_PTR kTabUpDownSubclassID              = 4;
+	static constexpr UINT_PTR kCustomBorderSubclassID           = 5;
+	static constexpr UINT_PTR kComboBoxSubclassID               = 6;
+	static constexpr UINT_PTR kComboBoxExSubclassID             = 7;
+	static constexpr UINT_PTR kListViewSubclassID               = 8;
+	static constexpr UINT_PTR kHeaderSubclassID                 = 9;
+	static constexpr UINT_PTR kStatusBarSubclassID              = 10;
+	static constexpr UINT_PTR kProgressBarSubclassID            = 11;
+	static constexpr UINT_PTR kStaticTextSubclassID             = 12;
+	static constexpr UINT_PTR kWindowEraseBgSubclassID          = 13;
+	static constexpr UINT_PTR kWindowCtlColorSubclassID         = 14;
+	static constexpr UINT_PTR kWindowNotifySubclassID           = 15;
+	static constexpr UINT_PTR kWindowMenuBarSubclassID          = 16;
+	static constexpr UINT_PTR kWindowSettingChangeSubclassID    = 17;
+
 	struct DarkModeParams
 	{
 		const wchar_t* _themeClassName = nullptr;
 		bool _subclass = false;
 		bool _theme = false;
 	};
+
+	static constexpr int kWin11CornerRoundness = 4;
 
 	static struct
 	{
@@ -342,7 +352,7 @@ namespace DarkMode
 			::DeleteObject(_disabledEdge);       _disabledEdge = nullptr;
 		}
 
-		void updateBrushes(const Colors& colors)
+		void updateBrushes(const Colors& colors) noexcept
 		{
 			::DeleteObject(_background);
 			::DeleteObject(_ctrlBackground);
@@ -396,7 +406,7 @@ namespace DarkMode
 			::DeleteObject(_disabledEdge);  _disabledEdge = nullptr;
 		}
 
-		void updatePens(const Colors& colors)
+		void updatePens(const Colors& colors) noexcept
 		{
 			::DeleteObject(_darkerText);
 			::DeleteObject(_edge);
@@ -931,11 +941,11 @@ namespace DarkMode
 		}
 	}
 
-	static constexpr DWORD DwmwaClrDefaultRGBCheck = 0x00FFFFFF;
+	static constexpr DWORD kDwmwaClrDefaultRGBCheck = 0x00FFFFFF;
 
 	void setBorderColorConfig(COLORREF clr)
 	{
-		if (clr == DwmwaClrDefaultRGBCheck)
+		if (clr == kDwmwaClrDefaultRGBCheck)
 		{
 			g_dmCfg._borderColor = DWMWA_COLOR_DEFAULT;
 		}
@@ -991,7 +1001,7 @@ namespace DarkMode
 			DarkMode::setMicaConfig(::GetPrivateProfileIntW(sectionBase.c_str(), L"mica", 0, iniPath.c_str()));
 			DarkMode::setRoundCornerConfig(::GetPrivateProfileIntW(sectionBase.c_str(), L"roundCorner", 0, iniPath.c_str()));
 			setClrFromIni(sectionBase, L"borderColor", iniPath, &g_dmCfg._borderColor);
-			if (g_dmCfg._borderColor == DwmwaClrDefaultRGBCheck)
+			if (g_dmCfg._borderColor == kDwmwaClrDefaultRGBCheck)
 			{
 				g_dmCfg._borderColor = DWMWA_COLOR_DEFAULT;
 			}
@@ -1262,8 +1272,6 @@ namespace DarkMode
 		DarkMode::paintRoundRect(hdc, rect, hpen, static_cast<HBRUSH>(::GetStockObject(NULL_BRUSH)), width, height);
 	}
 
-	static constexpr int Win11CornerRoundness = 4;
-
 	class ThemeData
 	{
 	public:
@@ -1517,7 +1525,9 @@ namespace DarkMode
 				}
 
 				default:
+				{
 					break;
+				}
 			}
 		}
 	};
@@ -1732,8 +1742,6 @@ namespace DarkMode
 		}
 	}
 
-	static constexpr auto ButtonSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::button);
-
 	static LRESULT CALLBACK ButtonSubclass(
 		HWND hWnd,
 		UINT uMsg,
@@ -1841,12 +1849,12 @@ namespace DarkMode
 
 	void setCheckboxOrRadioBtnCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass<ButtonData>(hWnd, ButtonSubclass, ButtonSubclassID);
+		DarkMode::setSubclass<ButtonData>(hWnd, ButtonSubclass, kButtonSubclassID);
 	}
 
 	void removeCheckboxOrRadioBtnCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<ButtonData>(hWnd, ButtonSubclass, ButtonSubclassID);
+		DarkMode::removeSubclass<ButtonData>(hWnd, ButtonSubclass, kButtonSubclassID);
 	}
 
 	static void paintGroupbox(HWND hWnd, HDC hdc, const ButtonData& buttonData)
@@ -1949,8 +1957,6 @@ namespace DarkMode
 		}
 	}
 
-	static constexpr auto GroupboxSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::groupbox);
-
 	static LRESULT CALLBACK GroupboxSubclass(
 		HWND hWnd,
 		UINT uMsg,
@@ -2035,12 +2041,12 @@ namespace DarkMode
 
 	void setGroupboxCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass<ButtonData>(hWnd, GroupboxSubclass, GroupboxSubclassID);
+		DarkMode::setSubclass<ButtonData>(hWnd, GroupboxSubclass, kGroupboxSubclassID);
 	}
 
 	void removeGroupboxCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<ButtonData>(hWnd, GroupboxSubclass, GroupboxSubclassID);
+		DarkMode::removeSubclass<ButtonData>(hWnd, GroupboxSubclass, kGroupboxSubclassID);
 	}
 
 	static void setBtnCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p)
@@ -2118,8 +2124,8 @@ namespace DarkMode
 		UpDownData() = delete;
 
 		explicit UpDownData(HWND hWnd)
-			: _cornerRoundness((DarkMode::isWindows11() && cmpWndClassName(::GetParent(hWnd), WC_TABCONTROL)) ? (Win11CornerRoundness + 1) : 0)
-			, _isHorizontal((::GetWindowLongPtr(hWnd, GWL_STYLE)& UDS_HORZ) == UDS_HORZ)
+			: _cornerRoundness((DarkMode::isWindows11() && cmpWndClassName(::GetParent(hWnd), WC_TABCONTROL)) ? (kWin11CornerRoundness + 1) : 0)
+			, _isHorizontal((::GetWindowLongPtr(hWnd, GWL_STYLE) & UDS_HORZ) == UDS_HORZ)
 		{
 			updateRect(hWnd);
 		}
@@ -2237,8 +2243,6 @@ namespace DarkMode
 
 		::SelectObject(hdc, holdFont);
 	}
-
-	static constexpr auto UpDownSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::upDown);
 
 	static LRESULT CALLBACK UpDownSubclass(
 		HWND hWnd,
@@ -2379,13 +2383,13 @@ namespace DarkMode
 
 	void setUpDownCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass<UpDownData>(hWnd, UpDownSubclass, UpDownSubclassID, hWnd);
+		DarkMode::setSubclass<UpDownData>(hWnd, UpDownSubclass, kUpDownSubclassID, hWnd);
 		DarkMode::setDarkExplorerTheme(hWnd);
 	}
 
 	void removeUpDownCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<UpDownData>(hWnd, UpDownSubclass, UpDownSubclassID);
+		DarkMode::removeSubclass<UpDownData>(hWnd, UpDownSubclass, kUpDownSubclassID);
 	}
 
 	static void setUpDownCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p)
@@ -2509,7 +2513,7 @@ namespace DarkMode
 					int cx = 0;
 					int cy = 0;
 					auto hImagelist = TabCtrl_GetImageList(hWnd);
-					constexpr int offset = 2;
+					static constexpr int offset = 2;
 					::ImageList_GetIconSize(hImagelist, &cx, &cy);
 					::ImageList_Draw(hImagelist, tci.iImage, hdc, rcText.left + offset, rcText.top + (((rcText.bottom - rcText.top) - cy) / 2), ILD_NORMAL);
 					rcText.left += cx;
@@ -2539,8 +2543,6 @@ namespace DarkMode
 		}
 		::SelectObject(hdc, holdPen);
 	}
-
-	static constexpr auto TabPaintSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::tabPaint);
 
 	static LRESULT CALLBACK TabPaintSubclass(
 		HWND hWnd,
@@ -2649,15 +2651,13 @@ namespace DarkMode
 
 	static void setTabCtrlPaintSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass<BufferData>(hWnd, TabPaintSubclass, TabPaintSubclassID);
+		DarkMode::setSubclass<BufferData>(hWnd, TabPaintSubclass, kTabPaintSubclassID);
 	}
 
 	static void removeTabCtrlPaintSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<BufferData>(hWnd, TabPaintSubclass, TabPaintSubclassID);
+		DarkMode::removeSubclass<BufferData>(hWnd, TabPaintSubclass, kTabPaintSubclassID);
 	}
-
-	static constexpr auto TabUpDownSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::tabUpDown);
 
 	static LRESULT CALLBACK TabUpDownSubclass(
 		HWND hWnd,
@@ -2678,25 +2678,16 @@ namespace DarkMode
 
 			case WM_PARENTNOTIFY:
 			{
-				switch (LOWORD(wParam))
+				if (LOWORD(wParam) == WM_CREATE)
 				{
-					case WM_CREATE:
+					auto hUpDown = reinterpret_cast<HWND>(lParam);
+					if (cmpWndClassName(hUpDown, UPDOWN_CLASS))
 					{
-						auto hUpDown = reinterpret_cast<HWND>(lParam);
-						if (cmpWndClassName(hUpDown, UPDOWN_CLASS))
-						{
-							DarkMode::setUpDownCtrlSubclass(hUpDown);
-							return 0;
-						}
-						break;
-					}
-
-					default:
-					{
-						break;
+						DarkMode::setUpDownCtrlSubclass(hUpDown);
+						return 0;
 					}
 				}
-				return 0;
+				break;
 			}
 
 			default:
@@ -2709,12 +2700,12 @@ namespace DarkMode
 
 	void setTabCtrlUpDownSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass(hWnd, TabUpDownSubclass, TabUpDownSubclassID);
+		DarkMode::setSubclass(hWnd, TabUpDownSubclass, kTabUpDownSubclassID);
 	}
 
 	void removeTabCtrlUpDownSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass(hWnd, TabUpDownSubclass, TabUpDownSubclassID);
+		DarkMode::removeSubclass(hWnd, TabUpDownSubclass, kTabUpDownSubclassID);
 	}
 
 	void setTabCtrlSubclass(HWND hWnd)
@@ -2733,7 +2724,7 @@ namespace DarkMode
 	{
 		if (p._theme)
 		{
-			DarkMode::setDarkTooltips(hWnd, DarkMode::ToolTipsType::tabbar);
+			DarkMode::setDarkTooltips(hWnd, ToolTipsType::tabbar);
 		}
 
 		if (p._subclass)
@@ -2793,8 +2784,6 @@ namespace DarkMode
 
 		::ReleaseDC(hWnd, hdc);
 	}
-
-	static constexpr auto CustomBorderSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::customBorder);
 
 	static LRESULT CALLBACK CustomBorderSubclass(
 		HWND hWnd,
@@ -2924,12 +2913,12 @@ namespace DarkMode
 
 	static void setCustomBorderForListBoxOrEditCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass<BorderMetricsData>(hWnd, CustomBorderSubclass, CustomBorderSubclassID);
+		DarkMode::setSubclass<BorderMetricsData>(hWnd, CustomBorderSubclass, kCustomBorderSubclassID);
 	}
 
 	//void removeCustomBorderForListBoxOrEditCtrlSubclass(HWND hWnd)
 	//{
-	//	DarkMode::removeCtrlSubclass<BorderMetricsData>(hWnd, CustomBorderSubclass, CustomBorderSubclassID);
+	//	DarkMode::removeCtrlSubclass<BorderMetricsData>(hWnd, CustomBorderSubclass, kCustomBorderSubclassID);
 	//}
 
 	static void setCustomBorderForListBoxOrEditCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p, bool isListBox)
@@ -2951,7 +2940,7 @@ namespace DarkMode
 			DarkMode::setCustomBorderForListBoxOrEditCtrlSubclass(hWnd);
 		}
 
-		if (::GetWindowSubclass(hWnd, CustomBorderSubclass, CustomBorderSubclassID, nullptr) == TRUE)
+		if (::GetWindowSubclass(hWnd, CustomBorderSubclass, kCustomBorderSubclassID, nullptr) == TRUE)
 		{
 			const bool enableClientEdge = !DarkMode::isEnabled();
 			DarkMode::setWindowExStyle(hWnd, enableClientEdge, WS_EX_CLIENTEDGE);
@@ -3142,14 +3131,11 @@ namespace DarkMode
 			::FillRect(hdc, &rcInner, isDisabled ? DarkMode::getDlgBackgroundBrush() : DarkMode::getCtrlBackgroundBrush());
 		}
 
-		const int roundCornerValue = DarkMode::isWindows11() ? Win11CornerRoundness : 0;
-
-		DarkMode::paintRoundFrameRect(hdc, rcClient, hPen, roundCornerValue, roundCornerValue);
+		static const int roundness = DarkMode::isWindows11() ? kWin11CornerRoundness : 0;
+		DarkMode::paintRoundFrameRect(hdc, rcClient, hPen, roundness, roundness);
 
 		::SelectObject(hdc, holdPen);
 	}
-
-	static constexpr auto ComboBoxSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::comboBox);
 
 	static LRESULT CALLBACK ComboBoxSubclass(
 		HWND hWnd,
@@ -3278,12 +3264,12 @@ namespace DarkMode
 	void setComboBoxCtrlSubclass(HWND hWnd)
 	{
 		const auto cbStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE) & CBS_DROPDOWNLIST;
-		DarkMode::setSubclass<ComboboxData>(hWnd, ComboBoxSubclass, ComboBoxSubclassID, cbStyle);
+		DarkMode::setSubclass<ComboboxData>(hWnd, ComboBoxSubclass, kComboBoxSubclassID, cbStyle);
 	}
 
 	void removeComboBoxCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<ComboboxData>(hWnd, ComboBoxSubclass, ComboBoxSubclassID);
+		DarkMode::removeSubclass<ComboboxData>(hWnd, ComboBoxSubclass, kComboBoxSubclassID);
 	}
 
 	static void setComboBoxCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p)
@@ -3325,8 +3311,6 @@ namespace DarkMode
 			}
 		}
 	}
-
-	static constexpr auto ComboBoxExSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::comboBoxEx);
 
 	static LRESULT CALLBACK ComboboxExSubclass(
 		HWND hWnd,
@@ -3402,7 +3386,9 @@ namespace DarkMode
 					}
 
 					default:
+					{
 						break;
+					}
 				}
 				break;
 			}
@@ -3417,12 +3403,12 @@ namespace DarkMode
 
 	void setComboBoxExCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass(hWnd, ComboboxExSubclass, ComboBoxExSubclassID);
+		DarkMode::setSubclass(hWnd, ComboboxExSubclass, kComboBoxExSubclassID);
 	}
 
 	void removeComboBoxExCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass(hWnd, ComboboxExSubclass, ComboBoxExSubclassID);
+		DarkMode::removeSubclass(hWnd, ComboboxExSubclass, kComboBoxExSubclassID);
 		DarkMode::unhookSysColor();
 	}
 
@@ -3433,8 +3419,6 @@ namespace DarkMode
 			DarkMode::setComboBoxExCtrlSubclass(hWnd);
 		}
 	}
-
-	static constexpr auto ListViewSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::listView);
 
 	static LRESULT CALLBACK ListViewSubclass(
 		HWND hWnd,
@@ -3545,12 +3529,12 @@ namespace DarkMode
 
 	void setListViewCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass(hWnd, ListViewSubclass, ListViewSubclassID);
+		DarkMode::setSubclass(hWnd, ListViewSubclass, kListViewSubclassID);
 	}
 
 	void removeListViewCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass(hWnd, ListViewSubclass, ListViewSubclassID);
+		DarkMode::removeSubclass(hWnd, ListViewSubclass, kListViewSubclassID);
 	}
 
 	static void setListViewCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p)
@@ -3581,7 +3565,7 @@ namespace DarkMode
 	{
 		ThemeData _themeData{ VSCLASS_HEADER };
 		BufferData _bufferData;
-		FontData _fontData;
+		FontData _fontData{ nullptr };
 
 		POINT _pt{ LONG_MIN, LONG_MIN };
 		bool _isHot = false;
@@ -3735,8 +3719,6 @@ namespace DarkMode
 		::SelectObject(hdc, holdFont);
 		::SelectObject(hdc, holdPen);
 	}
-
-	static constexpr auto HeaderSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::header);
 
 	static LRESULT CALLBACK HeaderSubclass(
 		HWND hWnd,
@@ -3913,12 +3895,12 @@ namespace DarkMode
 	void setHeaderCtrlSubclass(HWND hWnd)
 	{
 		const bool hasBtnStyle = (::GetWindowLongPtr(hWnd, GWL_STYLE) & HDS_BUTTONS) == HDS_BUTTONS;
-		DarkMode::setSubclass<HeaderData>(hWnd, HeaderSubclass, HeaderSubclassID, hasBtnStyle);
+		DarkMode::setSubclass<HeaderData>(hWnd, HeaderSubclass, kHeaderSubclassID, hasBtnStyle);
 	}
 
 	void removeHeaderCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<HeaderData>(hWnd, HeaderSubclass, HeaderSubclassID);
+		DarkMode::removeSubclass<HeaderData>(hWnd, HeaderSubclass, kHeaderSubclassID);
 	}
 
 	struct StatusBarData
@@ -4040,8 +4022,6 @@ namespace DarkMode
 		::SelectObject(hdc, holdFont);
 		::SelectObject(hdc, holdPen);
 	}
-
-	static constexpr auto StatusBarSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::statusBar);
 
 	static LRESULT CALLBACK StatusBarSubclass(
 		HWND hWnd,
@@ -4165,12 +4145,12 @@ namespace DarkMode
 		{
 			lf = ncm.lfStatusFont;
 		}
-		DarkMode::setSubclass<StatusBarData>(hWnd, StatusBarSubclass, StatusBarSubclassID, ::CreateFontIndirect(&lf));
+		DarkMode::setSubclass<StatusBarData>(hWnd, StatusBarSubclass, kStatusBarSubclassID, ::CreateFontIndirect(&lf));
 	}
 
 	void removeStatusBarCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<StatusBarData>(hWnd, StatusBarSubclass, StatusBarSubclassID);
+		DarkMode::removeSubclass<StatusBarData>(hWnd, StatusBarSubclass, kStatusBarSubclassID);
 	}
 
 	static void setStatusBarCtrlSubclass(HWND hWnd, DarkModeParams p)
@@ -4227,8 +4207,6 @@ namespace DarkMode
 		::DrawThemeBackground(hTheme, hdc, PP_FILL, progressBarData._iStateID, &rcFill, nullptr);
 		::FillRect(hdc, &rcClient, DarkMode::getCtrlBackgroundBrush());
 	}
-
-	static constexpr auto ProgressBarSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::progress);
 
 	static LRESULT CALLBACK ProgressBarSubclass(
 		HWND hWnd,
@@ -4367,12 +4345,12 @@ namespace DarkMode
 
 	void setProgressBarCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass<ProgressBarData>(hWnd, ProgressBarSubclass, ProgressBarSubclassID);
+		DarkMode::setSubclass<ProgressBarData>(hWnd, ProgressBarSubclass, kProgressBarSubclassID);
 	}
 
 	void removeProgressBarCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<ProgressBarData>(hWnd, ProgressBarSubclass, ProgressBarSubclassID);
+		DarkMode::removeSubclass<ProgressBarData>(hWnd, ProgressBarSubclass, kProgressBarSubclassID);
 	}
 
 	static void setProgressBarCtrlSubclass(HWND hWnd, DarkModeParams p)
@@ -4400,8 +4378,6 @@ namespace DarkMode
 			: _isEnabled(::IsWindowEnabled(hWnd) == TRUE)
 		{}
 	};
-
-	static constexpr auto StaticTextSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::staticText);
 
 	static LRESULT CALLBACK StaticTextSubclass(
 		HWND hWnd,
@@ -4456,12 +4432,12 @@ namespace DarkMode
 
 	void setStaticTextCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass<StaticTextData>(hWnd, StaticTextSubclass, StaticTextSubclassID, hWnd);
+		DarkMode::setSubclass<StaticTextData>(hWnd, StaticTextSubclass, kStaticTextSubclassID, hWnd);
 	}
 
 	void removeStaticTextCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<StaticTextData>(hWnd, StaticTextSubclass, StaticTextSubclassID);
+		DarkMode::removeSubclass<StaticTextData>(hWnd, StaticTextSubclass, kStaticTextSubclassID);
 	}
 
 	static void setStaticTextCtrlSubclass(HWND hWnd, DarkModeParams p)
@@ -4649,8 +4625,6 @@ namespace DarkMode
 #endif
 	}
 
-	static constexpr auto WindowEraseBgSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::eraseBg);
-
 	static LRESULT CALLBACK WindowEraseBgSubclass(
 		HWND hWnd,
 		UINT uMsg,
@@ -4691,15 +4665,13 @@ namespace DarkMode
 
 	void setWindowEraseBgSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass(hWnd, WindowEraseBgSubclass, WindowEraseBgSubclassID);
+		DarkMode::setSubclass(hWnd, WindowEraseBgSubclass, kWindowEraseBgSubclassID);
 	}
 
 	void removeWindowEraseBgSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass(hWnd, WindowEraseBgSubclass, WindowEraseBgSubclassID);
+		DarkMode::removeSubclass(hWnd, WindowEraseBgSubclass, kWindowEraseBgSubclassID);
 	}
-
-	static constexpr auto WindowCtlColorSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::ctlColor);
 
 	static LRESULT CALLBACK WindowCtlColorSubclass(
 		HWND hWnd,
@@ -4774,7 +4746,7 @@ namespace DarkMode
 				}
 
 				DWORD_PTR dwRefData = 0;
-				if (::GetWindowSubclass(hChild, StaticTextSubclass, StaticTextSubclassID, &dwRefData) == TRUE)
+				if (::GetWindowSubclass(hChild, StaticTextSubclass, kStaticTextSubclassID, &dwRefData) == TRUE)
 				{
 					const bool isTextEnabled = (reinterpret_cast<StaticTextData*>(dwRefData))->_isEnabled;
 					return DarkMode::onCtlColorDlgStaticText(hdc, isTextEnabled);
@@ -4801,12 +4773,12 @@ namespace DarkMode
 
 	void setWindowCtlColorSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass(hWnd, WindowCtlColorSubclass, WindowCtlColorSubclassID);
+		DarkMode::setSubclass(hWnd, WindowCtlColorSubclass, kWindowCtlColorSubclassID);
 	}
 
 	void removeWindowCtlColorSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass(hWnd, WindowCtlColorSubclass, WindowCtlColorSubclassID);
+		DarkMode::removeSubclass(hWnd, WindowCtlColorSubclass, kWindowCtlColorSubclassID);
 	}
 
 	[[nodiscard]] static LRESULT prepaintToolbarItem(LPNMTBCUSTOMDRAW& lptbcd)
@@ -4842,7 +4814,7 @@ namespace DarkMode
 			rcItem.right = rcDrop.left;
 		}
 
-		const int roundCornerValue = DarkMode::isWindows11() ? Win11CornerRoundness + 1 : 0;
+		static const int roundness = DarkMode::isWindows11() ? kWin11CornerRoundness + 1 : 0;
 
 		if (isHot)
 		{
@@ -4852,10 +4824,10 @@ namespace DarkMode
 			}
 			else
 			{
-				DarkMode::paintRoundRect(lptbcd->nmcd.hdc, rcItem, DarkMode::getHotEdgePen(), DarkMode::getHotBackgroundBrush(), roundCornerValue, roundCornerValue);
+				DarkMode::paintRoundRect(lptbcd->nmcd.hdc, rcItem, DarkMode::getHotEdgePen(), DarkMode::getHotBackgroundBrush(), roundness, roundness);
 				if (isDropDown)
 				{
-					DarkMode::paintRoundRect(lptbcd->nmcd.hdc, rcDrop, DarkMode::getHotEdgePen(), DarkMode::getHotBackgroundBrush(), roundCornerValue, roundCornerValue);
+					DarkMode::paintRoundRect(lptbcd->nmcd.hdc, rcDrop, DarkMode::getHotEdgePen(), DarkMode::getHotBackgroundBrush(), roundness, roundness);
 				}
 			}
 
@@ -4869,10 +4841,10 @@ namespace DarkMode
 			}
 			else
 			{
-				DarkMode::paintRoundRect(lptbcd->nmcd.hdc, rcItem, DarkMode::getEdgePen(), DarkMode::getCtrlBackgroundBrush(), roundCornerValue, roundCornerValue);
+				DarkMode::paintRoundRect(lptbcd->nmcd.hdc, rcItem, DarkMode::getEdgePen(), DarkMode::getCtrlBackgroundBrush(), roundness, roundness);
 				if (isDropDown)
 				{
-					DarkMode::paintRoundRect(lptbcd->nmcd.hdc, rcDrop, DarkMode::getEdgePen(), DarkMode::getCtrlBackgroundBrush(), roundCornerValue, roundCornerValue);
+					DarkMode::paintRoundRect(lptbcd->nmcd.hdc, rcDrop, DarkMode::getEdgePen(), DarkMode::getCtrlBackgroundBrush(), roundness, roundness);
 				}
 			}
 
@@ -5217,18 +5189,18 @@ namespace DarkMode
 		if ((rbBand.fStyle & RBBS_USECHEVRON) == RBBS_USECHEVRON
 			&& (rbBand.rcChevronLocation.right - rbBand.rcChevronLocation.left) > 0)
 		{
-			const int roundCornerValue = DarkMode::isWindows11() ? Win11CornerRoundness + 1 : 0;
+			static const int roundness = DarkMode::isWindows11() ? kWin11CornerRoundness + 1 : 0;
 
 			const bool isHot = (rbBand.uChevronState & STATE_SYSTEM_HOTTRACKED) == STATE_SYSTEM_HOTTRACKED;
 			const bool isPressed = (rbBand.uChevronState & STATE_SYSTEM_PRESSED) == STATE_SYSTEM_PRESSED;
 
 			if (isHot)
 			{
-				DarkMode::paintRoundRect(lpnmcd->hdc, rbBand.rcChevronLocation, DarkMode::getHotEdgePen(), DarkMode::getHotBackgroundBrush(), roundCornerValue, roundCornerValue);
+				DarkMode::paintRoundRect(lpnmcd->hdc, rbBand.rcChevronLocation, DarkMode::getHotEdgePen(), DarkMode::getHotBackgroundBrush(), roundness, roundness);
 			}
 			else if (isPressed)
 			{
-				DarkMode::paintRoundRect(lpnmcd->hdc, rbBand.rcChevronLocation, DarkMode::getEdgePen(), DarkMode::getCtrlBackgroundBrush(), roundCornerValue, roundCornerValue);
+				DarkMode::paintRoundRect(lpnmcd->hdc, rbBand.rcChevronLocation, DarkMode::getEdgePen(), DarkMode::getCtrlBackgroundBrush(), roundness, roundness);
 			}
 
 			::SetTextColor(lpnmcd->hdc, isHot ? DarkMode::getTextColor() : DarkMode::getDarkerTextColor());
@@ -5245,23 +5217,12 @@ namespace DarkMode
 	[[nodiscard]] static LRESULT darkRebarNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		auto* lpnmcd = reinterpret_cast<LPNMCUSTOMDRAW>(lParam);
-
-		switch (lpnmcd->dwDrawStage)
+		if (lpnmcd->dwDrawStage == CDDS_PREPAINT)
 		{
-			case CDDS_PREPAINT:
-			{
-				return DarkMode::prepaintRebar(lpnmcd);
-			}
-
-			default:
-			{
-				break;
-			}
+			return DarkMode::prepaintRebar(lpnmcd);
 		}
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
-
-	static constexpr auto WindowNotifySubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::notify);
 
 	static LRESULT CALLBACK WindowNotifySubclass(
 		HWND hWnd,
@@ -5339,7 +5300,7 @@ namespace DarkMode
 
 	void setWindowNotifyCustomDrawSubclass(HWND hWnd, bool subclassChildren)
 	{
-		if (DarkMode::setSubclass(hWnd, WindowNotifySubclass, WindowNotifySubclassID) == TRUE)
+		if (DarkMode::setSubclass(hWnd, WindowNotifySubclass, kWindowNotifySubclassID) == TRUE)
 		{
 			if (subclassChildren)
 			{
@@ -5354,7 +5315,7 @@ namespace DarkMode
 
 	void removeWindowNotifyCustomDrawSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass(hWnd, WindowNotifySubclass, WindowNotifySubclassID);
+		DarkMode::removeSubclass(hWnd, WindowNotifySubclass, kWindowNotifySubclassID);
 	}
 
 	static void drawUAHMenuNCBottomLine(HWND hWnd)
@@ -5385,8 +5346,6 @@ namespace DarkMode
 		::FillRect(hdc, &rcAnnoyingLine, DarkMode::getDlgBackgroundBrush());
 		::ReleaseDC(hWnd, hdc);
 	}
-
-	static constexpr auto WindowMenuBarSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::menuBar);
 
 	static LRESULT CALLBACK WindowMenuBarSubclass(
 		HWND hWnd,
@@ -5584,15 +5543,13 @@ namespace DarkMode
 
 	void setWindowMenuBarSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass<ThemeData>(hWnd, WindowMenuBarSubclass, WindowMenuBarSubclassID, VSCLASS_MENU);
+		DarkMode::setSubclass<ThemeData>(hWnd, WindowMenuBarSubclass, kWindowMenuBarSubclassID, VSCLASS_MENU);
 	}
 
 	void removeWindowMenuBarSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<ThemeData>(hWnd, WindowMenuBarSubclass, WindowMenuBarSubclassID);
+		DarkMode::removeSubclass<ThemeData>(hWnd, WindowMenuBarSubclass, kWindowMenuBarSubclassID);
 	}
-
-	static constexpr auto WindowSettingChangeSubclassID = static_cast<UINT_PTR>(DarkMode::SubclassID::settingChange);
 
 	static LRESULT CALLBACK WindowSettingChangeSubclass(
 		HWND hWnd,
@@ -5632,12 +5589,12 @@ namespace DarkMode
 
 	void setWindowSettingChangeSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass(hWnd, WindowSettingChangeSubclass, WindowSettingChangeSubclassID);
+		DarkMode::setSubclass(hWnd, WindowSettingChangeSubclass, kWindowSettingChangeSubclassID);
 	}
 
 	void removeWindowSettingChangeSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass(hWnd, WindowSettingChangeSubclass, WindowSettingChangeSubclassID);
+		DarkMode::removeSubclass(hWnd, WindowSettingChangeSubclass, kWindowSettingChangeSubclassID);
 	}
 
 	void enableSysLinkCtrlCtlColor(HWND hWnd)
