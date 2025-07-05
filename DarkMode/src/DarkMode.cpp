@@ -1,12 +1,17 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MPL-2.0
 
-// Copyright (c) 2024-2025 ozone10
-// MIT license
+/*
+ * Copyright (c) 2025 oZone10
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * This file incorporates work from the win32-darkmode project:
+ *  https://github.com/ysc3839/win32-darkmode
+ *  which is covered by the MIT License.
+ *  See LICENSE-win32-darkmode for more information.
+ */
 
-// This file contains parts of code from the win32-darkmode project
-// https://github.com/ysc3839/win32-darkmode
-// which is licensed under the MIT License.
-// See LICENSE-win32-darkmode for more information.
 
 #include "StdAfx.h"
 
@@ -358,11 +363,6 @@ static HTHEME WINAPI MyOpenNcThemeData(HWND hWnd, LPCWSTR pszClassList)
 			hWnd = nullptr;
 			pszClassList = L"Explorer::ScrollBar";
 		}
-		//else if (g_darkModeEnabled)
-		//{
-		//	hWnd = nullptr;
-		//	pszClassList = L"DarkMode_Explorer::ScrollBar";
-		//}
 	}
 	return pfOpenNcThemeData(hWnd, pszClassList);
 }
@@ -492,7 +492,6 @@ void SetDarkMode(bool useDark, bool fixDarkScrollbar)
 	if (g_darkModeSupported)
 	{
 		AllowDarkModeForApp(useDark);
-		//pfRefreshImmersiveColorPolicyState();
 		FlushMenuThemes();
 		if (fixDarkScrollbar)
 		{
@@ -502,7 +501,7 @@ void SetDarkMode(bool useDark, bool fixDarkScrollbar)
 	}
 }
 
-// Hooking GetSysColor for comboboxex listbox
+// Hooking GetSysColor for comboboxex' list box and list view's gridlines
 
 using fnGetSysColor = auto (WINAPI*)(int nIndex) -> DWORD;
 

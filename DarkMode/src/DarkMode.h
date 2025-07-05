@@ -1,12 +1,17 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MPL-2.0
 
-// Copyright (c) 2024-2025 ozone10
-// MIT license
+/*
+ * Copyright (c) 2025 oZone10
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * This file incorporates work from the win32-darkmode project:
+ *  https://github.com/ysc3839/win32-darkmode
+ *  which is covered by the MIT License.
+ *  See LICENSE-win32-darkmode for more information.
+ */
 
-// This file contains parts of code from the win32-darkmode project
-// https://github.com/ysc3839/win32-darkmode
-// which is licensed under the MIT License.
-// See LICENSE-win32-darkmode for more information.
 
 #pragma once
 

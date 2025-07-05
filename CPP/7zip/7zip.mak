@@ -169,7 +169,7 @@ $(GUI_OBJS): ../../UI/GUI/$(*B).cpp
 !ENDIF
 
 !IFDEF DARK_MODE_OBJS
-$(DARK_MODE_OBJS): ../../../../DarkMode/$(*B).cpp
+$(DARK_MODE_OBJS): ../../../../DarkMode/src/$(*B).cpp
 	$(COMPL)
 !ENDIF
 
@@ -241,7 +241,7 @@ $(C_OBJS): ../../../../C/$(*B).c
 {../../../../C}.c{$O}.obj::
 	$(CCOMPLB)
 
-{../../../../DarkMode}.cpp{$O}.obj::
+{../../../../DarkMode/src}.cpp{$O}.obj::
 	$(COMPLB)
 
 !ENDIF

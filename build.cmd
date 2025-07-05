@@ -49,14 +49,15 @@ if not exist "%PLATFORM%-bin\" mkdir "%PLATFORM%-bin"
 copy "CPP\7zip\Bundles\SFXWin\%PLATFORM%\7z.sfx" "%PLATFORM%-bin"
 copy "CPP\7zip\UI\FileManager\%PLATFORM%\7zFM.exe" "%PLATFORM%-bin"
 copy "CPP\7zip\UI\GUI\%PLATFORM%\7zG.exe" "%PLATFORM%-bin"
-copy "DarkMode\7zDark.ini" "%PLATFORM%-bin"
+copy "DarkMode\7zRes\7zDark.ini" "%PLATFORM%-bin"
+copy "LICENSE.md" "%PLATFORM%-bin"
 
 rem Build the fluent version only for x64
 if "%PLATFORM%" == "x64" (
   echo Building fluent version
   if not exist "tmp\" mkdir "tmp"
   move "CPP\7zip\UI\FileManager\*.bmp" "tmp" >nul
-  xcopy "DarkMode\icons\*.bmp" "CPP\7zip\UI\FileManager" /Y >nul
+  xcopy "DarkMode\7zRes\icons\*.bmp" "CPP\7zip\UI\FileManager" /Y >nul
   
   if exist "CPP\7zip\UI\FileManager\%PLATFORM%\resource.res" (
     del /F /Q "CPP\7zip\UI\FileManager\%PLATFORM%\resource.res"
@@ -70,7 +71,8 @@ if "%PLATFORM%" == "x64" (
   copy "CPP\7zip\Bundles\SFXWin\%PLATFORM%\7z.sfx" "%PLATFORM%-fluent-bin"
   copy "CPP\7zip\UI\FileManager\%PLATFORM%\7zFM.exe" "%PLATFORM%-fluent-bin"
   copy "CPP\7zip\UI\GUI\%PLATFORM%\7zG.exe" "%PLATFORM%-fluent-bin"
-  copy "DarkMode\7zDark.ini" "%PLATFORM%-fluent-bin"
+  copy "DarkMode\7zRes\7zDark.ini" "%PLATFORM%-fluent-bin"
+  copy "LICENSE.md" "%PLATFORM%-fluent-bin"
 
   xcopy "tmp\*.bmp" "CPP\7zip\UI\FileManager" /Y >nul
   rmdir /S /Q "tmp"

@@ -4,12 +4,12 @@
 [![Build status](https://img.shields.io/github/actions/workflow/status/ozone10/7zip-Dark7zip/build_win.yml?logo=Github)](https://github.com/ozone10/7zip-Dark7zip/actions)
 [![Latest release](https://img.shields.io/github/v/release/ozone10/7zip-Dark7zip?include_prereleases)](https://github.com/ozone10/7zip-Dark7zip/releases/latest)
 [![Total downloads](https://img.shields.io/github/downloads/ozone10/7zip-Dark7zip/total.svg)](https://github.com/ozone10/7zip-Dark7zip/releases)
-[![License](https://img.shields.io/github/license/ozone10/7zip-Dark7zip?color=green)](https://www.gnu.org/licenses/gpl-3.0.en.html)
-[![License-MIT](https://img.shields.io/badge/license-MIT-green)](./LICENSE-MIT.md)
+[![License](https://img.shields.io/badge/License-7--Zip-black?logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjRkZGRkZGIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik0xMi43NSAyLjc1YS43NS43NSAwIDAwLTEuNSAwVjQuNUg5LjI3NmExLjc1IDEuNzUgMCAwMC0uOTg1LjMwM0w2LjU5NiA1Ljk1N0EuMjUuMjUgMCAwMTYuNDU1IDZIMi4zNTNhLjc1Ljc1IDAgMTAwIDEuNUgzLjkzTC41NjMgMTUuMThhLjc2Mi43NjIgMCAwMC4yMS44OGMuMDguMDY0LjE2MS4xMjUuMzA5LjIyMS4xODYuMTIxLjQ1Mi4yNzguNzkyLjQzMy42OC4zMTEgMS42NjIuNjIgMi44NzYuNjJhNi45MTkgNi45MTkgMCAwMDIuODc2LS42MmMuMzQtLjE1NS42MDYtLjMxMi43OTItLjQzMy4xNS0uMDk3LjIzLS4xNTguMzEtLjIyM2EuNzUuNzUgMCAwMC4yMDktLjg3OEw1LjU2OSA3LjVoLjg4NmMuMzUxIDAgLjY5NC0uMTA2Ljk4NC0uMzAzbDEuNjk2LTEuMTU0QS4yNS4yNSAwIDAxOS4yNzUgNmgxLjk3NXYxNC41SDYuNzYzYS43NS43NSAwIDAwMCAxLjVoMTAuNDc0YS43NS43NSAwIDAwMC0xLjVIMTIuNzVWNmgxLjk3NGMuMDUgMCAuMS4wMTUuMTQuMDQzbDEuNjk3IDEuMTU0Yy4yOS4xOTcuNjMzLjMwMy45ODQuMzAzaC44ODZsLTMuMzY4IDcuNjhhLjc1Ljc1IDAgMDAuMjMuODk2Yy4wMTIuMDA5IDAgMCAuMDAyIDBhMy4xNTQgMy4xNTQgMCAwMC4zMS4yMDZjLjE4NS4xMTIuNDUuMjU2Ljc5LjRhNy4zNDMgNy4zNDMgMCAwMDIuODU1LjU2OCA3LjM0MyA3LjM0MyAwIDAwMi44NTYtLjU2OWMuMzM4LS4xNDMuNjA0LS4yODcuNzktLjM5OWEzLjUgMy41IDAgMDAuMzEtLjIwNi43NS43NSAwIDAwLjIzLS44OTZMMjAuMDcgNy41aDEuNTc4YS43NS43NSAwIDAwMC0xLjVoLTQuMTAyYS4yNS4yNSAwIDAxLS4xNC0uMDQzbC0xLjY5Ny0xLjE1NGExLjc1IDEuNzUgMCAwMC0uOTg0LS4zMDNIMTIuNzVWMi43NXpNMi4xOTMgMTUuMTk4YTUuNDE4IDUuNDE4IDAgMDAyLjU1Ny42MzUgNS40MTggNS40MTggMCAwMDIuNTU3LS42MzVMNC43NSA5LjM2OGwtMi41NTcgNS44M3ptMTQuNTEtLjAyNGMuMDgyLjA0LjE3NC4wODMuMjc1LjEyNi41My4yMjMgMS4zMDUuNDUgMi4yNzIuNDVhNS44NDYgNS44NDYgMCAwMDIuNTQ3LS41NzZMMTkuMjUgOS4zNjdsLTIuNTQ3IDUuODA3eiI+PC9wYXRoPjwvc3ZnPg==
+)](LICENSE.md)
 [![PayPal.me](https://img.shields.io/badge/PayPal-me-blue.svg?maxAge=2592000)](https://paypal.me/ozone10/)
 ---
 
-Dark7zip is project to experiment with dark mode for [7-Zip](https://github.com/ip7z/7zip) and its fork [7-Zip-zstd](#7-zip-zstd).  
+Dark7zip is project to experiment with dark mode via [darkmodelib](https://github.com/ozone10/darkmodelib) library for [7-Zip](https://github.com/ip7z/7zip) and its fork [7-Zip-zstd](#7-zip-zstd).  
 It is mainly for Windows 10 and Windows 11. Some controls might, might not use dark/custom colors on older OS.
 
 * * *
@@ -101,6 +101,9 @@ Replace 7z original files (e.g. `C:\Program Files\7-Zip\`) with files from downl
     - 2 - apply Mica material
     - 3 - apply "acrylic" effect
     - 4 - apply Mica Alt material
+  - colorizeTitleBar - on Windows 11 applies same colors as dialog background and static text on title bar, with `micaExtend=1` this option will be ignored
+    - 0 - Use system colors (default)
+    - 1 - Use custom colors (backgroundDlg and text)
 
 Values for custom colors are in RGB hex format - RRGGBB.
 
@@ -142,6 +145,7 @@ roundCorner = 0
 borderColor = "FFFFFF"
 mica = 0
 micaExtend = 0
+colorizeTitleBar = 0
 
 [dark.colors]
 background =            "202020"
@@ -168,6 +172,7 @@ edgeHeader =            "646464"
 roundCorner = 0
 borderColor = "FFFFFF"
 mica = 0
+colorizeTitleBar = 0
 
 [light.colors]
 background =            "F0F0F0"
@@ -207,10 +212,12 @@ Source code for dark mode for it is in [7z-zstd](https://github.com/ozone10/7zip
 For more information about 7-Zip-zstd fork check [7-Zip-zstd](https://github.com/mcmilk/7-Zip-zstd).
 
 ## License
+The license for use and distribution is the same as that of the original 7-Zip.  
+Additionally, code related to dark mode in `DarkMode` folder is licensed under the MIT License or the Mozilla Public License, version 2.0.  
+[MPL-2.0](DarkMode\LICENSE.md)  
+[MIT](DarkMode\LICENSE-MIT.md)
 
-Most code related to dark mode is under license MIT, or GPLv3 or later version.
-
-For 7-Zip check DOC folder for information on used license.  
+For details on the 7-Zip license, see the `DOC` folder.  
 [License.txt](DOC/License.txt)  
 [readme.txt](DOC/readme.txt)
 

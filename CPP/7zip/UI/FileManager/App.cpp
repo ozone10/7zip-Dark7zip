@@ -29,7 +29,7 @@
 
 #include "PropertyNameRes.h"
 
-#include "../../../../DarkMode/DarkModeSubclass.h"
+#include "../../../../DarkMode/src/DarkModeSubclass.h"
 
 using namespace NWindows;
 using namespace NFile;
@@ -356,7 +356,7 @@ HRESULT CApp::Create(HWND hwnd, const UString &mainPath, const UString &arcForma
   }
 
   DarkMode::setWindowEraseBgSubclass(hwnd);
-  DarkMode::setDarkDlgNotifySafe(hwnd, true);
+  DarkMode::setDarkWndNotifySafeEx(hwnd, true, true);
   DarkMode::setWindowMenuBarSubclass(hwnd);
 
   for (i = 0; i < kNumPanelsMax; i++)
@@ -365,7 +365,7 @@ HRESULT CApp::Create(HWND hwnd, const UString &mainPath, const UString &arcForma
     DarkMode::setWindowCtlColorSubclass(Panels[i]);
     DarkMode::setWindowEraseBgSubclass(Panels[i]._headerReBar);
     DarkMode::setWindowCtlColorSubclass(Panels[i]._headerReBar);
-    DarkMode::setWindowNotifyCustomDrawSubclass(Panels[i], false);
+    DarkMode::setWindowNotifyCustomDrawSubclass(Panels[i]);
   }
 
   SetFocusedPanel(LastFocusedPanel);
