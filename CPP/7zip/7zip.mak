@@ -177,7 +177,7 @@ $(GUI_OBJS): ../../UI/GUI/$(*B).cpp
 !ENDIF
 
 !IFDEF DARK_MODE_OBJS
-$(DARK_MODE_OBJS): ../../../../DarkMode/$(*B).cpp
+$(DARK_MODE_OBJS): ../../../../DarkMode/src/$(*B).cpp
 	$(COMPL)
 !ENDIF
 
@@ -306,7 +306,7 @@ $(FASTLZMA2_OBJS): ../../../../C/fast-lzma2/$(*B).c
 {../../../../C/fast-lzma2}.c{$O}.obj::
 	$(CCOMPLB) -DNO_XXHASH -DFL2_7ZIP_BUILD
 
-{../../../../DarkMode}.cpp{$O}.obj::
+{../../../../DarkMode/src}.cpp{$O}.obj::
 	$(COMPLB)
 
 !ENDIF

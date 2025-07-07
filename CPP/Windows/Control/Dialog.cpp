@@ -10,7 +10,7 @@
 
 #include "Dialog.h"
 
-#include "../../../DarkMode/DarkModeSubclass.h"
+#include "../../../DarkMode/src/DarkModeSubclass.h"
 
 extern HINSTANCE g_hInstance;
 #ifndef _UNICODE
@@ -39,7 +39,7 @@ DialogProcedure(HWND dialogHWND, UINT message, WPARAM wParam, LPARAM lParam)
     {
       dialog->Attach(dialogHWND);
       DarkMode::initDarkMode(L"7zDark");
-      DarkMode::setDarkDlgNotifySafe(*dialog, true);
+      DarkMode::setDarkWndNotifySafeEx(*dialog, true, true);
     }
 
   /* MSDN: The dialog box procedure should return

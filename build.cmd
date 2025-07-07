@@ -21,10 +21,6 @@ if "%PLATFORM%" == "arm64" set ARCH=x64_arm64
 if exist "%InstallDir%\VC\Auxiliary\Build\vcvarsall.bat" (
   call "%InstallDir%\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
 
-  rem pushd CPP\7zip
-  rem nmake
-  rem popd
-
   pushd CPP\7zip\UI\FileManager
   nmake
   popd
@@ -41,7 +37,9 @@ if exist "%InstallDir%\VC\Auxiliary\Build\vcvarsall.bat" (
   copy "CPP\7zip\Bundles\SFXWin\%PLATFORM%\7z.sfx" "%PLATFORM%-bin"
   copy "CPP\7zip\UI\FileManager\%PLATFORM%\7zFM.exe" "%PLATFORM%-bin"
   copy "CPP\7zip\UI\GUI\%PLATFORM%\7zG.exe" "%PLATFORM%-bin"
-  copy "DarkMode\7zDark.ini" "%PLATFORM%-bin"
+  copy "DarkMode\7zRes\7zDark.ini" "%PLATFORM%-bin"
+  copy "COPYING" "%PLATFORM%-bin"
+  copy "LICENSE.md" "%PLATFORM%-bin"
 )
 
 endlocal

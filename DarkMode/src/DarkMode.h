@@ -1,9 +1,17 @@
-// MIT license
-// Copyright(c) 2024-2025 ozone10
+// SPDX-License-Identifier: MPL-2.0
 
-// Parts of code based on the win32-darkmode project
-// https://github.com/ysc3839/win32-darkmode
-// which is licensed under the MIT License. Copyright (c) 2019 Richard Yu
+/*
+ * Copyright (c) 2025 ozone10
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * This file incorporates work from the win32-darkmode project:
+ *  https://github.com/ysc3839/win32-darkmode
+ *  which is covered by the MIT License.
+ *  See LICENSE-win32-darkmode for more information.
+ */
+
 
 #pragma once
 
@@ -25,7 +33,7 @@ void SetTitleBarThemeColor(HWND hWnd, BOOL dark);
 void AllowDarkModeForApp(bool allow);
 void EnableDarkScrollBarForWindowAndChildren(HWND hWnd);
 void InitDarkMode();
-void SetDarkMode(bool useDarkMode, bool fixDarkScrollbar);
+void SetDarkMode(bool useDark, bool fixDarkScrollbar);
 [[nodiscard]] bool IsWindows10();
 [[nodiscard]] bool IsWindows11();
 [[nodiscard]] DWORD GetWindowsBuildNumber();
