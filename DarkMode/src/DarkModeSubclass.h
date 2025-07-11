@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /*
- * Copyright (c) 2025 oZone10
+ * Copyright (c) 2025 ozone10
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -9,7 +9,7 @@
 
 // Based on the Notepad++ dark mode code licensed under GPLv3.
 // Originally by adzm / Adam D. Walling, with modifications by the Notepad++ team.
-// Heavily modified by oZone10 (Notepad++ contributor).
+// Heavily modified by ozone10 (Notepad++ contributor).
 // Used with permission to relicense under the Mozilla Public License, v. 2.0.
 
 
@@ -130,7 +130,7 @@ namespace DarkMode
 		allowOldOS,       ///< '1' if older Windows 10 versions are allowed, '2' if all older Windows are allowed.
 		useDlgProcCtl,    ///< True if WM_CTLCOLORxxx can be handled directly in dialog procedure.
 		preferTheme,      ///< True if theme is supported and can be used over subclass, e.g. combo box on Windows 10+.
-		limitSBFix,       ///< True if scroll bar fix can be limited to specific window.
+		useSBFix,         ///< '1' if scroll bar fix is applied to all scroll bars, '2' if scroll bar fix can be limited to specific window.
 		maxValue          ///< Sentinel value for internal validation (not intended for use).
 	};
 

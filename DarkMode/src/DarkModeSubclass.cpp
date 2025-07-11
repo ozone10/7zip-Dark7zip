@@ -1,7 +1,7 @@
 ﻿// SPDX-License-Identifier: MPL-2.0
 
 /*
- * Copyright (c) 2025 oZone10
+ * Copyright (c) 2025 ozone10
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -9,7 +9,7 @@
 
 // Based on the Notepad++ dark mode code licensed under GPLv3.
 // Originally by adzm / Adam D. Walling, with modifications by the Notepad++ team.
-// Heavily modified by oZone10 (Notepad++ contributor).
+// Heavily modified by ozone10 (Notepad++ contributor).
 // Used with permission to relicense under the Mozilla Public License, v. 2.0.
 
 
@@ -305,10 +305,10 @@ namespace DarkMode
 #endif
 			}
 
-			case LibInfo::limitSBFix:
+			case LibInfo::useSBFix:
 			{
-#if defined(_DARKMODELIB_LIMIT_SCROLLBAR_FIX)
-				return _DARKMODELIB_LIMIT_SCROLLBAR_FIX;
+#if defined(_DARKMODELIB_USE_SCROLLBAR_FIX)
+				return _DARKMODELIB_USE_SCROLLBAR_FIX;
 #else
 				return FALSE;
 #endif
@@ -1757,7 +1757,7 @@ namespace DarkMode
 	 */
 	void enableDarkScrollBarForWindowAndChildren([[maybe_unused]] HWND hWnd)
 	{
-#if defined(_DARKMODELIB_LIMIT_SCROLLBAR_FIX) && (_DARKMODELIB_LIMIT_SCROLLBAR_FIX > 0)
+#if defined(_DARKMODELIB_USE_SCROLLBAR_FIX) && (_DARKMODELIB_USE_SCROLLBAR_FIX > 0)
 		::EnableDarkScrollBarForWindowAndChildren(hWnd);
 #endif
 	}

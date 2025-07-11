@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /*
- * Copyright (c) 2025 oZone10
+ * Copyright (c) 2025 ozone10
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -30,8 +30,10 @@
 #include <uxtheme.h>
 #include <vsstyle.h>
 
+#if defined(_DARKMODELIB_USE_SCROLLBAR_FIX) && (_DARKMODELIB_USE_SCROLLBAR_FIX > 0)
 #include <mutex>
 #include <unordered_set>
+#endif
 
 #if !defined(_DARKMODELIB_EXTERNAL_IATHOOK)
 #include "IatHook.h"
@@ -323,9 +325,10 @@ static void FlushMenuThemes()
 	}
 }
 
-// limit dark scroll bar to specific windows and their children
 
-#if defined(_DARKMODELIB_LIMIT_SCROLLBAR_FIX) && (_DARKMODELIB_LIMIT_SCROLLBAR_FIX > 0)
+#if defined(_DARKMODELIB_USE_SCROLLBAR_FIX) && (_DARKMODELIB_USE_SCROLLBAR_FIX > 0)
+#if defined(_DARKMODELIB_USE_SCROLLBAR_FIX) && (_DARKMODELIB_USE_SCROLLBAR_FIX > 1)
+// limit dark scroll bar to specific windows and their children
 static std::unordered_set<HWND> g_darkScrollBarWindows;
 static std::mutex g_darkScrollBarMutex;
 
@@ -354,14 +357,14 @@ static bool IsWindowOrParentUsingDarkScrollBar(HWND hWnd)
 	}
 	return (hWnd != hRoot && hasElement(g_darkScrollBarWindows, hRoot));
 }
-#endif // defined(_DARKMODELIB_LIMIT_SCROLLBAR_FIX) && (_DARKMODELIB_LIMIT_SCROLLBAR_FIX > 0)
+#endif // defined(_DARKMODELIB_USE_SCROLLBAR_FIX) && (_DARKMODELIB_USE_SCROLLBAR_FIX > 1)
 
 static HTHEME WINAPI MyOpenNcThemeData(HWND hWnd, LPCWSTR pszClassList)
 {
 	static constexpr std::wstring_view scrollBarClassName = WC_SCROLLBAR;
 	if (scrollBarClassName == pszClassList)
 	{
-#if defined(_DARKMODELIB_LIMIT_SCROLLBAR_FIX) && (_DARKMODELIB_LIMIT_SCROLLBAR_FIX > 0)
+#if defined(_DARKMODELIB_USE_SCROLLBAR_FIX) && (_DARKMODELIB_USE_SCROLLBAR_FIX > 1)
 		if (IsWindowOrParentUsingDarkScrollBar(hWnd))
 #endif
 		{
@@ -384,6 +387,7 @@ static void FixDarkScrollBar()
 		}
 	}
 }
+#endif // defined(_DARKMODELIB_USE_SCROLLBAR_FIX) && (_DARKMODELIB_USE_SCROLLBAR_FIX > 0)
 
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
 static constexpr DWORD g_win10Build = 17763;
@@ -492,16 +496,18 @@ void InitDarkMode()
 	}
 }
 
-void SetDarkMode(bool useDark, bool fixDarkScrollbar)
+void SetDarkMode(bool useDark, [[maybe_unused]] bool fixDarkScrollbar)
 {
 	if (g_darkModeSupported)
 	{
 		AllowDarkModeForApp(useDark);
 		FlushMenuThemes();
+#if defined(_DARKMODELIB_USE_SCROLLBAR_FIX) && (_DARKMODELIB_USE_SCROLLBAR_FIX > 0)
 		if (fixDarkScrollbar)
 		{
 			FixDarkScrollBar();
 		}
+#endif
 		g_darkModeEnabled = useDark && ShouldAppsUseDarkMode() && !IsHighContrast();
 	}
 }
