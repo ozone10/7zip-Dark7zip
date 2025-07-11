@@ -15,19 +15,20 @@ setlocal
 
 set PLATFORM=%1
 
-if "%PLATFORM%" == "" (
+if "%PLATFORM%" == "x64" set ARCH=x64
+if "%PLATFORM%" == "x86" set ARCH=x64_x86
+if "%PLATFORM%" == "arm64" (
+  set ARCH=x64_arm64
+) else (
   set ARCH=x64
   set PLATFORM=x64
 )
-if "%PLATFORM%" == "x64" set ARCH=x64
-if "%PLATFORM%" == "x86" set ARCH=x64_x86
-if "%PLATFORM%" == "arm64" set ARCH=x64_arm64
 
 call "%InstallDir%\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
 
 if not "%2" == "fluent" (
-  rem Delete resource.res only if x64 is used, due to fluent version
-  if "%PLATFORM%"=="x64" (
+  rem Delete resource.res only if x64 or arm64 is used, due to fluent version
+  if not "%PLATFORM%"=="x86" (
     if exist "CPP\7zip\UI\FileManager\%PLATFORM%\resource.res" (
       del /F /Q "CPP\7zip\UI\FileManager\%PLATFORM%\resource.res"
     )
@@ -35,22 +36,25 @@ if not "%2" == "fluent" (
 )
 
 if "%2" == "all" (
-  rem Build all
+  echo Compiling all
   pushd CPP\7zip
   nmake
   popd
 ) else (
-  rem Build the main version
-  pushd CPP\7zip\UI\FileManager
-  nmake
-  popd
-
+  rem Build only relevant binaries
   if "%2" == "" (
-    pushd CPP\7zip\UI\GUI
+    echo Compiling 7zFM.exe with standard icons
+    pushd CPP\7zip\UI\FileManager
     nmake
     popd
   )
 
+  echo Compiling 7zG.exe
+  pushd CPP\7zip\UI\GUI
+  nmake
+  popd
+
+  echo Compiling 7z.sfx
   pushd CPP\7zip\Bundles\SFXWin
   nmake
   popd
@@ -65,9 +69,8 @@ if not "%2" == "fluent" (
   copy "LICENSE.md" "%PLATFORM%-bin"
 )
 
-rem Build the fluent version only for x64
-if "%PLATFORM%" == "x64" (
-  echo Building fluent version
+rem Build the fluent version only for x64 or arm64
+if not "%PLATFORM%" == "x86" (
   if not exist "tmp\" mkdir "tmp"
   move "CPP\7zip\UI\FileManager\*.bmp" "tmp" >nul
   xcopy "DarkMode\7zRes\icons\*.bmp" "CPP\7zip\UI\FileManager" /Y >nul
@@ -77,7 +80,8 @@ if "%PLATFORM%" == "x64" (
       del /F /Q "CPP\7zip\UI\FileManager\%PLATFORM%\resource.res"
     )
   )
-  
+
+  echo Compiling 7zFM.exe with fluent icons
   pushd CPP\7zip\UI\FileManager
   nmake
   popd
