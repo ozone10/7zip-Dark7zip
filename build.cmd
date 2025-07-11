@@ -15,9 +15,11 @@ setlocal
 
 set PLATFORM=%1
 
-if "%PLATFORM%" == "x64" set ARCH=x64
-if "%PLATFORM%" == "x86" set ARCH=x64_x86
-if "%PLATFORM%" == "arm64" (
+if "%PLATFORM%" == "x64" (
+  set ARCH=x64
+) else if "%PLATFORM%" == "x86" (
+  set ARCH=x64_x86
+) else if "%PLATFORM%" == "arm64" (
   set ARCH=x64_arm64
 ) else (
   set ARCH=x64

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /*
- * Copyright (c) 2025 ozone10
+ * Copyright (c) 2025 oZone10
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -134,7 +134,7 @@ enum class PreferredAppMode
 	Max
 };
 
-#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+#if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
 enum WINDOWCOMPOSITIONATTRIB
 {
 	WCA_UNDEFINED = 0,
@@ -176,13 +176,13 @@ struct WINDOWCOMPOSITIONATTRIBDATA
 #endif
 
 using fnRtlGetNtVersionNumbers = void (WINAPI*)(LPDWORD major, LPDWORD minor, LPDWORD build);
-#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+#if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
 using fnSetWindowCompositionAttribute = BOOL (WINAPI*)(HWND hWnd, WINDOWCOMPOSITIONATTRIBDATA*);
 #endif
 // 1809 17763
 using fnShouldAppsUseDarkMode = auto (WINAPI*)() -> bool; // ordinal 132
 using fnAllowDarkModeForWindow = auto (WINAPI*)(HWND hWnd, bool allow) -> bool; // ordinal 133
-#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+#if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
 using fnAllowDarkModeForApp = auto (WINAPI*)(bool allow) -> bool; // ordinal 135, in 1809
 #endif
 using fnFlushMenuThemes = void (WINAPI*)(); // ordinal 136
@@ -195,12 +195,12 @@ using fnOpenNcThemeData = auto (WINAPI*)(HWND hWnd, LPCWSTR pszClassList) -> HTH
 using fnSetPreferredAppMode = auto (WINAPI*)(PreferredAppMode appMode) -> PreferredAppMode; // ordinal 135, in 1903
 //using fnIsDarkModeAllowedForApp = auto (WINAPI*)() -> bool; // ordinal 139
 
-#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+#if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
 static fnSetWindowCompositionAttribute pfSetWindowCompositionAttribute = nullptr;
 #endif
 static fnShouldAppsUseDarkMode pfShouldAppsUseDarkMode = nullptr;
 static fnAllowDarkModeForWindow pfAllowDarkModeForWindow = nullptr;
-#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+#if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
 static fnAllowDarkModeForApp _AllowDarkModeForApp = nullptr;
 #endif
 static fnFlushMenuThemes pfFlushMenuThemes = nullptr;
@@ -245,7 +245,7 @@ bool IsHighContrast()
 	return false;
 }
 
-#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+#if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
 void SetTitleBarThemeColor(HWND hWnd, BOOL dark)
 {
 
@@ -307,7 +307,7 @@ void AllowDarkModeForApp(bool allow)
 	{
 		pfSetPreferredAppMode(allow ? PreferredAppMode::ForceDark : PreferredAppMode::Default);
 	}
-#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+#if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
 	else if (_AllowDarkModeForApp != nullptr)
 	{
 		_AllowDarkModeForApp(allow);
@@ -325,6 +325,7 @@ static void FlushMenuThemes()
 
 // limit dark scroll bar to specific windows and their children
 
+#if defined(_DARKMODELIB_LIMIT_SCROLLBAR_FIX) && (_DARKMODELIB_LIMIT_SCROLLBAR_FIX > 0)
 static std::unordered_set<HWND> g_darkScrollBarWindows;
 static std::mutex g_darkScrollBarMutex;
 
@@ -353,12 +354,16 @@ static bool IsWindowOrParentUsingDarkScrollBar(HWND hWnd)
 	}
 	return (hWnd != hRoot && hasElement(g_darkScrollBarWindows, hRoot));
 }
+#endif // defined(_DARKMODELIB_LIMIT_SCROLLBAR_FIX) && (_DARKMODELIB_LIMIT_SCROLLBAR_FIX > 0)
 
 static HTHEME WINAPI MyOpenNcThemeData(HWND hWnd, LPCWSTR pszClassList)
 {
-	if (std::wcscmp(pszClassList, WC_SCROLLBAR) == 0)
+	static constexpr std::wstring_view scrollBarClassName = WC_SCROLLBAR;
+	if (scrollBarClassName == pszClassList)
 	{
+#if defined(_DARKMODELIB_LIMIT_SCROLLBAR_FIX) && (_DARKMODELIB_LIMIT_SCROLLBAR_FIX > 0)
 		if (IsWindowOrParentUsingDarkScrollBar(hWnd))
+#endif
 		{
 			hWnd = nullptr;
 			pszClassList = L"Explorer::ScrollBar";
@@ -380,10 +385,10 @@ static void FixDarkScrollBar()
 	}
 }
 
-#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+#if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
 static constexpr DWORD g_win10Build = 17763;
 #else
-static constexpr DWORD g_win10Build = 19045;
+static constexpr DWORD g_win10Build = 19044; // 21H2 latest LTSC, 22H2 19045 latest GA
 #endif
 static constexpr DWORD g_win11Build = 22000;
 
@@ -399,7 +404,7 @@ bool IsWindows11() // or later OS version
 
 static constexpr bool CheckBuildNumber(DWORD buildNumber)
 {
-#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+#if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0) 
 	static constexpr size_t nWin10Builds = 8;
 	// Windows 10 builds { 1809, 1903, 1909, 2004, 20H2, 21H1, 21H2, 22H2 }
 	static constexpr DWORD win10Builds[nWin10Builds] = { 17763, 18362, 18363, 19041, 19042, 19043, 19044, 19045 };
@@ -452,7 +457,7 @@ void InitDarkMode()
 				const HMODULE& hUxtheme = moduleUxtheme.get();
 
 				bool ptrFnOrd135NotNullptr = false;
-#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+#if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
 				if (g_buildNumber < 18362)
 					ptrFnOrd135NotNullptr = loadFn(hUxtheme, _AllowDarkModeForApp, 135);
 				else
@@ -471,7 +476,7 @@ void InitDarkMode()
 				}
 
 				loadFn(hUxtheme, pfGetIsImmersiveColorUsingHighContrast, 106);
-#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+#if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
 				if (g_buildNumber < 19041)
 				{
 					HMODULE hUser32 = GetModuleHandleW(L"user32.dll");

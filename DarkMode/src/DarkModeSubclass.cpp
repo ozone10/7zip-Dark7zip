@@ -1,7 +1,7 @@
 ﻿// SPDX-License-Identifier: MPL-2.0
 
 /*
- * Copyright (c) 2025 ozone10
+ * Copyright (c) 2025 oZone10
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -9,7 +9,7 @@
 
 // Based on the Notepad++ dark mode code licensed under GPLv3.
 // Originally by adzm / Adam D. Walling, with modifications by the Notepad++ team.
-// Heavily modified by ozone10 (Notepad++ contributor).
+// Heavily modified by oZone10 (Notepad++ contributor).
 // Used with permission to relicense under the Mozilla Public License, v. 2.0.
 
 
@@ -281,7 +281,7 @@ namespace DarkMode
 			case LibInfo::allowOldOS:
 			{
 #if defined(_DARKMODELIB_ALLOW_OLD_OS)
-				return TRUE;
+				return _DARKMODELIB_ALLOW_OLD_OS;
 #else
 				return FALSE;
 #endif
@@ -290,7 +290,7 @@ namespace DarkMode
 			case LibInfo::useDlgProcCtl:
 			{
 #if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS)
-				return TRUE;
+				return _DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS;
 #else
 				return FALSE;
 #endif
@@ -299,7 +299,16 @@ namespace DarkMode
 			case LibInfo::preferTheme:
 			{
 #if defined(_DARKMODELIB_PREFER_THEME)
-				return TRUE;
+				return _DARKMODELIB_PREFER_THEME;
+#else
+				return FALSE;
+#endif
+			}
+
+			case LibInfo::limitSBFix:
+			{
+#if defined(_DARKMODELIB_LIMIT_SCROLLBAR_FIX)
+				return _DARKMODELIB_LIMIT_SCROLLBAR_FIX;
 #else
 				return FALSE;
 #endif
@@ -1293,11 +1302,12 @@ namespace DarkMode
 		return ::AllowDarkModeForWindow(hWnd, allow);
 	}
 
-#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+#if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
 	/**
 	 * @brief Refreshes the title bar theme color for legacy systems.
 	 *
-	 * Used only on old Windows 10 systems when `_DARKMODELIB_ALLOW_OLD_OS` is defined.
+	 * Used only on old Windows 10 systems when `_DARKMODELIB_ALLOW_OLD_OS`
+	 * is defined with non-zero unsigned value.
 	 *
 	 * @param hWnd Handle to the window to update.
 	 */
@@ -1565,14 +1575,15 @@ namespace DarkMode
 	/**
 	 * @brief Checks if non-classic mode is enabled.
 	 *
-	 * If `_DARKMODELIB_ALLOW_OLD_OS` is defined, this skips Windows version checks.
-	 * Otherwise, dark mode is only enabled on Windows 10 or newer.
+	 * If `_DARKMODELIB_ALLOW_OLD_OS` is defined with value larger than '1',
+	 * this skips Windows version checks. Otherwise, dark mode is only enabled
+	 * on Windows 10 or newer.
 	 *
 	 * @return `true` if a supported dark mode type is active, otherwise `false`.
 	 */
 	bool isEnabled()
 	{
-#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+#if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 1)
 		return g_dmCfg._dmType != DarkModeType::classic;
 #else
 		return DarkMode::isAtLeastWindows10() && g_dmCfg._dmType != DarkModeType::classic;
@@ -1744,9 +1755,11 @@ namespace DarkMode
 	 *
 	 * @param hWnd Handle to the parent window.
 	 */
-	void enableDarkScrollBarForWindowAndChildren(HWND hWnd)
+	void enableDarkScrollBarForWindowAndChildren([[maybe_unused]] HWND hWnd)
 	{
+#if defined(_DARKMODELIB_LIMIT_SCROLLBAR_FIX) && (_DARKMODELIB_LIMIT_SCROLLBAR_FIX > 0)
 		::EnableDarkScrollBarForWindowAndChildren(hWnd);
+#endif
 	}
 
 	/**
@@ -3997,7 +4010,9 @@ namespace DarkMode
 		// Drop down arrow part
 		if (comboBoxData._cbStyle != CBS_SIMPLE)
 		{
-			if (hasTheme)
+			if (hasTheme
+				&& (DarkMode::isExperimentalSupported()
+					|| g_dmCfg._dmType != DarkMode::DarkModeType::dark))
 			{
 				const RECT rcThemedArrow{ rcArrow.left, rcArrow.top - 1, rcArrow.right, rcArrow.bottom - 1 };
 				::DrawThemeBackground(hTheme, hdc, CP_DROPDOWNBUTTONRIGHT, isDisabled ? CBXSR_DISABLED : CBXSR_NORMAL, &rcThemedArrow, nullptr);
@@ -5687,7 +5702,7 @@ namespace DarkMode
 
 	void setChildCtrlsTheme(HWND hParent)
 	{
-#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+#if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 1)
 		DarkMode::setChildCtrlsSubclassAndTheme(hParent, false, true);
 #else
 		DarkMode::setChildCtrlsSubclassAndTheme(hParent, false, DarkMode::isAtLeastWindows10());
@@ -7113,22 +7128,24 @@ namespace DarkMode
 	/**
 	 * @brief Configures the SysLink control to be affected by `WM_CTLCOLORSTATIC` message.
 	 *
-	 * Configures the first hyperlink item (index 0)
-	 * to either use default system link colors if in classic mode,
+	 * Configures all items to either use default system link colors if in classic mode,
 	 * or to be affected by `WM_CTLCOLORSTATIC` message from its parent.
 	 *
 	 * @param hWnd Handle to the SysLink control.
 	 *
-	 * @note Currently affects only the first link (index 0).
+	 * @note Will affect all items, even if it's static (non-clickable).
 	 */
 	void enableSysLinkCtrlCtlColor(HWND hWnd)
 	{
-		LITEM item{};
-		item.iLink = 0; // for now colorize only 1st item
-		item.mask = LIF_ITEMINDEX | LIF_STATE;
-		item.state = DarkMode::isEnabled() ? LIS_DEFAULTCOLORS : 0;
-		item.stateMask = LIS_DEFAULTCOLORS;
-		::SendMessage(hWnd, LM_SETITEM, 0, reinterpret_cast<LPARAM>(&item));
+		LITEM lItem{};
+		lItem.iLink = 0;
+		lItem.mask = LIF_ITEMINDEX | LIF_STATE;
+		lItem.state = DarkMode::isEnabled() ? LIS_DEFAULTCOLORS : 0;
+		lItem.stateMask = LIS_DEFAULTCOLORS;
+		while (::SendMessage(hWnd, LM_SETITEM, 0, reinterpret_cast<LPARAM>(&lItem)) == TRUE)
+		{
+			++lItem.iLink;
+		}
 	}
 
 	/**
@@ -7144,8 +7161,8 @@ namespace DarkMode
 	 *   (`DWMWA_CAPTION_COLOR`, `DWMWA_TEXT_COLOR`),
 	 *   only when frames are not extended to full window
 	 *
-	 * If `_DARKMODELIB_ALLOW_OLD_OS` is defined and running on pre-2004 builds,
-	 * fallback behavior will enable dark title bars via undocumented APIs.
+	 * If `_DARKMODELIB_ALLOW_OLD_OS` is defined with non-zero unsigned value
+	 * and running on pre-2004 builds, fallback behavior will enable dark title bars via undocumented APIs.
 	 *
 	 * @param hWnd Handle to the top-level window.
 	 * @param useWin11Features `true` to enable Windows 11 specific features such as Mica and rounded corners.
@@ -7191,7 +7208,7 @@ namespace DarkMode
 				::DwmSetWindowAttribute(hWnd, DWMWA_TEXT_COLOR, &clrText, sizeof(clrText));
 			}
 		}
-#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+#if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
 		else
 		{
 			DarkMode::allowDarkModeForWindow(hWnd, DarkMode::isExperimentalActive());
@@ -8055,14 +8072,15 @@ namespace DarkMode
 	 *
 	 * @param hdc Handle to the device context (HDC) receiving the drawing instructions.
 	 * @return Background brush to use for painting, or `FALSE` (0) if classic mode is enabled
-	 *         and `_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS` is defined.
+	 *         and `_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS` is defined
+	 *         and has non-zero unsigned value.
 	 *
 	 * @see DarkMode::WindowCtlColorSubclass()
 	 * @see DarkMode::onCtlColorListbox()
 	 */
 	LRESULT onCtlColor(HDC hdc)
 	{
-#if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS)
+#if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS) && (_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS > 0)
 		if (!DarkMode::_isEnabled())
 		{
 			return FALSE;
@@ -8083,14 +8101,15 @@ namespace DarkMode
 	 *
 	 * @param hdc Handle to the device context for the target control.
 	 * @return The background brush, or `FALSE` if dark mode is disabled and
-	 *         `_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS` is defined.
+	 *         `_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS` is defined
+	 *         and has non-zero unsigned value.
 	 *
 	 * @see DarkMode::WindowCtlColorSubclass()
 	 * @see DarkMode::onCtlColorListbox()
 	 */
 	LRESULT onCtlColorCtrl(HDC hdc)
 	{
-#if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS)
+#if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS) && (_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS > 0)
 		if (!DarkMode::_isEnabled())
 		{
 			return FALSE;
@@ -8112,14 +8131,15 @@ namespace DarkMode
 	 *
 	 * @param hdc Handle to the device context for the target control.
 	 * @return The background brush, or `FALSE` if dark mode is disabled and
-	 *         `_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS` is defined.
+	 *         `_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS` is defined
+	 *         and has non-zero unsigned value.
 	 *
 	 * @see DarkMode::WindowCtlColorSubclass()
 	 * @see DarkMode::onCtlColorListbox()
 	 */
 	LRESULT onCtlColorDlg(HDC hdc)
 	{
-#if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS)
+#if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS) && (_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS > 0)
 		if (!DarkMode::_isEnabled())
 		{
 			return FALSE;
@@ -8138,13 +8158,14 @@ namespace DarkMode
 	 *
 	 * @param hdc Handle to the device context for the target control.
 	 * @return The background brush, or `FALSE` if dark mode is disabled and
-	 *         `_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS` is defined.
+	 *         `_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS` is defined
+	 *         and has non-zero unsigned value.
 	 *
 	 * @see DarkMode::WindowCtlColorSubclass()
 	 */
 	LRESULT onCtlColorError(HDC hdc)
 	{
-#if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS)
+#if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS) && (_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS > 0)
 		if (!DarkMode::_isEnabled())
 		{
 			return FALSE;
@@ -8166,13 +8187,14 @@ namespace DarkMode
 	 *
 	 * @param hdc Handle to the device context for the target control.
 	 * @return The background brush, or `FALSE` if dark mode is disabled and
-	 *         `_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS` is defined.
+	 *         `_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS` is defined
+	 *         and has non-zero unsigned value.
 	 *
 	 * @see DarkMode::WindowCtlColorSubclass()
 	 */
 	LRESULT onCtlColorDlgStaticText(HDC hdc, bool isTextEnabled)
 	{
-#if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS)
+#if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS) && (_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS > 0)
 		if (!DarkMode::_isEnabled())
 		{
 			::SetTextColor(hdc, ::GetSysColor(isTextEnabled ? COLOR_WINDOWTEXT : COLOR_GRAYTEXT));
@@ -8194,13 +8216,14 @@ namespace DarkMode
 	 *
 	 * @param hdc Handle to the device context for the target control.
 	 * @return The background brush, or `FALSE` if dark mode is disabled and
-	 *         `_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS` is defined.
+	 *         `_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS` is defined
+	 *         and has non-zero unsigned value.
 	 *
 	 * @see DarkMode::WindowCtlColorSubclass()
 	 */
 	LRESULT onCtlColorDlgLinkText(HDC hdc, bool isTextEnabled)
 	{
-#if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS)
+#if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS) && (_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS > 0)
 		if (!DarkMode::_isEnabled())
 		{
 			::SetTextColor(hdc, ::GetSysColor(isTextEnabled ? COLOR_HOTLIGHT : COLOR_GRAYTEXT));

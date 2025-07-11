@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /*
- * Copyright (c) 2025 ozone10
+ * Copyright (c) 2025 oZone10
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -24,14 +24,16 @@ extern bool g_darkModeEnabled;
 [[nodiscard]] bool ShouldAppsUseDarkMode();
 bool AllowDarkModeForWindow(HWND hWnd, bool allow);
 [[nodiscard]] bool IsHighContrast();
-#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+#if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
 void RefreshTitleBarThemeColor(HWND hWnd);
 void SetTitleBarThemeColor(HWND hWnd, BOOL dark);
 #endif
 [[nodiscard]] bool IsColorSchemeChangeMessage(LPARAM lParam);
 [[nodiscard]] bool IsColorSchemeChangeMessage(UINT uMsg, LPARAM lParam);
 void AllowDarkModeForApp(bool allow);
+#if defined(_DARKMODELIB_LIMIT_SCROLLBAR_FIX) && (_DARKMODELIB_LIMIT_SCROLLBAR_FIX > 0)
 void EnableDarkScrollBarForWindowAndChildren(HWND hWnd);
+#endif
 void InitDarkMode();
 void SetDarkMode(bool useDark, bool fixDarkScrollbar);
 [[nodiscard]] bool IsWindows10();
