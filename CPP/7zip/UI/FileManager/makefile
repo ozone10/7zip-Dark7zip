@@ -51,10 +51,6 @@ WIN_CTRL_OBJS = \
   $O\PropertyPage.obj \
   $O\Window2.obj \
 
-DARK_MODE_OBJS = \
-  $O\DarkMode.obj \
-  $O\DarkModeSubclass.obj \
-
 7ZIP_COMMON_OBJS = \
   $O\CreateCoder.obj \
   $O\FilePathAutoRename.obj \

@@ -28,12 +28,15 @@ OBJS = \
   $(CRYPTO_OBJS) \
   $(C_OBJS) \
   $(ASM_OBJS) \
-  $(DARK_MODE_OBJS) \
   $O\resource.res \
+
+!include "../../../../DarkMode/7zRes/7zDarkObj.mak"
 
 !include "../../../Build.mak"
 
 # MAK_SINGLE_FILE = 1
+
+!include "../../../../DarkMode/7zRes/7zDark.mak"
 
 !IFDEF MAK_SINGLE_FILE
 
@@ -168,11 +171,6 @@ $(GUI_OBJS): ../../UI/GUI/$(*B).cpp
 	$(COMPL)
 !ENDIF
 
-!IFDEF DARK_MODE_OBJS
-$(DARK_MODE_OBJS): ../../../../DarkMode/src/$(*B).cpp
-	$(COMPL)
-!ENDIF
-
 !IFDEF C_OBJS
 $(C_OBJS): ../../../../C/$(*B).c
 	$(COMPL_O2)
@@ -240,9 +238,6 @@ $(C_OBJS): ../../../../C/$(*B).c
 	$(COMPLB_O2)
 {../../../../C}.c{$O}.obj::
 	$(CCOMPLB)
-
-{../../../../DarkMode/src}.cpp{$O}.obj::
-	$(COMPLB)
 
 !ENDIF
 

@@ -56,10 +56,6 @@ WIN_CTRL_OBJS = \
   $O\Dialog.obj \
   $O\ListView.obj \
 
-DARK_MODE_OBJS = \
-  $O\DarkMode.obj \
-  $O\DarkModeSubclass.obj \
-
 UI_COMMON_OBJS = \
   $O\ArchiveName.obj \
   $O\CompressCall.obj \
