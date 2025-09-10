@@ -14,6 +14,11 @@
 
 #include <cstdint>
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+#endif // __clang__
+
 template <typename T, typename T1, typename T2>
 inline constexpr T RVA2VA(T1 base, T2 rva)
 {
@@ -110,3 +115,7 @@ inline PIMAGE_THUNK_DATA FindDelayLoadThunkInModule(void* moduleBase, const char
 	}
 	return nullptr;
 }
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif

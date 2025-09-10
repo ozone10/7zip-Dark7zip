@@ -28,6 +28,10 @@
 #pragma comment(lib, "Gdi32.lib")
 #endif
 
+/**
+ * @namespace DarkMode
+ * @brief Provides dark mode theming, subclassing, and rendering utilities for most Win32 controls.
+ */
 namespace DarkMode
 {
 	struct Colors
@@ -380,45 +384,67 @@ namespace DarkMode
 	/// Removes the owner drawn subclass from a groupbox button control.
 	void removeGroupboxCtrlSubclass(HWND hWnd);
 
-	/// Applies owner drawn subclassing and theming to an updown (spinner) control.
+	/// Applies owner drawn subclassing and theming to an up-down (spinner) control.
 	void setUpDownCtrlSubclass(HWND hWnd);
-	/// Removes the owner drawn subclass from a updown (spinner) control.
+	/// Removes the owner drawn subclass from a up-down (spinner) control.
 	void removeUpDownCtrlSubclass(HWND hWnd);
 
+	/// Applies a subclass to detect and subclass tab control's up-down (spinner) child.
 	void setTabCtrlUpDownSubclass(HWND hWnd);
+	/// Removes the subclass procedure for a tab control's up-down (spinner) child detection.
 	void removeTabCtrlUpDownSubclass(HWND hWnd);
+	/// Applies owner drawn and up-down (spinner) child detection subclassings for a tab control.
 	void setTabCtrlSubclass(HWND hWnd);
+	/// Removes owner drawn and up-down (spinner) child detection subclasses.
 	void removeTabCtrlSubclass(HWND hWnd);
 
+	/// Applies owner drawn custom border subclassing to a list box or edit control.
 	void setCustomBorderForListBoxOrEditCtrlSubclass(HWND hWnd);
+	/// Removes the custom border subclass from a list box or edit control.
 	void removeCustomBorderForListBoxOrEditCtrlSubclass(HWND hWnd);
 
+	/// Applies owner drawn subclassing to a combo box control.
 	void setComboBoxCtrlSubclass(HWND hWnd);
+	/// Removes the owner drawn subclass from a combo box control.
 	void removeComboBoxCtrlSubclass(HWND hWnd);
 
+	/// Applies subclassing to a ComboBoxEx control to handle its child list box and edit controls.
 	void setComboBoxExCtrlSubclass(HWND hWnd);
+	///  Removes the child handling subclass from a ComboBoxEx control.
 	void removeComboBoxExCtrlSubclass(HWND hWnd);
 
+	/// Applies subclassing to a list view control to handle custom colors.
 	void setListViewCtrlSubclass(HWND hWnd);
+	/// Removes the custom colors handling subclass from a list view control.
 	void removeListViewCtrlSubclass(HWND hWnd);
 
+	/// Applies owner drawn subclassing to a header control.
 	void setHeaderCtrlSubclass(HWND hWnd);
+	/// Removes the owner drawn subclass from a header control.
 	void removeHeaderCtrlSubclass(HWND hWnd);
 
+	/// Applies owner drawn subclassing to a status bar control.
 	void setStatusBarCtrlSubclass(HWND hWnd);
+	/// Removes the owner drawn subclass from a status bar control.
 	void removeStatusBarCtrlSubclass(HWND hWnd);
 
+	/// Applies owner drawn subclassing to a progress bar control.
 	void setProgressBarCtrlSubclass(HWND hWnd);
+	/// Removes the owner drawn subclass from a progress bar control.
 	void removeProgressBarCtrlSubclass(HWND hWnd);
 
+	/// Applies workaround subclassing to a static control to handle visual glitch in disabled state.
 	void setStaticTextCtrlSubclass(HWND hWnd);
+	/// Removes the workaround subclass from a static control.
 	void removeStaticTextCtrlSubclass(HWND hWnd);
 
 	// ========================================================================
 	// Child Subclassing
 	// ========================================================================
 
+	/// Applies theming and/or subclassing to all child controls of a parent window.
 	void setChildCtrlsSubclassAndTheme(HWND hParent, bool subclass = true, bool theme = true);
+	/// Applies theming to all child controls of a parent window.
 	void setChildCtrlsTheme(HWND hParent);
 
 	// ========================================================================
@@ -550,7 +576,7 @@ namespace DarkMode
 	/// Handles text and background colorizing for static text controls.
 	[[nodiscard]] LRESULT onCtlColorDlgStaticText(HDC hdc, bool isTextEnabled);
 
-	/// Handles text and background colorizing for syslink controls.
+	/// Handles text and background colorizing for SysLink controls.
 	[[nodiscard]] LRESULT onCtlColorDlgLinkText(HDC hdc, bool isTextEnabled = true);
 
 	/// Handles text and background colorizing for list box controls.
@@ -642,10 +668,10 @@ namespace DarkMode
 	 * cf.lpTemplateName = MAKEINTRESOURCE(IDD_DARK_FONT_DIALOG);
 	 * ```
 	 *
-	 * @param hWnd Handle to the dialog window.
-	 * @param uMsg Message identifier.
-	 * @param wParam First message parameter (unused).
-	 * @param lParam Second message parameter (unused).
+	 * @param hWnd      Handle to the dialog window.
+	 * @param uMsg      Message identifier.
+	 * @param wParam    First message parameter (unused).
+	 * @param lParam    Second message parameter (unused).
 	 * @return A value defined by the hook procedure.
 	 */
 	UINT_PTR CALLBACK HookDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
