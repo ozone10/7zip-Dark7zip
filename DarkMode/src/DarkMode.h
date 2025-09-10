@@ -21,7 +21,6 @@ extern bool g_darkModeSupported;
 extern bool g_darkModeEnabled;
 
 
-[[nodiscard]] bool ShouldAppsUseDarkMode();
 bool AllowDarkModeForWindow(HWND hWnd, bool allow);
 [[nodiscard]] bool IsHighContrast();
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)

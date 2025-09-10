@@ -136,10 +136,24 @@ HRESULT CApp::CreateOnePanel(unsigned panelIndex, const UString &mainPath, const
   
   const unsigned id = 1000 + 100 * panelIndex; // check it
 
-  return Panels[panelIndex].Create(_window, _window,
+  const auto resVal = Panels[panelIndex].Create(_window, _window,
       id, path, arcFormat, &m_PanelCallbackImp[panelIndex], &AppState,
       needOpenArc,
       openRes);
+  
+  if (Panels[panelIndex].PanelCreated)
+  {
+    DarkMode::setChildCtrlsSubclassAndTheme(Panels[panelIndex]);
+    DarkMode::setWindowEraseBgSubclass(Panels[panelIndex]);
+    DarkMode::setWindowCtlColorSubclass(Panels[panelIndex]);
+    DarkMode::setWindowNotifyCustomDrawSubclass(Panels[panelIndex]);
+    DarkMode::setWindowEraseBgSubclass(Panels[panelIndex]._headerReBar);
+    DarkMode::setWindowCtlColorSubclass(Panels[panelIndex]._headerReBar);
+
+    DarkMode::redrawWindowFrame(Panels[panelIndex]._headerComboBox);
+  }
+
+  return resVal;
 }
 
 
@@ -271,6 +285,9 @@ void CApp::ReloadToolbars()
       for (i = 0; i < Z7_ARRAY_SIZE(g_StandardButtons); i++)
         AddButton(_buttonsImageList, _toolBar, g_StandardButtons[i], ShowButtonsLables, LargeButtons);
 
+    DarkMode::setDarkLineAbovePanelToolbar(_toolBar);
+    DarkMode::setDarkTooltips(_toolBar, DarkMode::ToolTipsType::toolbar);
+
     _toolBar.AutoSize();
   }
 }
@@ -358,15 +375,6 @@ HRESULT CApp::Create(HWND hwnd, const UString &mainPath, const UString &arcForma
   DarkMode::setWindowEraseBgSubclass(hwnd);
   DarkMode::setDarkWndNotifySafeEx(hwnd, true, true);
   DarkMode::setWindowMenuBarSubclass(hwnd);
-
-  for (i = 0; i < kNumPanelsMax; i++)
-  {
-    DarkMode::setWindowEraseBgSubclass(Panels[i]);
-    DarkMode::setWindowCtlColorSubclass(Panels[i]);
-    DarkMode::setWindowEraseBgSubclass(Panels[i]._headerReBar);
-    DarkMode::setWindowCtlColorSubclass(Panels[i]._headerReBar);
-    DarkMode::setWindowNotifyCustomDrawSubclass(Panels[i]);
-  }
 
   SetFocusedPanel(LastFocusedPanel);
   Panels[LastFocusedPanel].SetFocusToList();
