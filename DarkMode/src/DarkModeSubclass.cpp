@@ -41,6 +41,7 @@
 #include <string>
 
 #include "DarkMode.h"
+#include "DarkModeHook.h"
 #include "UAHMenuBar.h"
 
 #include "Version.h"
@@ -234,7 +235,7 @@ namespace DarkMode
 	 * - Build configuration flags (returns `TRUE` or `FALSE`)
 	 * - A constant value (`featureCheck`, `maxValue`) used for validation
 	 *
-	 * @param libInfoType Enum value specifying which piece of information to retrieve.
+	 * @param libInfoType Integer with `LibInfo` enum value specifying which piece of information to retrieve.
 	 * @return Integer value:
 	 * - Version: as defined by `DM_VERSION_MAJOR`, etc.
 	 * - Boolean flags: `TRUE` (1) if the feature is enabled, `FALSE` (0) otherwise.
@@ -243,9 +244,10 @@ namespace DarkMode
 	 *
 	 * @see LibInfo
 	 */
-	int getLibInfo(LibInfo libInfoType)
+	int getLibInfo(int libInfoType)
 	{
-		switch (libInfoType)
+		const auto infoType = static_cast<LibInfo>(libInfoType);
+		switch (infoType)
 		{
 			case LibInfo::maxValue:
 			case LibInfo::featureCheck:
@@ -340,24 +342,31 @@ namespace DarkMode
 		classic    ///< Use classic style if system is in light mode.
 	};
 
-	static constexpr UINT_PTR kButtonSubclassID                 = 42;
-	static constexpr UINT_PTR kGroupboxSubclassID               = 1;
-	static constexpr UINT_PTR kUpDownSubclassID                 = 2;
-	static constexpr UINT_PTR kTabPaintSubclassID               = 3;
-	static constexpr UINT_PTR kTabUpDownSubclassID              = 4;
-	static constexpr UINT_PTR kCustomBorderSubclassID           = 5;
-	static constexpr UINT_PTR kComboBoxSubclassID               = 6;
-	static constexpr UINT_PTR kComboBoxExSubclassID             = 7;
-	static constexpr UINT_PTR kListViewSubclassID               = 8;
-	static constexpr UINT_PTR kHeaderSubclassID                 = 9;
-	static constexpr UINT_PTR kStatusBarSubclassID              = 10;
-	static constexpr UINT_PTR kProgressBarSubclassID            = 11;
-	static constexpr UINT_PTR kStaticTextSubclassID             = 12;
-	static constexpr UINT_PTR kWindowEraseBgSubclassID          = 13;
-	static constexpr UINT_PTR kWindowCtlColorSubclassID         = 14;
-	static constexpr UINT_PTR kWindowNotifySubclassID           = 15;
-	static constexpr UINT_PTR kWindowMenuBarSubclassID          = 16;
-	static constexpr UINT_PTR kWindowSettingChangeSubclassID    = 17;
+	/**
+	 * @brief Defines control subclass ID values.
+	 */
+	enum class SubclassID :std::uint8_t
+	{
+		button = 42,
+		groupbox,
+		upDown,
+		tabPaint,
+		tabUpDown,
+		customBorder,
+		comboBox,
+		comboBoxEx,
+		listView,
+		header,
+		statusBar,
+		progressBar,
+		staticText,
+		windowEraseBg,
+		windowCtlColor,
+		windowNotify,
+		windowMenuBar,
+		windowSettingChange,
+		taskDlg
+	};
 
 	/**
 	 * @struct DarkModeParams
@@ -442,7 +451,7 @@ namespace DarkMode
 	{
 	public:
 		GdiObject() = delete;
-		explicit GdiObject(HDC hdc, HGDIOBJ obj, bool isShared)
+		explicit GdiObject(HDC hdc, HGDIOBJ obj, bool isShared) noexcept
 			: m_hdc(hdc)
 			, m_hObj(obj)
 			, m_isShared(isShared)
@@ -453,7 +462,7 @@ namespace DarkMode
 			}
 		}
 
-		explicit GdiObject(HDC hdc, HGDIOBJ obj)
+		explicit GdiObject(HDC hdc, HGDIOBJ obj) noexcept
 			: GdiObject(hdc, obj, false)
 		{}
 
@@ -462,7 +471,7 @@ namespace DarkMode
 			deleteObj();
 		}
 
-		void deleteObj()
+		void deleteObj() noexcept
 		{
 			if (m_hObj != nullptr)
 			{
@@ -481,7 +490,7 @@ namespace DarkMode
 		GdiObject(GdiObject&&) = delete;
 		GdiObject& operator=(GdiObject&&) = delete;
 
-		explicit operator HGDIOBJ() const
+		explicit operator HGDIOBJ() const noexcept
 		{
 			return m_hObj;
 		}
@@ -762,19 +771,19 @@ namespace DarkMode
 			, m_pens(colors)
 		{}
 
-		void updateTheme()
+		void updateTheme() noexcept
 		{
 			m_brushes.updateBrushes(m_colors);
 			m_pens.updatePens(m_colors);
 		}
 
-		void updateTheme(Colors colors)
+		void updateTheme(Colors colors) noexcept
 		{
 			m_colors = colors;
 			Theme::updateTheme();
 		}
 
-		[[nodiscard]] Colors getToneColors() const
+		[[nodiscard]] Colors getToneColors() const noexcept
 		{
 			switch (m_tone)
 			{
@@ -817,7 +826,7 @@ namespace DarkMode
 			return kDarkColors;
 		}
 
-		void setToneColors(ColorTone colorTone)
+		void setToneColors(ColorTone colorTone) noexcept
 		{
 			m_tone = colorTone;
 
@@ -870,23 +879,23 @@ namespace DarkMode
 			Theme::updateTheme();
 		}
 
-		void setToneColors()
+		void setToneColors() noexcept
 		{
 			m_colors = Theme::getToneColors();
 			Theme::updateTheme();
 		}
 
-		[[nodiscard]] const Brushes& getBrushes() const
+		[[nodiscard]] const Brushes& getBrushes() const noexcept
 		{
 			return m_brushes;
 		}
 
-		[[nodiscard]] const Pens& getPens() const
+		[[nodiscard]] const Pens& getPens() const noexcept
 		{
 			return m_pens;
 		}
 
-		[[nodiscard]] const ColorTone& getColorTone() const
+		[[nodiscard]] const ColorTone& getColorTone() const noexcept
 		{
 			return m_tone;
 		}
@@ -915,9 +924,9 @@ namespace DarkMode
 	 * @see DarkMode::getColorTone()
 	 * @see DarkMode::Theme
 	 */
-	void setColorTone(ColorTone colorTone)
+	void setColorTone(int colorTone)
 	{
-		DarkMode::getTheme().setToneColors(colorTone);
+		DarkMode::getTheme().setToneColors(static_cast<ColorTone>(colorTone));
 	}
 
 	/**
@@ -927,9 +936,9 @@ namespace DarkMode
 	 *
 	 * @see DarkMode::setColorTone()
 	 */
-	ColorTone getColorTone()
+	int getColorTone()
 	{
-		return DarkMode::getTheme().getColorTone();
+		return static_cast<int>(DarkMode::getTheme().getColorTone());
 	}
 
 	/// Dark views colors
@@ -990,7 +999,7 @@ namespace DarkMode
 			::DeleteObject(m_headerEdge);           m_headerEdge = nullptr;
 		}
 
-		void update(const ColorsView& colors)
+		void update(const ColorsView& colors) noexcept
 		{
 			::DeleteObject(m_background);
 			::DeleteObject(m_gridlines);
@@ -1021,18 +1030,18 @@ namespace DarkMode
 			, m_hbrPnView(colorsView)
 		{}
 
-		void updateView()
+		void updateView() noexcept
 		{
 			m_hbrPnView.update(m_clrView);
 		}
 
-		void updateView(ColorsView colors)
+		void updateView(ColorsView colors) noexcept
 		{
 			m_clrView = colors;
 			ThemeView::updateView();
 		}
 
-		[[nodiscard]] const BrushesAndPensView& getViewBrushesAndPens() const
+		[[nodiscard]] const BrushesAndPensView& getViewBrushesAndPens() const noexcept
 		{
 			return m_hbrPnView;
 		}
@@ -1366,7 +1375,7 @@ namespace DarkMode
 	 */
 	static void initExperimentalDarkMode()
 	{
-		::InitDarkMode();
+		dmlib_win32api::InitDarkMode();
 	}
 
 	/**
@@ -1379,7 +1388,7 @@ namespace DarkMode
 	 */
 	static void setDarkMode(bool useDark, bool fixDarkScrollBar = true)
 	{
-		::SetDarkMode(useDark, fixDarkScrollBar);
+		dmlib_win32api::SetDarkMode(useDark, fixDarkScrollBar);
 	}
 
 	/**
@@ -1391,7 +1400,7 @@ namespace DarkMode
 	 */
 	static bool allowDarkModeForWindow(HWND hWnd, bool allow)
 	{
-		return ::AllowDarkModeForWindow(hWnd, allow);
+		return dmlib_win32api::AllowDarkModeForWindow(hWnd, allow);
 	}
 
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
@@ -1417,7 +1426,7 @@ namespace DarkMode
 	 */
 	[[nodiscard]] static bool isColorSchemeChangeMessage(LPARAM lParam)
 	{
-		return ::IsColorSchemeChangeMessage(lParam);
+		return dmlib_win32api::IsColorSchemeChangeMessage(lParam);
 	}
 
 	/**
@@ -1427,7 +1436,7 @@ namespace DarkMode
 	 */
 	static bool isHighContrast()
 	{
-		return ::IsHighContrast();
+		return dmlib_win32api::IsHighContrast();
 	}
 
 	/**
@@ -1439,7 +1448,7 @@ namespace DarkMode
 	 */
 	static bool isThemePrefered()
 	{
-		return (DarkMode::getLibInfo(LibInfo::preferTheme) == TRUE)
+		return (DarkMode::getLibInfo(static_cast<int>(LibInfo::preferTheme)) == TRUE)
 			&& DarkMode::isAtLeastWindows10()
 			&& DarkMode::isExperimentalSupported();
 	}
@@ -1456,7 +1465,7 @@ namespace DarkMode
 	 * - Tone settings for dark theme (`ColorTone`)
 	 *
 	 * If the INI file does not exist, default dark mode behavior is applied via
-	 * @ref DarkMode::setDarkModeConfig.
+	 * @ref DarkMode::setDarkModeConfigEx.
 	 *
 	 * @param iniName Name of INI file (resolved via @ref GetIniPath).
 	 *
@@ -1475,7 +1484,7 @@ namespace DarkMode
 			DarkMode::initDarkModeConfig(::GetPrivateProfileIntW(L"main", L"mode", 1, iniPath.c_str()));
 			if (g_dmCfg.m_dmType == DarkModeType::classic)
 			{
-				DarkMode::setDarkModeConfig(static_cast<UINT>(DarkModeType::classic));
+				DarkMode::setDarkModeConfigEx(static_cast<UINT>(DarkModeType::classic));
 				DarkMode::setDefaultColors(false);
 				return;
 			}
@@ -1555,7 +1564,7 @@ namespace DarkMode
 		}
 		else
 		{
-			DarkMode::setDarkModeConfig(static_cast<UINT>(DarkModeType::dark));
+			DarkMode::setDarkModeConfigEx(static_cast<UINT>(DarkModeType::dark));
 			DarkMode::setDefaultColors(true);
 		}
 	}
@@ -1570,10 +1579,11 @@ namespace DarkMode
 	 *
 	 * @param dmType Dark mode configuration type; see @ref DarkMode::initDarkModeConfig for values.
 	 *
+	 * @see DarkMode::setDarkModeConfig()
 	 * @see DarkMode::initDarkModeConfig()
 	 * @see DarkMode::setDefaultColors()
 	 */
-	void setDarkModeConfig(UINT dmType)
+	void setDarkModeConfigEx(UINT dmType)
 	{
 		DarkMode::initDarkModeConfig(dmType);
 
@@ -1585,19 +1595,19 @@ namespace DarkMode
 	 * @brief Applies dark mode settings based on system mode preference.
 	 *
 	 * Determines the appropriate mode using @ref DarkMode::isDarkModeReg and forwards
-	 * the result to @ref DarkMode::setDarkModeConfig.
+	 * the result to @ref DarkMode::setDarkModeConfigEx.
 	 * It is recommended to use together with @ref DarkMode::setDefaultColors to also set colors.
 	 *
 	 * Uses:
 	 * - `DarkModeType::dark` if registry prefers dark mode.
 	 * - `DarkModeType::classic` otherwise.
 	 *
-	 * @see DarkMode::setDefaultColors()
+	 * @see DarkMode::setDarkModeConfigEx()
 	 */
 	void setDarkModeConfig()
 	{
 		const auto dmType = static_cast<UINT>(DarkMode::isDarkModeReg() ? DarkModeType::dark : DarkModeType::classic);
-		DarkMode::setDarkModeConfig(dmType);
+		DarkMode::setDarkModeConfigEx(dmType);
 	}
 
 	/**
@@ -1616,9 +1626,10 @@ namespace DarkMode
 	 *       subsequent calls have no effect, unless follow system mode is used,
 	 *       then only colors are updated each time system changes mode.
 	 *
+	 * @see DarkMode::initDarkMode()
 	 * @see DarkMode::calculateTreeViewStyle()
 	 */
-	void initDarkMode([[maybe_unused]] const wchar_t* iniName)
+	void initDarkModeEx([[maybe_unused]] const wchar_t* iniName)
 	{
 		if (!g_dmCfg.m_isInit)
 		{
@@ -1636,7 +1647,7 @@ namespace DarkMode
 
 				if (g_dmCfg.m_iniName.empty())
 				{
-					DarkMode::setDarkModeConfig(static_cast<UINT>(DarkModeType::dark));
+					DarkMode::setDarkModeConfigEx(static_cast<UINT>(DarkModeType::dark));
 					DarkMode::setDefaultColors(true);
 				}
 			}
@@ -1657,11 +1668,13 @@ namespace DarkMode
 	/**
 	 * @brief Initializes dark mode without INI settings.
 	 *
-	 * Forwards to @ref DarkMode::initDarkMode with an empty INI path, effectively disabling INI settings.
+	 * Forwards to @ref DarkMode::initDarkModeEx with an empty INI path, effectively disabling INI settings.
+	 *
+	 * @see DarkMode::initDarkModeEx()
 	 */
 	void initDarkMode()
 	{
-		DarkMode::initDarkMode(L"");
+		DarkMode::initDarkModeEx(L"");
 	}
 
 	/**
@@ -1719,7 +1732,7 @@ namespace DarkMode
 	 */
 	bool isAtLeastWindows10()
 	{
-		return ::IsWindows10();
+		return dmlib_win32api::IsWindows10();
 	}
 	/**
 	 * @brief Checks if the host OS is at least Windows 11.
@@ -1728,7 +1741,7 @@ namespace DarkMode
 	 */
 	bool isAtLeastWindows11()
 	{
-		return ::IsWindows11();
+		return dmlib_win32api::IsWindows11();
 	}
 
 	/**
@@ -1738,7 +1751,7 @@ namespace DarkMode
 	 */
 	DWORD getWindowsBuildNumber()
 	{
-		return GetWindowsBuildNumber();
+		return dmlib_win32api::GetWindowsBuildNumber();
 	}
 
 	/**
@@ -1815,7 +1828,7 @@ namespace DarkMode
 	 */
 	void setSysColor(int nIndex, COLORREF color)
 	{
-		::SetMySysColor(nIndex, color);
+		dmlib_hook::SetMySysColor(nIndex, color);
 	}
 
 	/**
@@ -1825,7 +1838,7 @@ namespace DarkMode
 	 */
 	static bool hookSysColor()
 	{
-		return ::HookSysColor();
+		return dmlib_hook::HookSysColor();
 	}
 
 	/**
@@ -1837,7 +1850,36 @@ namespace DarkMode
 	 */
 	static void unhookSysColor()
 	{
-		::UnhookSysColor();
+		dmlib_hook::UnhookSysColor();
+	}
+
+	/**
+	 * @brief Hooks `GetThemeColor` to support dark colors.
+	 *
+	 * @return `true` if the hook was installed successfully.
+	 */
+	static bool hookThemeColor()
+	{
+		if (DarkMode::isAtLeastWindows11())
+		{
+			return dmlib_hook::HookThemeColor();
+		}
+		return false;
+	}
+
+	/**
+	 * @brief Unhooks `GetThemeColor` overrides and restores default color behavior.
+	 *
+	 * This function is safe to call even if no color hook is currently installed.
+	 * It ensures that theme colors return to normal without requiring
+	 * prior state checks.
+	 */
+	static void unhookThemeColor()
+	{
+		if (DarkMode::isAtLeastWindows11())
+		{
+			dmlib_hook::UnhookThemeColor();
+		}
 	}
 
 	/**
@@ -1850,7 +1892,7 @@ namespace DarkMode
 	void enableDarkScrollBarForWindowAndChildren([[maybe_unused]] HWND hWnd)
 	{
 #if defined(_DARKMODELIB_USE_SCROLLBAR_FIX) && (_DARKMODELIB_USE_SCROLLBAR_FIX > 0)
-		::EnableDarkScrollBarForWindowAndChildren(hWnd);
+		dmlib_hook::EnableDarkScrollBarForWindowAndChildren(hWnd);
 #endif
 	}
 
@@ -1877,19 +1919,58 @@ namespace DarkMode
 	}
 
 	/**
+	 * @brief Paints a rectangle using the specified pen and brush.
+	 *
+	 * Draws a rectangle defined by `rect`, using the provided pen (`hpen`) and brush (`hBrush`)
+	 * for the edge and fill, respectively. Preserves previous GDI object selections.
+	 * Forwards to `DarkMode::paintRoundRect` with `width` and `height` parameters with `0` value.
+	 *
+	 * @param hdc       Handle to the device context.
+	 * @param rect      Rectangle bounds for the shape.
+	 * @param hpen      Pen used to draw the edge.
+	 * @param hBrush    Brush used to inner fill.
+	 *
+	 * @see DarkMode::paintRoundRect()
+	 */
+	void paintRect(HDC hdc, const RECT& rect, HPEN hpen, HBRUSH hBrush)
+	{
+		paintRoundRect(hdc, rect, hpen, hBrush, 0, 0);
+	}
+
+	/**
 	 * @brief Paints an unfilled rounded rectangle (frame only).
 	 *
-	 * Uses a `NULL_BRUSH` to omit the inner fill, drawing only the rounded frame.
+	 * Forwards to `DarkMode::paintRoundRect` and uses a `NULL_BRUSH`
+	 * to omit the inner fill, drawing only the rounded frame.
 	 *
 	 * @param hdc       Handle to the device context.
 	 * @param rect      Rectangle bounds for the frame.
 	 * @param hpen      Pen used to draw the edge.
 	 * @param width     Horizontal corner radius.
 	 * @param height    Vertical corner radius.
+	 *
+	 * @see DarkMode::paintRoundRect()
 	 */
 	void paintRoundFrameRect(HDC hdc, const RECT& rect, HPEN hpen, int width, int height)
 	{
 		DarkMode::paintRoundRect(hdc, rect, hpen, static_cast<HBRUSH>(::GetStockObject(NULL_BRUSH)), width, height);
+	}
+
+	/**
+	 * @brief Paints an unfilled rectangle (frame only).
+	 *
+	 * Forwards to `DarkMode::paintRoundFrameRect`
+	 * with `width` and `height` parameters with `0` value.
+	 *
+	 * @param hdc       Handle to the device context.
+	 * @param rect      Rectangle bounds for the frame.
+	 * @param hpen      Pen used to draw the edge.
+	 *
+	 * @see DarkMode::paintRoundFrameRect()
+	 */
+	void paintFrameRect(HDC hdc, const RECT& rect, HPEN hpen)
+	{
+		DarkMode::paintRoundFrameRect(hdc, rect, hpen, 0, 0);
 	}
 
 	/**
@@ -1911,7 +1992,7 @@ namespace DarkMode
 	public:
 		ThemeData() = delete;
 
-		explicit ThemeData(const wchar_t* themeClass)
+		explicit ThemeData(const wchar_t* themeClass) noexcept
 			: m_themeClass(themeClass)
 		{}
 
@@ -1926,7 +2007,7 @@ namespace DarkMode
 			closeTheme();
 		}
 
-		bool ensureTheme(HWND hWnd)
+		bool ensureTheme(HWND hWnd) noexcept
 		{
 			if (m_hTheme == nullptr && m_themeClass != nullptr)
 			{
@@ -1944,7 +2025,7 @@ namespace DarkMode
 			}
 		}
 
-		[[nodiscard]] const HTHEME& getHTheme() const
+		[[nodiscard]] const HTHEME& getHTheme() const noexcept
 		{
 			return m_hTheme;
 		}
@@ -1986,7 +2067,7 @@ namespace DarkMode
 			releaseBuffer();
 		}
 
-		bool ensureBuffer(HDC hdc, const RECT& rcClient)
+		bool ensureBuffer(HDC hdc, const RECT& rcClient) noexcept
 		{
 			const int width = rcClient.right - rcClient.left;
 			const int height = rcClient.bottom - rcClient.top;
@@ -2018,7 +2099,7 @@ namespace DarkMode
 			}
 		}
 
-		[[nodiscard]] const HDC& getHMemDC() const
+		[[nodiscard]] const HDC& getHMemDC() const noexcept
 		{
 			return m_hMemDC;
 		}
@@ -2103,13 +2184,14 @@ namespace DarkMode
 	 * @tparam Param        Type used to initialize `T`.
 	 * @param hWnd          Window handle.
 	 * @param subclassProc  Subclass procedure.
-	 * @param subclassID    Identifier for the subclass instance.
+	 * @param subID         Identifier for the subclass instance.
 	 * @param param         Constructor argument forwarded to `T`.
 	 * @return TRUE on success, FALSE on failure, -1 if subclass already set.
 	 */
 	template <typename T, typename Param>
-	static auto setSubclass(HWND hWnd, SUBCLASSPROC subclassProc, UINT_PTR subclassID, const Param& param) -> int
+	static auto SetSubclass(HWND hWnd, SUBCLASSPROC subclassProc, SubclassID subID, const Param& param) -> int
 	{
+		const auto subclassID = static_cast<UINT_PTR>(subID);
 		if (::GetWindowSubclass(hWnd, subclassProc, subclassID, nullptr) == FALSE)
 		{
 			auto pData = std::make_unique<T>(param);
@@ -2131,12 +2213,13 @@ namespace DarkMode
 	 * @tparam T            The user-defined data type associated with the subclass.
 	 * @param hWnd          Window handle.
 	 * @param subclassProc  Subclass procedure.
-	 * @param subclassID    Identifier for the subclass instance.
+	 * @param subID         Identifier for the subclass instance.
 	 * @return TRUE on success, FALSE on failure, -1 if already subclassed.
 	 */
 	template <typename T>
-	static auto setSubclass(HWND hWnd, SUBCLASSPROC subclassProc, UINT_PTR subclassID) -> int
+	static auto SetSubclass(HWND hWnd, SUBCLASSPROC subclassProc, SubclassID subID) -> int
 	{
+		const auto subclassID = static_cast<UINT_PTR>(subID);
 		if (::GetWindowSubclass(hWnd, subclassProc, subclassID, nullptr) == FALSE)
 		{
 			auto pData = std::make_unique<T>();
@@ -2157,11 +2240,12 @@ namespace DarkMode
 	 *
 	 * @param hWnd          Window handle.
 	 * @param subclassProc  Subclass procedure.
-	 * @param subclassID    Identifier for the subclass instance.
+	 * @param subID         Identifier for the subclass instance.
 	 * @return TRUE on success, FALSE on failure, -1 if already subclassed.
 	 */
-	static int setSubclass(HWND hWnd, SUBCLASSPROC subclassProc, UINT_PTR subclassID)
+	static int SetSubclass(HWND hWnd, SUBCLASSPROC subclassProc, SubclassID subID)
 	{
+		const auto subclassID = static_cast<UINT_PTR>(subID);
 		if (::GetWindowSubclass(hWnd, subclassProc, subclassID, nullptr) == FALSE)
 		{
 			return ::SetWindowSubclass(hWnd, subclassProc, subclassID, 0);
@@ -2178,14 +2262,14 @@ namespace DarkMode
 	 * @tparam T            Optional type of reference data to delete.
 	 * @param hWnd          Window handle.
 	 * @param subclassProc  Subclass procedure.
-	 * @param subclassID    Identifier for the subclass instance.
+	 * @param subID         Identifier for the subclass instance.
 	 * @return TRUE on success, FALSE on failure, -1 if not present.
 	 */
 	template <typename T = void>
-	static auto removeSubclass(HWND hWnd, SUBCLASSPROC subclassProc, UINT_PTR subclassID) -> int
+	static auto RemoveSubclass(HWND hWnd, SUBCLASSPROC subclassProc, SubclassID subID) -> int
 	{
 		T* pData = nullptr;
-
+		const auto subclassID = static_cast<UINT_PTR>(subID);
 		if (::GetWindowSubclass(hWnd, subclassProc, subclassID, reinterpret_cast<DWORD_PTR*>(&pData)) == TRUE)
 		{
 			if constexpr (!std::is_void_v<T>)
@@ -2218,7 +2302,7 @@ namespace DarkMode
 	 * @see BufferData
 	 */
 	template<typename T, typename PaintFunc>
-	static void paintWithBuffer(
+	static void PaintWithBuffer(
 		T& ctrlData,
 		HDC hdc,
 		const PAINTSTRUCT& ps,
@@ -2269,10 +2353,10 @@ namespace DarkMode
 	 * @param paintFunc     Custom paint routine.
 	 * @param hWnd          Handle to the control window.
 	 *
-	 * @see DarkMode::paintWithBuffer(const T&, HDC, const PAINTSTRUCT&, PaintFunc&&, const RECT&)
+	 * @see DarkMode::PaintWithBuffer(const T&, HDC, const PAINTSTRUCT&, PaintFunc&&, const RECT&)
 	 */
 	template<typename T, typename PaintFunc>
-	static void paintWithBuffer(
+	static void PaintWithBuffer(
 		T& ctrlData,
 		HDC hdc,
 		const PAINTSTRUCT& ps,
@@ -2283,7 +2367,7 @@ namespace DarkMode
 		RECT rcClient{};
 		::GetClientRect(hWnd, &rcClient);
 
-		DarkMode::paintWithBuffer(ctrlData, hdc, ps, std::forward<PaintFunc>(paintFunc), rcClient);
+		DarkMode::PaintWithBuffer(ctrlData, hdc, ps, std::forward<PaintFunc>(paintFunc), rcClient);
 	}
 
 	/**
@@ -2331,7 +2415,7 @@ namespace DarkMode
 
 		// Saves width and height from the resource file for use as restrictions.
 		// Currently unused / have no effect.
-		explicit ButtonData(HWND hWnd)
+		explicit ButtonData(HWND hWnd) noexcept
 		{
 			const auto nBtnStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 			switch (nBtnStyle & BS_TYPEMASK)
@@ -2382,7 +2466,13 @@ namespace DarkMode
 	 *
 	 * @see DarkMode::paintButton()
 	 */
-	static void renderButton(HWND hWnd, HDC hdc, HTHEME hTheme, int iPartID, int iStateID)
+	static void renderButton(
+		HWND hWnd,
+		HDC hdc,
+		HTHEME hTheme,
+		int iPartID,
+		int iStateID
+	)
 	{
 		// Font part
 
@@ -2754,7 +2844,7 @@ namespace DarkMode
 	 */
 	void setCheckboxOrRadioBtnCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass<ButtonData>(hWnd, ButtonSubclass, kButtonSubclassID, hWnd);
+		DarkMode::SetSubclass<ButtonData>(hWnd, ButtonSubclass, SubclassID::button, hWnd);
 	}
 
 	/**
@@ -2769,7 +2859,7 @@ namespace DarkMode
 	 */
 	void removeCheckboxOrRadioBtnCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<ButtonData>(hWnd, ButtonSubclass, kButtonSubclassID);
+		DarkMode::RemoveSubclass<ButtonData>(hWnd, ButtonSubclass, SubclassID::button);
 	}
 
 	/**
@@ -2869,7 +2959,7 @@ namespace DarkMode
 		::GetThemeBackgroundContentRect(hTheme, hdc, BP_GROUPBOX, iStateID, &rcBackground, &rcContent);
 		::ExcludeClipRect(hdc, rcContent.left, rcContent.top, rcContent.right, rcContent.bottom);
 
-		DarkMode::paintRoundFrameRect(hdc, rcBackground, DarkMode::getEdgePen()); // main frame
+		DarkMode::paintFrameRect(hdc, rcBackground, DarkMode::getEdgePen()); // main frame
 
 		::SelectClipRgn(hdc, nullptr);
 
@@ -3010,7 +3100,7 @@ namespace DarkMode
 	 */
 	void setGroupboxCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass<ButtonData>(hWnd, GroupboxSubclass, kGroupboxSubclassID);
+		DarkMode::SetSubclass<ButtonData>(hWnd, GroupboxSubclass, SubclassID::groupbox);
 	}
 
 	/**
@@ -3025,7 +3115,7 @@ namespace DarkMode
 	 */
 	void removeGroupboxCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<ButtonData>(hWnd, GroupboxSubclass, kGroupboxSubclassID);
+		DarkMode::RemoveSubclass<ButtonData>(hWnd, GroupboxSubclass, SubclassID::groupbox);
 	}
 
 	/**
@@ -3155,7 +3245,7 @@ namespace DarkMode
 			updateRect(hWnd);
 		}
 
-		void updateRectUpDown()
+		void updateRectUpDown() noexcept
 		{
 			if (m_isHorizontal)
 			{
@@ -3191,13 +3281,13 @@ namespace DarkMode
 			}
 		}
 
-		void updateRect(HWND hWnd)
+		void updateRect(HWND hWnd) noexcept
 		{
 			::GetClientRect(hWnd, &m_rcClient);
 			updateRectUpDown();
 		}
 
-		bool updateRect(RECT rcClientNew)
+		bool updateRect(RECT rcClientNew) noexcept
 		{
 			if (::EqualRect(&m_rcClient, &rcClientNew) == FALSE)
 			{
@@ -3339,7 +3429,7 @@ namespace DarkMode
 				static constexpr std::array<POINTFLOAT, 3> ptsArrowDown{ { {0.0F, 0.0F}, {0.5F, 1.0F}, {1.0F, 0.0F} } };
 
 				static constexpr float scaleFactor = 3.0F;
-				const auto offsetSize = static_cast<LONG>(scaleFactor) % 2;
+				static constexpr auto offsetSize = static_cast<LONG>(scaleFactor) % 2;
 				const auto baseSize = (static_cast<float>(size.cy - offsetSize) / scaleFactor) + offsetSize;
 
 				auto paintArrow = [&](const RECT& rect, bool isHot, bool isPrev) -> void {
@@ -3494,7 +3584,7 @@ namespace DarkMode
 					::OffsetRect(&rcClient, 2, 0);
 				}
 
-				DarkMode::paintWithBuffer<UpDownData>(*pUpDownData, hdc, ps,
+				DarkMode::PaintWithBuffer<UpDownData>(*pUpDownData, hdc, ps,
 					[&]() { DarkMode::paintUpDown(hWnd, hMemDC, *pUpDownData); },
 					rcClient);
 
@@ -3565,7 +3655,7 @@ namespace DarkMode
 	 */
 	void setUpDownCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass<UpDownData>(hWnd, UpDownSubclass, kUpDownSubclassID, hWnd);
+		DarkMode::SetSubclass<UpDownData>(hWnd, UpDownSubclass, SubclassID::upDown, hWnd);
 		DarkMode::setDarkExplorerTheme(hWnd);
 	}
 
@@ -3581,7 +3671,7 @@ namespace DarkMode
 	 */
 	void removeUpDownCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<UpDownData>(hWnd, UpDownSubclass, kUpDownSubclassID);
+		DarkMode::RemoveSubclass<UpDownData>(hWnd, UpDownSubclass, SubclassID::upDown);
 	}
 
 	/**
@@ -3862,7 +3952,7 @@ namespace DarkMode
 
 				RECT rcClient{};
 				::GetClientRect(hWnd, &rcClient);
-				DarkMode::paintWithBuffer<TabData>(*pTabData, hdc, ps,
+				DarkMode::PaintWithBuffer<TabData>(*pTabData, hdc, ps,
 					[&]() { DarkMode::paintTab(hWnd, hMemDC, rcClient); },
 					hWnd);
 
@@ -3897,7 +3987,7 @@ namespace DarkMode
 	 */
 	static void setTabCtrlPaintSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass<TabData>(hWnd, TabPaintSubclass, kTabPaintSubclassID);
+		DarkMode::SetSubclass<TabData>(hWnd, TabPaintSubclass, SubclassID::tabPaint);
 	}
 
 	/**
@@ -3912,7 +4002,7 @@ namespace DarkMode
 	 */
 	static void removeTabCtrlPaintSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<TabData>(hWnd, TabPaintSubclass, kTabPaintSubclassID);
+		DarkMode::RemoveSubclass<TabData>(hWnd, TabPaintSubclass, SubclassID::tabPaint);
 	}
 
 	/**
@@ -3982,7 +4072,7 @@ namespace DarkMode
 	 */
 	void setTabCtrlUpDownSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass(hWnd, TabUpDownSubclass, kTabUpDownSubclassID);
+		DarkMode::SetSubclass(hWnd, TabUpDownSubclass, SubclassID::tabUpDown);
 	}
 
 	/**
@@ -3997,7 +4087,7 @@ namespace DarkMode
 	 */
 	void removeTabCtrlUpDownSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass(hWnd, TabUpDownSubclass, kTabUpDownSubclassID);
+		DarkMode::RemoveSubclass(hWnd, TabUpDownSubclass, SubclassID::tabUpDown);
 	}
 
 	/**
@@ -4053,7 +4143,7 @@ namespace DarkMode
 	{
 		if (p.m_theme)
 		{
-			DarkMode::setDarkTooltips(hWnd, ToolTipsType::tabbar);
+			DarkMode::setDarkTooltips(hWnd, static_cast<int>(ToolTipsType::tabbar));
 		}
 
 		if (p.m_subclass)
@@ -4124,7 +4214,7 @@ namespace DarkMode
 		HPEN hPen = ::CreatePen(PS_SOLID, 1, (::IsWindowEnabled(hWnd) == TRUE) ? DarkMode::getBackgroundColor() : DarkMode::getDlgBackgroundColor());
 		RECT rcInner{ rcClient };
 		::InflateRect(&rcInner, -1, -1);
-		DarkMode::paintRoundFrameRect(hdc, rcInner, hPen);
+		DarkMode::paintFrameRect(hdc, rcInner, hPen);
 		::DeleteObject(hPen);
 
 		POINT ptCursor{};
@@ -4136,7 +4226,7 @@ namespace DarkMode
 
 		HPEN hEnabledPen = ((borderMetricsData.m_isHot && isHot) || hasFocus ? DarkMode::getHotEdgePen() : DarkMode::getEdgePen());
 
-		DarkMode::paintRoundFrameRect(hdc, rcClient, (::IsWindowEnabled(hWnd) == TRUE) ? hEnabledPen : DarkMode::getDisabledEdgePen());
+		DarkMode::paintFrameRect(hdc, rcClient, (::IsWindowEnabled(hWnd) == TRUE) ? hEnabledPen : DarkMode::getDisabledEdgePen());
 
 		::ReleaseDC(hWnd, hdc);
 	}
@@ -4276,7 +4366,7 @@ namespace DarkMode
 	 */
 	void setCustomBorderForListBoxOrEditCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass<BorderMetricsData>(hWnd, CustomBorderSubclass, kCustomBorderSubclassID);
+		DarkMode::SetSubclass<BorderMetricsData>(hWnd, CustomBorderSubclass, SubclassID::customBorder);
 	}
 
 	/**
@@ -4292,7 +4382,7 @@ namespace DarkMode
 	 */
 	void removeCustomBorderForListBoxOrEditCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<BorderMetricsData>(hWnd, CustomBorderSubclass, kCustomBorderSubclassID);
+		DarkMode::RemoveSubclass<BorderMetricsData>(hWnd, CustomBorderSubclass, SubclassID::customBorder);
 	}
 
 	/**
@@ -4323,7 +4413,7 @@ namespace DarkMode
 			&& !isListBox
 			&& !hasScrollBar)
 		{
-			DarkMode::setDarkThemeExperimental(hWnd, L"CFD");
+			DarkMode::setDarkThemeExperimentalEx(hWnd, L"CFD");
 		}
 		else
 		{
@@ -4342,7 +4432,7 @@ namespace DarkMode
 				DarkMode::setCustomBorderForListBoxOrEditCtrlSubclass(hWnd);
 			}
 
-			if (::GetWindowSubclass(hWnd, CustomBorderSubclass, kCustomBorderSubclassID, nullptr) == TRUE)
+			if (::GetWindowSubclass(hWnd, CustomBorderSubclass, static_cast<UINT_PTR>(SubclassID::customBorder), nullptr) == TRUE)
 			{
 				const bool enableClientEdge = !DarkMode::isEnabled();
 				DarkMode::setWindowExStyle(hWnd, enableClientEdge, WS_EX_CLIENTEDGE);
@@ -4382,7 +4472,7 @@ namespace DarkMode
 
 		ComboBoxData() = delete;
 
-		explicit ComboBoxData(LONG_PTR cbStyle)
+		explicit ComboBoxData(LONG_PTR cbStyle) noexcept
 			: m_cbStyle(cbStyle)
 		{}
 	};
@@ -4585,7 +4675,7 @@ namespace DarkMode
 			}
 
 			HPEN hInnerPen = ::CreatePen(PS_SOLID, 1, isDisabled ? DarkMode::getDlgBackgroundColor() : DarkMode::getBackgroundColor());
-			DarkMode::paintRoundFrameRect(hdc, rcInner, hInnerPen);
+			DarkMode::paintFrameRect(hdc, rcInner, hInnerPen);
 			::DeleteObject(hInnerPen);
 			::InflateRect(&rcInner, -1, -1);
 			::FillRect(hdc, &rcInner, isDisabled ? DarkMode::getDlgBackgroundBrush() : DarkMode::getCtrlBackgroundBrush());
@@ -4666,7 +4756,7 @@ namespace DarkMode
 						return 0;
 					}
 
-					DarkMode::paintWithBuffer<ComboBoxData>(*pComboboxData, hdc, ps,
+					DarkMode::PaintWithBuffer<ComboBoxData>(*pComboboxData, hdc, ps,
 						[&]() { DarkMode::paintCombobox(hWnd, hMemDC, *pComboboxData); },
 						hWnd);
 				}
@@ -4728,7 +4818,7 @@ namespace DarkMode
 	void setComboBoxCtrlSubclass(HWND hWnd)
 	{
 		const auto cbStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE) & CBS_DROPDOWNLIST;
-		DarkMode::setSubclass<ComboBoxData>(hWnd, ComboBoxSubclass, kComboBoxSubclassID, cbStyle);
+		DarkMode::SetSubclass<ComboBoxData>(hWnd, ComboBoxSubclass, SubclassID::comboBox, cbStyle);
 	}
 
 	/**
@@ -4743,7 +4833,7 @@ namespace DarkMode
 	 */
 	void removeComboBoxCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<ComboBoxData>(hWnd, ComboBoxSubclass, kComboBoxSubclassID);
+		DarkMode::RemoveSubclass<ComboBoxData>(hWnd, ComboBoxSubclass, SubclassID::comboBox);
 	}
 
 	/**
@@ -4807,7 +4897,7 @@ namespace DarkMode
 
 			if (p.m_theme) // for light dropdown arrow in dark mode
 			{
-				DarkMode::setDarkThemeExperimental(hWnd, L"CFD");
+				DarkMode::setDarkThemeExperimentalEx(hWnd, L"CFD");
 
 				if (!isCbList)
 				{
@@ -4932,7 +5022,7 @@ namespace DarkMode
 	 */
 	void setComboBoxExCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass(hWnd, ComboBoxExSubclass, kComboBoxExSubclassID);
+		DarkMode::SetSubclass(hWnd, ComboBoxExSubclass, SubclassID::comboBoxEx);
 	}
 
 	/**
@@ -4947,7 +5037,7 @@ namespace DarkMode
 	 */
 	void removeComboBoxExCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass(hWnd, ComboBoxExSubclass, kComboBoxExSubclassID);
+		DarkMode::RemoveSubclass(hWnd, ComboBoxExSubclass, SubclassID::comboBoxEx);
 		DarkMode::unhookSysColor();
 	}
 
@@ -5098,7 +5188,7 @@ namespace DarkMode
 	 */
 	void setListViewCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass(hWnd, ListViewSubclass, kListViewSubclassID);
+		DarkMode::SetSubclass(hWnd, ListViewSubclass, SubclassID::listView);
 	}
 
 	/**
@@ -5113,7 +5203,7 @@ namespace DarkMode
 	 */
 	void removeListViewCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass(hWnd, ListViewSubclass, kListViewSubclassID);
+		DarkMode::RemoveSubclass(hWnd, ListViewSubclass, SubclassID::listView);
 	}
 
 	/**
@@ -5144,11 +5234,11 @@ namespace DarkMode
 
 			DarkMode::setDarkListView(hWnd);
 			DarkMode::setDarkListViewCheckboxes(hWnd);
-			DarkMode::setDarkTooltips(hWnd, DarkMode::ToolTipsType::listview);
+			DarkMode::setDarkTooltips(hWnd, static_cast<int>(ToolTipsType::listview));
 
 			if (DarkMode::isThemePrefered())
 			{
-				DarkMode::setDarkThemeExperimental(hHeader, L"ItemsView");
+				DarkMode::setDarkThemeExperimentalEx(hHeader, L"ItemsView");
 			}
 		}
 
@@ -5203,7 +5293,7 @@ namespace DarkMode
 
 		HeaderData() = delete;
 
-		explicit HeaderData(bool hasBtnStyle)
+		explicit HeaderData(bool hasBtnStyle) noexcept
 			: m_hasBtnStyle(hasBtnStyle)
 		{}
 	};
@@ -5446,7 +5536,7 @@ namespace DarkMode
 					return 0;
 				}
 
-				DarkMode::paintWithBuffer<HeaderData>(*pHeaderData, hdc, ps,
+				DarkMode::PaintWithBuffer<HeaderData>(*pHeaderData, hdc, ps,
 					[&]() { DarkMode::paintHeader(hWnd, hMemDC, *pHeaderData); },
 					hWnd);
 
@@ -5558,7 +5648,7 @@ namespace DarkMode
 	void setHeaderCtrlSubclass(HWND hWnd)
 	{
 		const bool hasBtnStyle = (::GetWindowLongPtr(hWnd, GWL_STYLE) & HDS_BUTTONS) == HDS_BUTTONS;
-		DarkMode::setSubclass<HeaderData>(hWnd, HeaderSubclass, kHeaderSubclassID, hasBtnStyle);
+		DarkMode::SetSubclass<HeaderData>(hWnd, HeaderSubclass, SubclassID::header, hasBtnStyle);
 	}
 
 	/**
@@ -5573,7 +5663,7 @@ namespace DarkMode
 	 */
 	void removeHeaderCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<HeaderData>(hWnd, HeaderSubclass, kHeaderSubclassID);
+		DarkMode::RemoveSubclass<HeaderData>(hWnd, HeaderSubclass, SubclassID::header);
 	}
 
 	/**
@@ -5603,7 +5693,7 @@ namespace DarkMode
 
 		StatusBarData() = delete;
 
-		explicit StatusBarData(const HFONT& hFont)
+		explicit StatusBarData(const HFONT& hFont) noexcept
 			: m_fontData(hFont)
 		{}
 	};
@@ -5753,7 +5843,8 @@ namespace DarkMode
 		WPARAM wParam,
 		LPARAM lParam,
 		UINT_PTR uIdSubclass,
-		DWORD_PTR dwRefData)
+		DWORD_PTR dwRefData
+	)
 	{
 		auto* pStatusBarData = reinterpret_cast<StatusBarData*>(dwRefData);
 		auto& themeData = pStatusBarData->m_themeData;
@@ -5799,7 +5890,7 @@ namespace DarkMode
 					return 0;
 				}
 
-				DarkMode::paintWithBuffer<StatusBarData>(*pStatusBarData, hdc, ps,
+				DarkMode::PaintWithBuffer<StatusBarData>(*pStatusBarData, hdc, ps,
 					[&]() { DarkMode::paintStatusBar(hWnd, hMemDC, *pStatusBarData); },
 					hWnd);
 
@@ -5859,7 +5950,7 @@ namespace DarkMode
 		{
 			lf = ncm.lfStatusFont;
 		}
-		DarkMode::setSubclass<StatusBarData>(hWnd, StatusBarSubclass, kStatusBarSubclassID, ::CreateFontIndirect(&lf));
+		DarkMode::SetSubclass<StatusBarData>(hWnd, StatusBarSubclass, SubclassID::statusBar, ::CreateFontIndirect(&lf));
 	}
 
 	/**
@@ -5874,7 +5965,7 @@ namespace DarkMode
 	 */
 	void removeStatusBarCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<StatusBarData>(hWnd, StatusBarSubclass, kStatusBarSubclassID);
+		DarkMode::RemoveSubclass<StatusBarData>(hWnd, StatusBarSubclass, SubclassID::statusBar);
 	}
 
 	/**
@@ -5920,7 +6011,7 @@ namespace DarkMode
 
 		int m_iStateID = PBFS_PARTIAL;
 
-		explicit ProgressBarData(HWND hWnd)
+		explicit ProgressBarData(HWND hWnd) noexcept
 			: m_iStateID(static_cast<int>(::SendMessage(hWnd, PBM_GETSTATE, 0, 0)))
 		{}
 	};
@@ -6061,7 +6152,7 @@ namespace DarkMode
 					return 0;
 				}
 
-				DarkMode::paintWithBuffer<ProgressBarData>(*pProgressBarData, hdc, ps,
+				DarkMode::PaintWithBuffer<ProgressBarData>(*pProgressBarData, hdc, ps,
 					[&]() { DarkMode::paintProgressBar(hWnd, hMemDC, *pProgressBarData); },
 					hWnd);
 
@@ -6136,7 +6227,7 @@ namespace DarkMode
 	 */
 	void setProgressBarCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass<ProgressBarData>(hWnd, ProgressBarSubclass, kProgressBarSubclassID, hWnd);
+		DarkMode::SetSubclass<ProgressBarData>(hWnd, ProgressBarSubclass, SubclassID::progressBar, hWnd);
 	}
 
 	/**
@@ -6151,7 +6242,7 @@ namespace DarkMode
 	 */
 	void removeProgressBarCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<ProgressBarData>(hWnd, ProgressBarSubclass, kProgressBarSubclassID);
+		DarkMode::RemoveSubclass<ProgressBarData>(hWnd, ProgressBarSubclass, SubclassID::progressBar);
 	}
 
 	/**
@@ -6203,7 +6294,7 @@ namespace DarkMode
 
 		StaticTextData() = default;
 
-		explicit StaticTextData(HWND hWnd)
+		explicit StaticTextData(HWND hWnd) noexcept
 			: m_isEnabled(::IsWindowEnabled(hWnd) == TRUE)
 		{}
 	};
@@ -6291,7 +6382,7 @@ namespace DarkMode
 	 */
 	void setStaticTextCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass<StaticTextData>(hWnd, StaticTextSubclass, kStaticTextSubclassID, hWnd);
+		DarkMode::SetSubclass<StaticTextData>(hWnd, StaticTextSubclass, SubclassID::staticText, hWnd);
 	}
 
 	/**
@@ -6306,7 +6397,7 @@ namespace DarkMode
 	 */
 	void removeStaticTextCtrlSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<StaticTextData>(hWnd, StaticTextSubclass, kStaticTextSubclassID);
+		DarkMode::RemoveSubclass<StaticTextData>(hWnd, StaticTextSubclass, SubclassID::staticText);
 	}
 
 	/**
@@ -6346,8 +6437,8 @@ namespace DarkMode
 			TreeView_SetTextColor(hWnd, DarkMode::getViewTextColor());
 			TreeView_SetBkColor(hWnd, DarkMode::getViewBackgroundColor());
 
-			DarkMode::setTreeViewWindowTheme(hWnd, p.m_theme);
-			DarkMode::setDarkTooltips(hWnd, DarkMode::ToolTipsType::treeview);
+			DarkMode::setTreeViewWindowThemeEx(hWnd, p.m_theme);
+			DarkMode::setDarkTooltips(hWnd, static_cast<int>(ToolTipsType::treeview));
 		}
 	}
 
@@ -6386,7 +6477,7 @@ namespace DarkMode
 		if (p.m_theme)
 		{
 			DarkMode::setDarkLineAbovePanelToolbar(hWnd);
-			DarkMode::setDarkTooltips(hWnd, DarkMode::ToolTipsType::toolbar);
+			DarkMode::setDarkTooltips(hWnd, static_cast<int>(ToolTipsType::toolbar));
 		}
 	}
 
@@ -6442,7 +6533,7 @@ namespace DarkMode
 		if (p.m_theme)
 		{
 			DarkMode::setWindowStyle(hWnd, DarkMode::isEnabled(), TBS_TRANSPARENTBKGND);
-			DarkMode::setDarkTooltips(hWnd, ToolTipsType::trackbar);
+			DarkMode::setDarkTooltips(hWnd, static_cast<int>(ToolTipsType::trackbar));
 		}
 	}
 
@@ -6633,14 +6724,15 @@ namespace DarkMode
 	 *
 	 * Mainly used when initializing parent control.
 	 *
-	 * @param hParent   Handle to the parent window whose child controls will be themed.
+	 * @param hParent   Handle to the parent window whose child controls will be themed and/or subclassed.
 	 * @param subclass  Whether to apply subclassing.
 	 * @param theme     Whether to apply theming.
 	 *
+	 * @see DarkMode::setChildCtrlsSubclassAndTheme()
 	 * @see DarkMode::DarkEnumChildProc()
 	 * @see DarkModeParams
 	 */
-	void setChildCtrlsSubclassAndTheme(HWND hParent, bool subclass, bool theme)
+	void setChildCtrlsSubclassAndThemeEx(HWND hParent, bool subclass, bool theme)
 	{
 		DarkModeParams p{
 			DarkMode::isExperimentalActive() ? L"DarkMode_Explorer" : nullptr
@@ -6649,6 +6741,20 @@ namespace DarkMode
 		};
 
 		::EnumChildWindows(hParent, DarkMode::DarkEnumChildProc, reinterpret_cast<LPARAM>(&p));
+	}
+
+	/**
+	 * @brief Wrapper for `DarkMode::setChildCtrlsSubclassAndThemeEx`.
+	 *
+	 * Forwards to `DarkMode::setChildCtrlsSubclassAndThemeEx` with `subclass` and `theme` parameters set as `true`.
+	 *
+	 * @param hParent Handle to the parent window whose child controls will be themed and/or subclassed.
+	 *
+	 * @see DarkMode::setChildCtrlsSubclassAndThemeEx()
+	 */
+	void setChildCtrlsSubclassAndTheme(HWND hParent)
+	{
+		DarkMode::setChildCtrlsSubclassAndThemeEx(hParent, true, true);
 	}
 
 	/**
@@ -6669,9 +6775,9 @@ namespace DarkMode
 	void setChildCtrlsTheme(HWND hParent)
 	{
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 1)
-		DarkMode::setChildCtrlsSubclassAndTheme(hParent, false, true);
+		DarkMode::setChildCtrlsSubclassAndThemeEx(hParent, false, true);
 #else
-		DarkMode::setChildCtrlsSubclassAndTheme(hParent, false, DarkMode::isAtLeastWindows10());
+		DarkMode::setChildCtrlsSubclassAndThemeEx(hParent, false, DarkMode::isAtLeastWindows10());
 #endif
 	}
 
@@ -6740,7 +6846,7 @@ namespace DarkMode
 	 */
 	void setWindowEraseBgSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass(hWnd, WindowEraseBgSubclass, kWindowEraseBgSubclassID);
+		DarkMode::SetSubclass(hWnd, WindowEraseBgSubclass, SubclassID::windowEraseBg);
 	}
 
 	/**
@@ -6755,7 +6861,7 @@ namespace DarkMode
 	 */
 	void removeWindowEraseBgSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass(hWnd, WindowEraseBgSubclass, kWindowEraseBgSubclassID);
+		DarkMode::RemoveSubclass(hWnd, WindowEraseBgSubclass, SubclassID::windowEraseBg);
 	}
 
 	/**
@@ -6859,7 +6965,7 @@ namespace DarkMode
 				}
 
 				DWORD_PTR dwRefDataStaticText = 0;
-				if (::GetWindowSubclass(hChild, StaticTextSubclass, kStaticTextSubclassID, &dwRefDataStaticText) == TRUE)
+				if (::GetWindowSubclass(hChild, StaticTextSubclass, static_cast<UINT_PTR>(SubclassID::staticText), &dwRefDataStaticText) == TRUE)
 				{
 					const bool isTextEnabled = (reinterpret_cast<StaticTextData*>(dwRefDataStaticText))->m_isEnabled;
 					return DarkMode::onCtlColorDlgStaticText(hdc, isTextEnabled);
@@ -6897,7 +7003,7 @@ namespace DarkMode
 	 */
 	void setWindowCtlColorSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass(hWnd, WindowCtlColorSubclass, kWindowCtlColorSubclassID);
+		DarkMode::SetSubclass(hWnd, WindowCtlColorSubclass, SubclassID::windowCtlColor);
 	}
 
 	/**
@@ -6912,7 +7018,7 @@ namespace DarkMode
 	 */
 	void removeWindowCtlColorSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass(hWnd, WindowCtlColorSubclass, kWindowCtlColorSubclassID);
+		DarkMode::RemoveSubclass(hWnd, WindowCtlColorSubclass, SubclassID::windowCtlColor);
 	}
 
 	/**
@@ -7092,7 +7198,12 @@ namespace DarkMode
 	 * @see DarkMode::prepaintToolbarItem()
 	 * @see DarkMode::postpaintToolbarItem()
 	 */
-	[[nodiscard]] static LRESULT darkToolbarNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	[[nodiscard]] static LRESULT darkToolbarNotifyCustomDraw(
+		HWND hWnd,
+		UINT uMsg,
+		WPARAM wParam,
+		LPARAM lParam
+	)
 	{
 		auto* lptbcd = reinterpret_cast<LPNMTBCUSTOMDRAW>(lParam);
 
@@ -7226,7 +7337,12 @@ namespace DarkMode
 	 *
 	 * @see DarkMode::prepaintListViewItem()
 	 */
-	[[nodiscard]] static LRESULT darkListViewNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	[[nodiscard]] static LRESULT darkListViewNotifyCustomDraw(
+		HWND hWnd,
+		UINT uMsg,
+		WPARAM wParam,
+		LPARAM lParam
+	)
 	{
 		auto* lplvcd = reinterpret_cast<LPNMLVCUSTOMDRAW>(lParam);
 		const auto& hList = lplvcd->nmcd.hdr.hwndFrom;
@@ -7294,7 +7410,8 @@ namespace DarkMode
 			lptvcd->clrText = DarkMode::getTextColor();
 			lptvcd->clrTextBk = DarkMode::getHotBackgroundColor();
 
-			if (DarkMode::isAtLeastWindows10() || DarkMode::getTreeViewStyle() == TreeViewStyle::light)
+			if (DarkMode::isAtLeastWindows10()
+				|| static_cast<TreeViewStyle>(DarkMode::getTreeViewStyle()) == TreeViewStyle::light)
 			{
 				::FillRect(lptvcd->nmcd.hdc, &lptvcd->nmcd.rc, DarkMode::getHotBackgroundBrush());
 				retVal |= CDRF_NOTIFYPOSTPAINT;
@@ -7348,7 +7465,12 @@ namespace DarkMode
 	 * @see DarkMode::prepaintTreeViewItem()
 	 * @see DarkMode::postpaintTreeViewItem()
 	 */
-	[[nodiscard]] static LRESULT darkTreeViewNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	[[nodiscard]] static LRESULT darkTreeViewNotifyCustomDraw(
+		HWND hWnd,
+		UINT uMsg,
+		WPARAM wParam,
+		LPARAM lParam
+	)
 	{
 		auto* lptvcd = reinterpret_cast<LPNMTVCUSTOMDRAW>(lParam);
 
@@ -7457,7 +7579,12 @@ namespace DarkMode
 	 *
 	 * @see DarkMode::prepaintTrackbarItem()
 	 */
-	[[nodiscard]] static LRESULT darkTrackbarNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	[[nodiscard]] static LRESULT darkTrackbarNotifyCustomDraw(
+		HWND hWnd,
+		UINT uMsg,
+		WPARAM wParam,
+		LPARAM lParam
+	)
 	{
 		auto* lpnmcd = reinterpret_cast<LPNMCUSTOMDRAW>(lParam);
 
@@ -7572,7 +7699,12 @@ namespace DarkMode
 	 *
 	 * @see DarkMode::prepaintRebar()
 	 */
-	[[nodiscard]] static LRESULT darkRebarNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	[[nodiscard]] static LRESULT darkRebarNotifyCustomDraw(
+		HWND hWnd,
+		UINT uMsg,
+		WPARAM wParam,
+		LPARAM lParam
+	)
 	{
 		auto* lpnmcd = reinterpret_cast<LPNMCUSTOMDRAW>(lParam);
 		if (lpnmcd->dwDrawStage == CDDS_PREPAINT)
@@ -7678,7 +7810,7 @@ namespace DarkMode
 	 */
 	void setWindowNotifyCustomDrawSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass(hWnd, WindowNotifySubclass, kWindowNotifySubclassID);
+		DarkMode::SetSubclass(hWnd, WindowNotifySubclass, SubclassID::windowNotify);
 	}
 
 	/**
@@ -7693,7 +7825,7 @@ namespace DarkMode
 	 */
 	void removeWindowNotifyCustomDrawSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass(hWnd, WindowNotifySubclass, kWindowNotifySubclassID);
+		DarkMode::RemoveSubclass(hWnd, WindowNotifySubclass, SubclassID::windowNotify);
 	}
 
 	/**
@@ -7990,7 +8122,7 @@ namespace DarkMode
 	 */
 	void setWindowMenuBarSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass<ThemeData>(hWnd, WindowMenuBarSubclass, kWindowMenuBarSubclassID, VSCLASS_MENU);
+		DarkMode::SetSubclass<ThemeData>(hWnd, WindowMenuBarSubclass, SubclassID::windowMenuBar, VSCLASS_MENU);
 	}
 
 	/**
@@ -8005,7 +8137,7 @@ namespace DarkMode
 	 */
 	void removeWindowMenuBarSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass<ThemeData>(hWnd, WindowMenuBarSubclass, kWindowMenuBarSubclassID);
+		DarkMode::RemoveSubclass<ThemeData>(hWnd, WindowMenuBarSubclass, SubclassID::windowMenuBar);
 	}
 
 	/**
@@ -8073,7 +8205,7 @@ namespace DarkMode
 	 */
 	void setWindowSettingChangeSubclass(HWND hWnd)
 	{
-		DarkMode::setSubclass(hWnd, WindowSettingChangeSubclass, kWindowSettingChangeSubclassID);
+		DarkMode::SetSubclass(hWnd, WindowSettingChangeSubclass, SubclassID::windowSettingChange);
 	}
 
 	/**
@@ -8088,7 +8220,7 @@ namespace DarkMode
 	 */
 	void removeWindowSettingChangeSubclass(HWND hWnd)
 	{
-		DarkMode::removeSubclass(hWnd, WindowSettingChangeSubclass, kWindowSettingChangeSubclassID);
+		DarkMode::RemoveSubclass(hWnd, WindowSettingChangeSubclass, SubclassID::windowSettingChange);
 	}
 
 	/**
@@ -8218,14 +8350,29 @@ namespace DarkMode
 	 * @see DarkMode::isExperimentalSupported()
 	 * @see DarkMode::isExperimentalActive()
 	 * @see DarkMode::allowDarkModeForWindow()
+	 * @see DarkMode::setDarkThemeExperimental()
 	 */
-	void setDarkThemeExperimental(HWND hWnd, const wchar_t* themeClassName)
+	void setDarkThemeExperimentalEx(HWND hWnd, const wchar_t* themeClassName)
 	{
 		if (DarkMode::isExperimentalSupported())
 		{
 			DarkMode::allowDarkModeForWindow(hWnd, DarkMode::isExperimentalActive());
 			::SetWindowTheme(hWnd, themeClassName, nullptr);
 		}
+	}
+
+	/**
+	 * @brief Applies an experimental Explorer visual style to the specified window, if supported.
+	 *
+	 * Forwards to `DarkMode::setDarkThemeExperimentalEx` with `themeClassName` as `L"Explorer"`.
+	 *
+	 * @param hWnd Handle to the target window or control.
+	 *
+	 * @see DarkMode::setDarkThemeExperimentalEx()
+	 */
+	void setDarkThemeExperimental(HWND hWnd)
+	{
+		DarkMode::setDarkThemeExperimentalEx(hWnd, L"Explorer");
 	}
 
 	/**
@@ -8265,14 +8412,15 @@ namespace DarkMode
 	 *
 	 * Internally calls @ref DarkMode::setDarkExplorerTheme to set dark tooltip.
 	 *
-	 * @param hWnd  Handle to the parent control or tooltip.
-	 * @param type  The tooltip context type (toolbar, list view, etc.).
+	 * @param hWnd          Handle to the parent control or tooltip.
+	 * @param tooltipType   The tooltip context type (toolbar, list view, etc.).
 	 *
 	 * @see DarkMode::setDarkExplorerTheme()
 	 * @see ToolTipsType
 	 */
-	void setDarkTooltips(HWND hWnd, ToolTipsType type)
+	void setDarkTooltips(HWND hWnd, int tooltipType)
 	{
+		const auto type = static_cast<ToolTipsType>(tooltipType);
 		UINT msg = 0;
 		switch (type)
 		{
@@ -8373,7 +8521,7 @@ namespace DarkMode
 	 */
 	void setDarkListView(HWND hWnd)
 	{
-		DarkMode::setDarkThemeExperimental(hWnd, L"Explorer");
+		DarkMode::setDarkThemeExperimental(hWnd);
 	}
 
 	/**
@@ -8533,8 +8681,9 @@ namespace DarkMode
 	 * @see DarkMode::setDarkTitleBarEx()
 	 * @see DarkMode::setWindowCtlColorSubclass()
 	 * @see DarkMode::setChildCtrlsSubclassAndTheme()
+	 * @see DarkMode::setDarkWndSafe()
 	 */
-	void setDarkWndSafe(HWND hWnd, bool useWin11Features)
+	void setDarkWndSafeEx(HWND hWnd, bool useWin11Features)
 	{
 		if (hWnd == nullptr)
 		{
@@ -8544,6 +8693,20 @@ namespace DarkMode
 		DarkMode::setDarkTitleBarEx(hWnd, useWin11Features);
 		DarkMode::setWindowCtlColorSubclass(hWnd);
 		DarkMode::setChildCtrlsSubclassAndTheme(hWnd);
+	}
+
+	/**
+	 * @brief Applies visual styles; ctl color message and child controls subclassings with Windows 11 features.
+	 *
+	 * Forwards to `DarkMode::setDarkWndSafeEx` with parameter `useWin11Features` as `true`.
+	 *
+	 * @param hWnd Handle to the window.
+	 *
+	 * @see DarkMode::setDarkWndSafeEx()
+	 */
+	void setDarkWndSafe(HWND hWnd)
+	{
+		DarkMode::setDarkWndSafeEx(hWnd, true);
 	}
 
 	/**
@@ -8592,13 +8755,13 @@ namespace DarkMode
 	}
 
 	/**
-	 * @brief Applies visual styles; ctl color message, child controls, and custom drawing subclassings to a window safely.
+	 * @brief Applies visual styles; ctl color message, child controls, and custom drawing subclassings with Windows 11 features.
 	 *
-	 * Calls @ref DarkMode::setDarkWndNotifySafeEx with `setSettingChangeSubclass = false`, streamlining
-	 * dark mode setup for secondary or transient windows that don't need to track system dark mode changes.
+	 * Calls @ref DarkMode::setDarkWndNotifySafeEx with `setSettingChangeSubclass = false`
+	 * and `useWin11Features = true`, streamlining dark mode setup for secondary or transient windows
+	 * that don't need to track system dark mode changes.
 	 *
-	 * @param hWnd              Handle to the target window.
-	 * @param useWin11Features  Enable Windows 11-specific visual effects (e.g., Mica, rounded corners).
+	 * @param hWnd Handle to the target window.
 	 *
 	 * @note Should not be used in combination with @ref DarkMode::setDarkWndSafe
 	 *       and @ref DarkMode::setDarkWndNotifySafeEx to avoid overlapping styling logic.
@@ -8606,9 +8769,9 @@ namespace DarkMode
 	 * @see DarkMode::setDarkWndNotifySafeEx()
 	 * @see DarkMode::setDarkWndSafe()
 	 */
-	void setDarkWndNotifySafe(HWND hWnd, bool useWin11Features)
+	void setDarkWndNotifySafe(HWND hWnd)
 	{
-		DarkMode::setDarkWndNotifySafeEx(hWnd, false, useWin11Features);
+		DarkMode::setDarkWndNotifySafeEx(hWnd, false, true);
 	}
 
 	/**
@@ -8707,11 +8870,11 @@ namespace DarkMode
 	/**
 	 * @brief Retrieves the current TreeView style configuration.
 	 *
-	 * @return Reference to the current `TreeViewStyle`.
+	 * @return Integer with enum value corresponding to the current `TreeViewStyle`.
 	 */
-	const TreeViewStyle& getTreeViewStyle()
+	int getTreeViewStyle()
 	{
-		return g_dmCfg.m_tvStyle;
+		return static_cast<int>(g_dmCfg.m_tvStyle);
 	}
 
 	/// Set TreeView style
@@ -8756,7 +8919,7 @@ namespace DarkMode
 	}
 
 	/**
-	 * @brief Applies the appropriate window theme style to the specified TreeView.
+	 * @brief (Re)applies the appropriate window theme style to the specified TreeView .
 	 *
 	 * Updates the TreeView's visual behavior and theme based on the currently selected
 	 * style @ref DarkMode::getTreeViewStyle. It conditionally adjusts the `TVS_TRACKSELECT`
@@ -8776,7 +8939,7 @@ namespace DarkMode
 	 * @see DarkMode::getTreeViewStyle()
 	 * @see DarkMode::getPrevTreeViewStyle()
 	 */
-	void setTreeViewWindowTheme(HWND hWnd, bool force)
+	void setTreeViewWindowThemeEx(HWND hWnd, bool force)
 	{
 		if (force || DarkMode::getPrevTreeViewStyle() != DarkMode::getTreeViewStyle())
 		{
@@ -8785,7 +8948,7 @@ namespace DarkMode
 			bool change = false;
 			std::wstring strSubAppName;
 
-			switch (DarkMode::getTreeViewStyle())
+			switch (static_cast<TreeViewStyle>(DarkMode::getTreeViewStyle()))
 			{
 				case TreeViewStyle::light:
 				{
@@ -8835,13 +8998,28 @@ namespace DarkMode
 	}
 
 	/**
+	 * @brief Applies the appropriate window theme style to the specified TreeView.
+	 *
+	 * Forwards to `DarkMode::setTreeViewWindowThemeEx` with `force = false` to change tree view style
+	 * only if needed.
+	 *
+	 * @param hWnd  Handle to the TreeView control.
+	 *
+	 * @see DarkMode::setTreeViewWindowThemeEx()
+	 */
+	void setTreeViewWindowTheme(HWND hWnd)
+	{
+		DarkMode::setTreeViewWindowThemeEx(hWnd, false);
+	}
+
+	/**
 	 * @brief Retrieves the previous TreeView style configuration.
 	 *
 	 * @return Reference to the previous `TreeViewStyle`.
 	 */
-	const TreeViewStyle& getPrevTreeViewStyle()
+	int getPrevTreeViewStyle()
 	{
-		return g_dmCfg.m_tvStylePrev;
+		return static_cast<int>(g_dmCfg.m_tvStylePrev);
 	}
 
 	/**
@@ -8849,7 +9027,7 @@ namespace DarkMode
 	 */
 	void setPrevTreeViewStyle()
 	{
-		g_dmCfg.m_tvStylePrev = DarkMode::getTreeViewStyle();
+		g_dmCfg.m_tvStylePrev = static_cast<TreeViewStyle>(DarkMode::getTreeViewStyle());
 	}
 
 	/**
@@ -8863,7 +9041,7 @@ namespace DarkMode
 	 */
 	bool isThemeDark()
 	{
-		return DarkMode::getTreeViewStyle() == TreeViewStyle::dark;
+		return static_cast<TreeViewStyle>(DarkMode::getTreeViewStyle()) == TreeViewStyle::dark;
 	}
 
 	/**
@@ -9248,7 +9426,7 @@ namespace DarkMode
 	}
 
 	/**
-	 * @brief Hook procedure for customizing common dialogs with dark mode.
+	 * @brief Hook procedure for customizing common dialogs with custom colors.
 	 */
 	UINT_PTR CALLBACK HookDlgProc(HWND hWnd, UINT uMsg, [[maybe_unused]] WPARAM wParam, [[maybe_unused]] LPARAM lParam)
 	{
@@ -9258,6 +9436,303 @@ namespace DarkMode
 			return TRUE;
 		}
 		return FALSE;
+	}
+
+	/**
+	 * @class TaskDlgData
+	 * @brief Class to handle colors for task dialog.
+	 *
+	 * Members:
+	 * - `m_themeData`: Theme data with "DarkMode_Explorer::TaskDialog" theme to get colors.
+	 * - `m_clrText`: Color for text.
+	 * - `m_clrBg`: Color for background.
+	 * - `m_hBrushBg`: Brush for background.
+	 *
+	 * Copying and moving are explicitly disabled to preserve exclusive ownership.
+	 */
+	class TaskDlgData
+	{
+	public:
+		TaskDlgData()
+		{
+			if (m_themeData.ensureTheme(nullptr))
+			{
+				COLORREF clrTmp = 0;
+				if (SUCCEEDED(::GetThemeColor(m_themeData.getHTheme(), TDLG_PRIMARYPANEL, 0, TMT_TEXTCOLOR, &clrTmp)))
+				{
+					m_clrText = clrTmp;
+				}
+
+				if (SUCCEEDED(::GetThemeColor(m_themeData.getHTheme(), TDLG_PRIMARYPANEL, 0, TMT_FILLCOLOR, &clrTmp)))
+				{
+					m_clrBg = clrTmp;
+				}
+			}
+
+			m_hBrushBg = ::CreateSolidBrush(m_clrBg);
+		}
+
+		TaskDlgData(const TaskDlgData&) = delete;
+		TaskDlgData& operator=(const TaskDlgData&) = delete;
+
+		TaskDlgData(TaskDlgData&&) = delete;
+		TaskDlgData& operator=(TaskDlgData&&) = delete;
+
+		~TaskDlgData()
+		{
+			::DeleteObject(m_hBrushBg);
+		}
+
+		[[nodiscard]] COLORREF getTextColor() const noexcept
+		{
+			return m_clrText;
+		}
+
+		[[nodiscard]] COLORREF getBgColor() const noexcept
+		{
+			return m_clrBg;
+		}
+
+		[[nodiscard]] const HBRUSH& getBgBrush() const noexcept
+		{
+			return m_hBrushBg;
+		}
+
+		[[nodiscard]] bool shouldErase() const noexcept
+		{
+			return m_needErase;
+		}
+
+		void stopErase() noexcept
+		{
+			m_needErase = false;
+		}
+
+	private:
+		ThemeData m_themeData{ L"DarkMode_Explorer::TaskDialog" };
+		COLORREF m_clrText = RGB(255, 255, 255);
+		COLORREF m_clrBg = RGB(44, 44, 44);
+		HBRUSH m_hBrushBg = nullptr;
+		bool m_needErase = true;
+	};
+
+	/**
+	 * @brief Window subclass procedure for handling dark mode for task dialog and its children.
+	 *
+	 * @param hWnd          Window handle being subclassed.
+	 * @param uMsg          Message identifier.
+	 * @param wParam        Message-specific data.
+	 * @param lParam        Message-specific data.
+	 * @param uIdSubclass   Subclass identifier.
+	 * @param dwRefData     TaskDlgData instance.
+	 * @return LRESULT Result of message processing.
+	 *
+	 * @see DarkMode::setDarkTaskDlgSubclass()
+	 */
+	static LRESULT CALLBACK DarkTaskDlgSubclass(
+		HWND hWnd,
+		UINT uMsg,
+		WPARAM wParam,
+		LPARAM lParam,
+		UINT_PTR uIdSubclass,
+		DWORD_PTR dwRefData
+	)
+	{
+		auto* pTaskDlgData = reinterpret_cast<TaskDlgData*>(dwRefData);
+
+		switch (uMsg)
+		{
+			case WM_NCDESTROY:
+			{
+				::RemoveWindowSubclass(hWnd, DarkTaskDlgSubclass, uIdSubclass);
+				delete pTaskDlgData;
+				break;
+			}
+
+			case WM_ERASEBKGND:
+			{
+				const std::wstring className = GetWndClassName(hWnd);
+
+				if (className == L"CtrlNotifySink")
+				{
+					break;
+				}
+
+				if ((className == L"DirectUIHWND") && pTaskDlgData->shouldErase())
+				{
+					RECT rcClient{};
+					::GetClientRect(hWnd, &rcClient);
+					::FillRect(reinterpret_cast<HDC>(wParam), &rcClient, pTaskDlgData->getBgBrush());
+					pTaskDlgData->stopErase();
+				}
+				return TRUE;
+			}
+
+			case WM_CTLCOLORDLG:
+			case WM_CTLCOLORSTATIC:
+			{
+				auto hdc = reinterpret_cast<HDC>(wParam);
+				::SetTextColor(hdc, pTaskDlgData->getTextColor());
+				::SetBkColor(hdc, pTaskDlgData->getBgColor());
+				return reinterpret_cast<LRESULT>(pTaskDlgData->getBgBrush());
+			}
+
+			case WM_PRINTCLIENT:
+			{
+				return TRUE;
+			}
+
+			default:
+			{
+				break;
+			}
+		}
+		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+	}
+
+	/**
+	 * @brief Applies a subclass to task dialog to handle dark mode.
+	 *
+	 * @param hWnd Handle to the task dialog.
+	 *
+	 * @see DarkMode::DarkTaskDlgSubclass()
+	 */
+	static void setDarkTaskDlgSubclass(HWND hWnd)
+	{
+		DarkMode::SetSubclass<TaskDlgData>(hWnd, DarkTaskDlgSubclass, SubclassID::taskDlg);
+	}
+
+	/**
+	 * @brief Callback function used to enumerate and apply theming/subclassing to task dialog child controls.
+	 *
+	 * @param hWnd      Handle to the window being enumerated.
+	 * @param lParam    LPARAM data (unused).
+	 * @return `TRUE`   to continue enumeration.
+	 */
+	static BOOL CALLBACK DarkTaskEnumChildProc(HWND hWnd, [[maybe_unused]] LPARAM lParam)
+	{
+		const std::wstring className = GetWndClassName(hWnd);
+
+		if (className == L"CtrlNotifySink")
+		{
+			DarkMode::setDarkTaskDlgSubclass(hWnd);
+			return TRUE;
+		}
+
+		if (className == WC_BUTTON)
+		{
+			const auto nBtnStyle = (::GetWindowLongPtr(hWnd, GWL_STYLE) & BS_TYPEMASK);
+			switch (nBtnStyle)
+			{
+				case BS_RADIOBUTTON:
+				case BS_AUTORADIOBUTTON:
+				{
+					DarkMode::setCheckboxOrRadioBtnCtrlSubclass(hWnd);
+					break;
+				}
+
+				default:
+				{
+					break;
+				}
+			}
+
+			DarkMode::setDarkExplorerTheme(hWnd);
+
+			return TRUE;
+		}
+
+		if (className == WC_LINK)
+		{
+			DarkMode::enableSysLinkCtrlCtlColor(hWnd);
+			DarkMode::setDarkTaskDlgSubclass(hWnd);
+			return TRUE;
+		}
+
+		if (className == WC_SCROLLBAR)
+		{
+			DarkMode::setDarkScrollBar(hWnd);
+			return TRUE;
+		}
+
+		if (className == PROGRESS_CLASS)
+		{
+			DarkMode::setProgressBarClassicTheme(hWnd);
+			return TRUE;
+		}
+
+		if (className == L"DirectUIHWND")
+		{
+			::EnumChildWindows(hWnd, DarkMode::DarkTaskEnumChildProc, 0);
+			DarkMode::setDarkTaskDlgSubclass(hWnd);
+			DarkMode::setDarkExplorerTheme(hWnd);
+			return TRUE;
+		}
+
+		return TRUE;
+	}
+
+	/**
+	 * @brief Applies dark mode visual styles to task dialog.
+	 *
+	 * @note Currently has only basic support on Windows 11,
+	 * and colors cannot be customized.
+	 *
+	 * @param hWnd Handle to the task dialog.
+	 */
+	void setDarkTaskDlg(HWND hWnd)
+	{
+		if (DarkMode::isAtLeastWindows11() && DarkMode::isExperimentalActive())
+		{
+			DarkMode::setDarkTitleBar(hWnd);
+			DarkMode::setDarkExplorerTheme(hWnd);
+			DarkMode::setDarkTaskDlgSubclass(hWnd);
+			::EnumChildWindows(hWnd, DarkMode::DarkTaskEnumChildProc, 0);
+		}
+	}
+
+	/**
+	 * @brief Simple task dialog callback procedure to enable dark mode support.
+	 *
+	 * @param hWnd      Handle to the task dialog.
+	 * @param uMsg      Message identifier.
+	 * @param wParam    First message parameter (unused).
+	 * @param lParam    Second message parameter (unused).
+	 * @param lpRefData Reserved data (unused).
+	 * @return A value defined by the hook procedure.
+	 *
+	 * @see DarkMode::setDarkTaskDlg()
+	 * @see DarkMode::darkTaskDialogIndirect()
+	 */
+	HRESULT CALLBACK DarkTaskDlgCallback(
+		HWND hWnd,
+		UINT uMsg,
+		[[maybe_unused]] WPARAM wParam,
+		[[maybe_unused]] LPARAM lParam,
+		[[maybe_unused]] LONG_PTR lpRefData
+	)
+	{
+		if (uMsg == TDN_DIALOG_CONSTRUCTED)
+		{
+			DarkMode::setDarkTaskDlg(hWnd);
+		}
+		return S_OK;
+	}
+
+	/**
+	 * @brief Wrapper for `TaskDialogIndirect` with dark mode support.
+	 */
+	HRESULT darkTaskDialogIndirect(
+		const TASKDIALOGCONFIG* pTaskConfig,
+		int* pnButton,
+		int* pnRadioButton,
+		BOOL* pfVerificationFlagChecked
+	)
+	{
+		DarkMode::hookThemeColor();
+		const HRESULT retVal = ::TaskDialogIndirect(pTaskConfig, pnButton, pnRadioButton, pfVerificationFlagChecked);
+		DarkMode::unhookThemeColor();
+		return retVal;
 	}
 } // namespace DarkMode
 
