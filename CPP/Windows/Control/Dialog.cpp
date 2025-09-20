@@ -38,7 +38,7 @@ DialogProcedure(HWND dialogHWND, UINT message, WPARAM wParam, LPARAM lParam)
   if (message == WM_INITDIALOG)
     {
       dialog->Attach(dialogHWND);
-      DarkMode::initDarkMode(L"7zDark");
+      DarkMode::initDarkModeEx(L"7zDark");
       DarkMode::setDarkWndNotifySafeEx(*dialog, true, true);
     }
 

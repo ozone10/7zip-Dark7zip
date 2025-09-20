@@ -286,7 +286,7 @@ void CApp::ReloadToolbars()
         AddButton(_buttonsImageList, _toolBar, g_StandardButtons[i], ShowButtonsLables, LargeButtons);
 
     DarkMode::setDarkLineAbovePanelToolbar(_toolBar);
-    DarkMode::setDarkTooltips(_toolBar, DarkMode::ToolTipsType::toolbar);
+    DarkMode::setDarkTooltips(_toolBar, static_cast<int>(DarkMode::ToolTipsType::toolbar));
 
     _toolBar.AutoSize();
   }
@@ -304,7 +304,7 @@ HRESULT CApp::Create(HWND hwnd, const UString &mainPath, const UString &arcForma
 {
   _window.Attach(hwnd);
 
-  DarkMode::initDarkMode(L"7zDark");
+  DarkMode::initDarkModeEx(L"7zDark");
 
   #ifdef UNDER_CE
   _commandBar.Create(g_hInstance, hwnd, 1);
