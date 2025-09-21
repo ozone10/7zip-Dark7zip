@@ -414,6 +414,7 @@ namespace DarkMode
 #if !defined(_DARKMODELIB_NO_INI_CONFIG)
 			std::wstring m_iniName;
 			bool m_isIniNameSet = false;
+			bool m_iniExist = false;
 #endif
 		} g_dmCfg;
 	} // anonymous namespace
@@ -1479,7 +1480,8 @@ namespace DarkMode
 		}
 
 		const std::wstring iniPath = GetIniPath(iniName);
-		if (FileExists(iniPath))
+		g_dmCfg.m_iniExist = FileExists(iniPath);
+		if (g_dmCfg.m_iniExist)
 		{
 			DarkMode::initDarkModeConfig(::GetPrivateProfileIntW(L"main", L"mode", 1, iniPath.c_str()));
 			if (g_dmCfg.m_dmType == DarkModeType::classic)
@@ -1675,6 +1677,20 @@ namespace DarkMode
 	void initDarkMode()
 	{
 		DarkMode::initDarkModeEx(L"");
+	}
+
+	/**
+	 * @brief Checks if there is config INI file.
+	 *
+	 * @return `true` if there is config INI file that can be used.
+	 */
+	bool doesConfigFileExist()
+	{
+#if !defined(_DARKMODELIB_NO_INI_CONFIG)
+		return g_dmCfg.m_iniExist;
+#else
+		return false;
+#endif
 	}
 
 	/**
@@ -5199,7 +5215,7 @@ namespace DarkMode
 	 * @param hWnd Handle to the list view control.
 	 *
 	 * @see DarkMode::ListViewSubclass()
-	 * @see DarkMode::setComboBoxExCtrlSubclass()
+	 * @see DarkMode::setListViewCtrlSubclass()
 	 */
 	void removeListViewCtrlSubclass(HWND hWnd)
 	{

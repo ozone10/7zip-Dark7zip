@@ -228,6 +228,9 @@ namespace DarkMode
 	///Initializes dark mode without INI settings.
 	DMLIB_API void initDarkMode();
 
+	/// Checks if there is config INI file.
+	DMLIB_API bool doesConfigFileExist();
+
 	// ========================================================================
 	// Basic checks
 	// ========================================================================
