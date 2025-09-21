@@ -12,7 +12,7 @@ BEGIN
   MY_CONTROL_CHECKBOX ( "&Full row select",      IDX_SETTINGS_FULL_ROW,             m, 36, xc)
   MY_CONTROL_CHECKBOX ( "Show &grid lines",      IDX_SETTINGS_SHOW_GRID,            m, 50, xc)
   MY_CONTROL_CHECKBOX ( "&Single-click to open an item", IDX_SETTINGS_SINGLE_CLICK, m, 64, xc)
-  MY_CONTROL_CHECKBOX ( "&Alternative selection mode", IDX_SETTINGS_ALTERNATIVE_SELECTION, m, 80, xc)
+  MY_CONTROL_CHECKBOX ( "&Alternative selection mode", IDX_SETTINGS_ALTERNATIVE_SELECTION, m, 78, xc)
 
   MY_CONTROL_CHECKBOX ( "Show system &menu",     IDX_SETTINGS_SHOW_SYSTEM_MENU,     m, 100, xc)
 
@@ -31,12 +31,8 @@ BEGIN
   // COMBOBOX  IDC_SETTINGS_MEM, m , 152, g1xs, yc - 152, MY_COMBO
   // LTEXT     "/ RAM", IDT_SETTINGS_MEM_RAM, m + g1xs + m, 154, xc - g1xs - m, MY_TEXT_NOPREFIX
 
-  MY_CONTROL_CHECKBOX ( "Want ArcHistory",    IDX_SETTINGS_WANT_ARC_HISTORY,        m, 172, xc)
-  MY_CONTROL_CHECKBOX ( "Want PathHistory",   IDX_SETTINGS_WANT_PATH_HISTORY,       m, 184, xc)
-  MY_CONTROL_CHECKBOX ( "Want CopyHistory",   IDX_SETTINGS_WANT_COPY_HISTORY,       m, 196, xc)
-  MY_CONTROL_CHECKBOX ( "Want FolderHistory", IDX_SETTINGS_WANT_FOLDER_HISTORY,     m, 208, xc)
-  MY_CONTROL_CHECKBOX ( "Use Lowercase Hashes", IDX_SETTINGS_LOWERCASE_HASHES,      m, 220, xc)
-
+  LTEXT "Color Mode:", IDT_COLOR_MODE, m, save_y + 34, xc, 8
+  COMBOBOX IDC_COLOR_MODE, m, spin_y + 34, spin_x_size, 60, MY_COMBO
 END
 
 #undef save_y
