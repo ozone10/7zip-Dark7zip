@@ -20,26 +20,20 @@
 extern bool g_darkModeSupported;
 extern bool g_darkModeEnabled;
 
-
-[[nodiscard]] bool ShouldAppsUseDarkMode();
-bool AllowDarkModeForWindow(HWND hWnd, bool allow);
-[[nodiscard]] bool IsHighContrast();
+namespace dmlib_win32api
+{
+	bool AllowDarkModeForWindow(HWND hWnd, bool allow);
+	[[nodiscard]] bool IsHighContrast();
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
-void RefreshTitleBarThemeColor(HWND hWnd);
-void SetTitleBarThemeColor(HWND hWnd, BOOL dark);
+	void RefreshTitleBarThemeColor(HWND hWnd);
+	void SetTitleBarThemeColor(HWND hWnd, BOOL dark);
 #endif
-[[nodiscard]] bool IsColorSchemeChangeMessage(LPARAM lParam);
-[[nodiscard]] bool IsColorSchemeChangeMessage(UINT uMsg, LPARAM lParam);
-void AllowDarkModeForApp(bool allow);
-#if defined(_DARKMODELIB_USE_SCROLLBAR_FIX) && (_DARKMODELIB_USE_SCROLLBAR_FIX > 0)
-void EnableDarkScrollBarForWindowAndChildren(HWND hWnd);
-#endif
-void InitDarkMode();
-void SetDarkMode(bool useDark, bool fixDarkScrollbar);
-[[nodiscard]] bool IsWindows10();
-[[nodiscard]] bool IsWindows11();
-[[nodiscard]] DWORD GetWindowsBuildNumber();
-
-void SetMySysColor(int nIndex, COLORREF clr);
-bool HookSysColor();
-void UnhookSysColor();
+	[[nodiscard]] bool IsColorSchemeChangeMessage(LPARAM lParam);
+	[[nodiscard]] bool IsColorSchemeChangeMessage(UINT uMsg, LPARAM lParam);
+	void AllowDarkModeForApp(bool allow);
+	void InitDarkMode();
+	void SetDarkMode(bool useDark, bool fixDarkScrollbar);
+	[[nodiscard]] bool IsWindows10();
+	[[nodiscard]] bool IsWindows11();
+	[[nodiscard]] DWORD GetWindowsBuildNumber();
+} // namespace dmlib_win32api
