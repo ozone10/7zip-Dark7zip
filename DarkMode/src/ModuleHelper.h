@@ -19,7 +19,7 @@ namespace dmlib_module
 	{
 		if (auto proc = ::GetProcAddress(handle, name); proc != nullptr)
 		{
-			pointer = reinterpret_cast<P>(proc);
+			pointer = reinterpret_cast<P>(reinterpret_cast<INT_PTR>(proc));
 			return true;
 		}
 		return false;
@@ -29,6 +29,17 @@ namespace dmlib_module
 	inline auto LoadFn(HMODULE handle, P& pointer, WORD index) -> bool
 	{
 		return dmlib_module::LoadFn(handle, pointer, MAKEINTRESOURCEA(index));
+	}
+
+	template <typename P, typename D>
+	inline auto LoadFn(HMODULE handle, P& pointer, const char* name, D& dummy) -> bool
+	{
+		const bool retVal = dmlib_module::LoadFn(handle, pointer, name);
+		if (!retVal)
+		{
+			pointer = static_cast<P>(dummy);
+		}
+		return retVal;
 	}
 
 	class ModuleHandle

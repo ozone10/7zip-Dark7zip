@@ -15,26 +15,16 @@
 
 #include "StdAfx.h"
 
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef VC_EXTRALEAN
-#define VC_EXTRALEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
+#include "DmlibWinApi.h"
 
-#include "DarkMode.h"
+#include <windows.h>
 
-#include "DarkModeHook.h"
-#include "ModuleHelper.h"
-
-#if defined(_MSC_VER) && _MSC_VER >= 1800
-#pragma warning(disable : 4191)
-#elif defined(__GNUC__)
 #include <cwchar>
+
+#if defined(_DARKMODELIB_USE_SCROLLBAR_FIX) && (_DARKMODELIB_USE_SCROLLBAR_FIX > 0)
+#include "DmlibHook.h"
 #endif
+#include "ModuleHelper.h"
 
 enum IMMERSIVE_HC_CACHE_MODE
 {
@@ -97,7 +87,7 @@ struct WINDOWCOMPOSITIONATTRIBDATA
 
 using fnRtlGetNtVersionNumbers = void (WINAPI*)(LPDWORD major, LPDWORD minor, LPDWORD build);
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
-using fnSetWindowCompositionAttribute = BOOL (WINAPI*)(HWND hWnd, WINDOWCOMPOSITIONATTRIBDATA*);
+using fnSetWindowCompositionAttribute = auto (WINAPI*)(HWND hWnd, WINDOWCOMPOSITIONATTRIBDATA*) -> BOOL;
 #endif
 // 1809 17763
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
@@ -158,6 +148,14 @@ static DWORD g_buildNumber = 0;
 	}
 }
 
+
+/**
+ * @brief Enables or disables dark mode support for a specific window.
+ *
+ * @param[in]   hWnd    Window handle to apply dark mode.
+ * @param[in]   allow   Whether to allow (`true`) or disallow (`false`) dark mode.
+ * @return `true` if successfully applied.
+ */
 bool dmlib_win32api::AllowDarkModeForWindow(HWND hWnd, bool allow)
 {
 	if (g_darkModeSupported && (pfAllowDarkModeForWindow != nullptr))
@@ -167,6 +165,11 @@ bool dmlib_win32api::AllowDarkModeForWindow(HWND hWnd, bool allow)
 	return false;
 }
 
+/**
+ * @brief Determines if high contrast mode is currently active.
+ *
+ * @return `true` if high contrast is enabled via system accessibility settings.
+ */
 bool dmlib_win32api::IsHighContrast()
 {
 	HIGHCONTRASTW highContrast{};
@@ -179,7 +182,7 @@ bool dmlib_win32api::IsHighContrast()
 }
 
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
-void dmlib_win32api::SetTitleBarThemeColor(HWND hWnd, BOOL dark)
+static void SetTitleBarThemeColor(HWND hWnd, BOOL dark)
 {
 	if (g_buildNumber < g_win10Build1903)
 	{
@@ -192,6 +195,14 @@ void dmlib_win32api::SetTitleBarThemeColor(HWND hWnd, BOOL dark)
 	}
 }
 
+/**
+ * @brief Refreshes the title bar theme color for legacy systems.
+ *
+ * Used only on old Windows 10 systems when `_DARKMODELIB_ALLOW_OLD_OS`
+ * is defined with non-zero unsigned value.
+ *
+ * @param[in] hWnd Handle to the window to update.
+ */
 void dmlib_win32api::RefreshTitleBarThemeColor(HWND hWnd)
 {
 	BOOL dark = FALSE;
@@ -207,6 +218,12 @@ void dmlib_win32api::RefreshTitleBarThemeColor(HWND hWnd)
 }
 #endif
 
+/**
+ * @brief Checks whether a `WM_SETTINGCHANGE` message indicates a color scheme switch.
+ *
+ * @param[in] lParam LPARAM from a system message.
+ * @return `true` if the message signals a theme mode change.
+ */
 bool dmlib_win32api::IsColorSchemeChangeMessage(LPARAM lParam)
 {
 	bool isMsg = false;
@@ -232,6 +249,15 @@ bool dmlib_win32api::IsColorSchemeChangeMessage(LPARAM lParam)
 	return isMsg;
 }
 
+/**
+ * @brief Checks whether a message indicates a color scheme switch.
+ *
+ * Overload that takes uMsg parameter and checks if it is a `WM_SETTINGCHANGE`
+ *
+ * @param[in]   lParam  LPARAM from a system message.
+ * @param[in]   uMsg    System message to check.
+ * @return `true` if the message signals a theme mode change.
+ */
 bool dmlib_win32api::IsColorSchemeChangeMessage(UINT uMsg, LPARAM lParam)
 {
 	if (uMsg == WM_SETTINGCHANGE)
@@ -241,7 +267,7 @@ bool dmlib_win32api::IsColorSchemeChangeMessage(UINT uMsg, LPARAM lParam)
 	return false;
 }
 
-void dmlib_win32api::AllowDarkModeForApp(bool allow)
+static void AllowDarkModeForApp(bool allow)
 {
 	if (pfSetPreferredAppMode != nullptr)
 	{
@@ -270,12 +296,22 @@ static constexpr DWORD g_win10Build = 19044; // 21H2 latest LTSC, 22H2 19045 lat
 #endif
 static constexpr DWORD g_win11Build = 22000;
 
-bool dmlib_win32api::IsWindows10() // or later OS version
+/**
+ * @brief Checks if the host OS is at least Windows 10.
+ *
+ * @return `true` if running on Windows 10 or newer.
+ */
+bool dmlib_win32api::IsWindows10()
 {
 	return (g_buildNumber >= g_win10Build);
 }
 
-bool dmlib_win32api::IsWindows11() // or later OS version
+/**
+ * @brief Checks if the host OS is at least Windows 11.
+ *
+ * @return `true` if running on Windows 11 or newer.
+ */
+bool dmlib_win32api::IsWindows11()
 {
 	return (g_buildNumber >= g_win11Build);
 }
@@ -306,11 +342,20 @@ bool dmlib_win32api::IsWindows11() // or later OS version
 #endif
 }
 
+
+/**
+ * @brief Retrieves the current Windows build number.
+ *
+ * @return Windows build number reported by the system.
+ */
 DWORD dmlib_win32api::GetWindowsBuildNumber()
 {
 	return g_buildNumber;
 }
 
+/**
+ * @brief Initializes undocumented dark mode API.
+ */
 void dmlib_win32api::InitDarkMode()
 {
 	static bool isInit = false;
@@ -353,7 +398,7 @@ void dmlib_win32api::InitDarkMode()
 					&& ptrFnOrd132NotNullptr
 #endif
 #if defined(_DARKMODELIB_USE_SCROLLBAR_FIX) && (_DARKMODELIB_USE_SCROLLBAR_FIX > 0)
-					&& dmlib_hook::LoadOpenNcThemeData(hUxtheme)
+					&& dmlib_hook::loadOpenNcThemeData(hUxtheme)
 #endif
 					&& dmlib_module::LoadFn(hUxtheme, pfRefreshImmersiveColorPolicyState, 104)
 					&& dmlib_module::LoadFn(hUxtheme, pfAllowDarkModeForWindow, 133)
@@ -383,16 +428,24 @@ void dmlib_win32api::InitDarkMode()
 	}
 }
 
-void dmlib_win32api::SetDarkMode(bool useDark, [[maybe_unused]] bool fixDarkScrollbar)
+/**
+ * @brief Enables or disables dark mode using undocumented API.
+ *
+ * Optionally applies a scroll bar fix for dark mode inconsistencies.
+ *
+ * @param[in]   useDark             Enable dark mode when `true`, disable when `false`.
+ * @param[in]   applyScrollBarFix   Apply scroll bar fix if `true`.
+ */
+void dmlib_win32api::SetDarkMode(bool useDark, [[maybe_unused]] bool applyScrollBarFix)
 {
 	if (g_darkModeSupported)
 	{
-		dmlib_win32api::AllowDarkModeForApp(useDark);
+		AllowDarkModeForApp(useDark);
 		FlushMenuThemes();
 #if defined(_DARKMODELIB_USE_SCROLLBAR_FIX) && (_DARKMODELIB_USE_SCROLLBAR_FIX > 0)
-		if (fixDarkScrollbar)
+		if (applyScrollBarFix)
 		{
-			FixDarkScrollBar();
+			dmlib_hook::fixDarkScrollBar();
 		}
 #endif
 		g_darkModeEnabled = useDark && ShouldAppsUseDarkMode() && !dmlib_win32api::IsHighContrast();

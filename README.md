@@ -51,15 +51,16 @@ Replace 7z original files (e.g. `C:\Program Files\7-Zip\`) with files from downl
 - `7zDark.ini` - optional, more information below
 
 > [!IMPORTANT]  
-> Ensure that you have downloaded the correct version. If the zip file name contains "zstd" (e.g. `7z-zstd-v24.09-v1.5.7-R1-dark-x64.zip`), it is intended for the zstd fork. If you are using the wrong version, a message box titled "7‑Zip ZS" will appear when attempting to extract the archive.
+> Ensure that you have downloaded the correct version. If the zip file name contains "zstd" (e.g. `7z-zstd-v25.01-v1.5.7-R1-v0.12.0-x64.zip`), it is intended for the zstd fork. If you are using the wrong version, a message box titled "7‑Zip ZS" will appear when attempting to extract the archive.
 
 > [!NOTE]  
-> Currently files are released only for x64 platform. You can get files for other platform from Github Actions for original 7-Zip, 7-Zip-zstd has only x64 platform. Ensure that you get correct version - [main](https://github.com/ozone10/7zip-Dark7zip/actions?query=branch%3Amain) for original 7-Zip, [7z-zstd](https://github.com/ozone10/7zip-Dark7zip/actions?query=branch%3A7z-zstd) for 7-Zip-zstd.
+> Currently files are released only for x64 and arm64 platforms. You can get files for x86 platform for original 7-Zip and testing artifacts from Github Actions. Ensure that you get correct version - [main](https://github.com/ozone10/7zip-Dark7zip/actions?query=branch%3Amain) for original 7-Zip, [7z-zstd](https://github.com/ozone10/7zip-Dark7zip/actions?query=branch%3A7z-zstd) for 7-Zip-zstd.
 
 ## Config
 
-`7zDark.ini` is configuration file to allow mainly to set custom colors.
-`7zDark.ini` should be in same folder as `7zFM.exe` and `7zG.exe`.
+`7zDark.ini` is configuration file to allow to set custom colors and other visual features. It should be in same folder as `7zFM.exe` and `7zG.exe`.  
+
+Without `7zDark.ini` 7-Zip still offers limited configuration via GUI interface. In Tools->Options...->Settings->Color Mode (dark, light, system). `7zDark.ini` has higher priority and will disable GUI setting.
 
 - [main]
   - mode - determine which sections color "key=value" pairs will be used and theming of title bar, buttons, scrollbars, and tooltips

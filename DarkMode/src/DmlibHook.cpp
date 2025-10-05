@@ -10,24 +10,12 @@
 
 #include "StdAfx.h"
 
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef VC_EXTRALEAN
-#define VC_EXTRALEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
+#include "DmlibHook.h"
 
-extern bool g_darkModeSupported;
-extern bool g_darkModeEnabled;
-
-#include "DarkModeHook.h"
-
-#include "ModuleHelper.h"
+#include <windows.h>
 
 #include <uxtheme.h>
+#include <vsstyle.h>
 #include <vssym32.h>
 
 #include <utility>
@@ -37,21 +25,19 @@ extern bool g_darkModeEnabled;
 #include <unordered_set>
 #endif
 
-#if !defined(_DARKMODELIB_EXTERNAL_IATHOOK)
+#include "DmlibWinApi.h"
+#include "ModuleHelper.h"
+
 #include "IatHook.h"
-#else
-extern PIMAGE_THUNK_DATA FindAddressByName(void* moduleBase, PIMAGE_THUNK_DATA impName, PIMAGE_THUNK_DATA impAddr, const char* funcName);
-extern PIMAGE_THUNK_DATA FindAddressByOrdinal(void* moduleBase, PIMAGE_THUNK_DATA impName, PIMAGE_THUNK_DATA impAddr, uint16_t ordinal);
-extern PIMAGE_THUNK_DATA FindIatThunkInModule(void* moduleBase, const char* dllName, const char* funcName);
-extern PIMAGE_THUNK_DATA FindDelayLoadThunkInModule(void* moduleBase, const char* dllName, const char* funcName);
-extern PIMAGE_THUNK_DATA FindDelayLoadThunkInModule(void* moduleBase, const char* dllName, uint16_t ordinal);
-#endif
+
+extern bool g_darkModeSupported;
+extern bool g_darkModeEnabled;
 
 using fnFindThunkInModule = auto (*)(void* moduleBase, const char* dllName, const char* funcName) -> PIMAGE_THUNK_DATA;
 
 using fnGetSysColor = auto (WINAPI*)(int nIndex) -> DWORD;
 using fnGetThemeColor = auto (WINAPI*)(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF* pColor) -> HRESULT;
-using fnDrawThemeBackgroundEx = auto (WINAPI*)(HTHEME hTheme, HDC hdc,  int iPartId,  int iStateId,  LPCRECT pRect, const DTBGOPTS* pOptions) -> HRESULT;
+using fnDrawThemeBackgroundEx = auto (WINAPI*)(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, const DTBGOPTS* pOptions) -> HRESULT;
 
 template <typename P>
 static auto ReplaceFunction(IMAGE_THUNK_DATA* addr, const P& newFunction) -> P
@@ -113,7 +99,7 @@ struct HookData
 
 		if (m_ord != 0)
 		{
-			return FindDelayLoadThunkInModule(hMod, m_dllName, m_ord);
+			return iat_hook::FindDelayLoadThunkInModule(hMod, m_dllName, m_ord);
 		}
 
 		return nullptr;
@@ -177,7 +163,7 @@ static void UnhookFunction(HookData<T>& hookData)
 using fnOpenNcThemeData = auto (WINAPI*)(HWND hWnd, LPCWSTR pszClassList) -> HTHEME; // ordinal 49
 static fnOpenNcThemeData pfOpenNcThemeData = nullptr;
 
-bool dmlib_hook::LoadOpenNcThemeData(const HMODULE& hUxtheme)
+bool dmlib_hook::loadOpenNcThemeData(const HMODULE& hUxtheme)
 {
 	return LoadFn(hUxtheme, pfOpenNcThemeData, 49);
 }
@@ -187,24 +173,32 @@ bool dmlib_hook::LoadOpenNcThemeData(const HMODULE& hUxtheme)
 static std::unordered_set<HWND> g_darkScrollBarWindows;
 static std::mutex g_darkScrollBarMutex;
 
-void dmlib_hook::EnableDarkScrollBarForWindowAndChildren(HWND hWnd)
+/**
+ * @brief Makes scroll bars on the specified window and all its children consistent.
+ *
+ * @note Currently not widely used by default.
+ *
+ * @param[in] hWnd Handle to the parent window.
+ */
+void dmlib_hook::enableDarkScrollBarForWindowAndChildren(HWND hWnd)
 {
 	const std::lock_guard<std::mutex> lock(g_darkScrollBarMutex);
 	g_darkScrollBarWindows.insert(hWnd);
 }
 
-static bool IsWindowOrParentUsingDarkScrollBar(HWND hWnd)
+static bool isWindowOrParentUsingDarkScrollBar(HWND hWnd)
 {
-	HWND hRoot = GetAncestor(hWnd, GA_ROOT);
+	HWND hRoot = ::GetAncestor(hWnd, GA_ROOT);
 
 	const std::lock_guard<std::mutex> lock(g_darkScrollBarMutex);
-	auto hasElement = [](const auto& container, HWND hWndToCheck) -> bool {
+	auto hasElement = [](const auto& container, HWND hWndToCheck) -> bool
+	{
 #if (defined(_MSC_VER) && (_MSVC_LANG >= 202002L)) || (__cplusplus >= 202002L)
 		return container.contains(hWndToCheck);
 #else
 		return container.count(hWndToCheck) != 0;
 #endif
-		};
+	};
 
 	if (hasElement(g_darkScrollBarWindows, hWnd))
 	{
@@ -220,7 +214,7 @@ static HTHEME WINAPI MyOpenNcThemeData(HWND hWnd, LPCWSTR pszClassList)
 	if (scrollBarClassName == pszClassList)
 	{
 #if defined(_DARKMODELIB_USE_SCROLLBAR_FIX) && (_DARKMODELIB_USE_SCROLLBAR_FIX > 1)
-		if (IsWindowOrParentUsingDarkScrollBar(hWnd))
+		if (isWindowOrParentUsingDarkScrollBar(hWnd))
 #endif
 		{
 			hWnd = nullptr;
@@ -230,12 +224,12 @@ static HTHEME WINAPI MyOpenNcThemeData(HWND hWnd, LPCWSTR pszClassList)
 	return pfOpenNcThemeData(hWnd, pszClassList);
 }
 
-void dmlib_hook::FixDarkScrollBar()
+void dmlib_hook::fixDarkScrollBar()
 {
 	const ModuleHandle moduleComctl(L"comctl32.dll");
 	if (moduleComctl.isLoaded())
 	{
-		auto* addr = FindDelayLoadThunkInModule(moduleComctl.get(), "uxtheme.dll", 49); // OpenNcThemeData
+		auto* addr = iat_hook::FindDelayLoadThunkInModule(moduleComctl.get(), "uxtheme.dll", 49); // OpenNcThemeData
 		if (addr != nullptr) // && pfOpenNcThemeData != nullptr) // checked in InitDarkMode
 		{
 			ReplaceFunction<fnOpenNcThemeData>(addr, MyOpenNcThemeData);
@@ -253,7 +247,19 @@ static COLORREF g_clrWindow = RGB(32, 32, 32);
 static COLORREF g_clrText = RGB(224, 224, 224);
 static COLORREF g_clrTGridlines = RGB(100, 100, 100);
 
-void dmlib_hook::SetMySysColor(int nIndex, COLORREF clr)
+
+/**
+ * @brief Overrides a specific system color with a custom color.
+ *
+ * Currently supports:
+ * - `COLOR_WINDOW`: Background of ComboBoxEx list.
+ * - `COLOR_WINDOWTEXT`: Text color of ComboBoxEx list.
+ * - `COLOR_BTNFACE`: Gridline color in ListView (when applicable).
+ *
+ * @param[in]   nIndex  One of the supported system color indices.
+ * @param[in]   clr     Custom `COLORREF` value to apply.
+ */
+void dmlib_hook::setMySysColor(int nIndex, COLORREF clr)
 {
 	switch (nIndex)
 	{
@@ -313,17 +319,29 @@ static DWORD WINAPI MyGetSysColor(int nIndex)
 	}
 }
 
-bool dmlib_hook::HookSysColor()
+/**
+ * @brief Hooks system color to support runtime customization.
+ *
+ * @return `true` if the hook was installed successfully.
+ */
+bool dmlib_hook::hookSysColor()
 {
 	return HookFunction<fnGetSysColor>(
 		g_hookDataGetSysColor,
 		MyGetSysColor,
 		"user32.dll",
 		static_cast<const char*>("GetSysColor"),
-		FindIatThunkInModule);
+		iat_hook::FindIatThunkInModule);
 }
 
-void dmlib_hook::UnhookSysColor()
+/**
+ * @brief Unhooks system color overrides and restores default color behavior.
+ *
+ * This function is safe to call even if no color hook is currently installed.
+ * It ensures that system colors return to normal without requiring
+ * prior state checks.
+ */
+void dmlib_hook::unhookSysColor()
 {
 	UnhookFunction<fnGetSysColor>(g_hookDataGetSysColor);
 }
@@ -433,48 +451,64 @@ static HRESULT WINAPI MyDrawThemeBackgroundEx(
 	return S_OK;
 }
 
-bool dmlib_hook::HookThemeColor()
+/**
+ * @brief Hooks `GetThemeColor` and `DrawThemeBackgroundEx` to support dark colors.
+ *
+ * @return `true` if the hook was installed successfully.
+ */
+bool dmlib_hook::hookThemeColor()
 {
-	if (g_hDarkTheme == nullptr)
+	COLORREF clrMain = kMainPaneBgClr;
+	COLORREF clrFooter = kFooterBgClr;
+
+	if (dmlib_win32api::IsWindows11() && g_hDarkTheme == nullptr)
 	{
 		g_hDarkTheme = ::OpenThemeData(nullptr, L"DarkMode_Explorer::TaskDialog");
-		if (g_hDarkTheme == nullptr)
+		if (g_hDarkTheme != nullptr)
 		{
-			return false;
-		}
-
-		COLORREF clrTmp = 0;
-		if (g_hBrushBg == nullptr)
-		{
-			if (FAILED(::GetThemeColor(g_hDarkTheme, TDLG_PRIMARYPANEL, 0, TMT_FILLCOLOR, &clrTmp)))
+			if (FAILED(::GetThemeColor(g_hDarkTheme, TDLG_PRIMARYPANEL, 0, TMT_FILLCOLOR, &clrMain)))
 			{
-				clrTmp = kMainPaneBgClr;
+				clrMain = kMainPaneBgClr;
 			}
-			g_hBrushBg = ::CreateSolidBrush(clrTmp);
-		}
 
-		if (g_hBrushBgFooter == nullptr)
-		{
-			if (FAILED(::GetThemeColor(g_hDarkTheme, TDLG_SECONDARYPANEL, 0, TMT_FILLCOLOR, &clrTmp)))
+			if (FAILED(::GetThemeColor(g_hDarkTheme, TDLG_SECONDARYPANEL, 0, TMT_FILLCOLOR, &clrFooter)))
 			{
-				clrTmp = kFooterBgClr;
+				clrFooter = kFooterBgClr;
 			}
-			g_hBrushBgFooter = ::CreateSolidBrush(clrTmp);
 		}
 	}
+
+	if (g_hBrushBg == nullptr)
+	{
+		g_hBrushBg = ::CreateSolidBrush(clrMain);
+	}
+
+	if (g_hBrushBgFooter == nullptr)
+	{
+		g_hBrushBgFooter = ::CreateSolidBrush(clrFooter);
+	}
+
 	return
 		HookFunction<fnGetThemeColor>(g_hookDataGetThemeColor,
 			MyGetThemeColor,
 			"uxtheme.dll",
 			static_cast<const char*>("GetThemeColor"),
-			static_cast<fnFindThunkInModule>(FindDelayLoadThunkInModule))
+			static_cast<fnFindThunkInModule>(iat_hook::FindDelayLoadThunkInModule))
 		&& HookFunction<fnDrawThemeBackgroundEx>(g_hookDataDrawThemeBackgroundEx,
 			MyDrawThemeBackgroundEx,
 			"uxtheme.dll",
 			kDrawThemeBackgroundExOrdinal);
 }
 
-void dmlib_hook::UnhookThemeColor()
+
+/**
+ * @brief Unhooks `GetThemeColor` and `DrawThemeBackgroundEx` overrides and restores default color behavior.
+ *
+ * This function is safe to call even if no color hook is currently installed.
+ * It ensures that theme colors return to normal without requiring
+ * prior state checks.
+ */
+void dmlib_hook::unhookThemeColor()
 {
 	UnhookFunction<fnGetThemeColor>(g_hookDataGetThemeColor);
 	UnhookFunction<fnDrawThemeBackgroundEx>(g_hookDataDrawThemeBackgroundEx);
@@ -482,10 +516,16 @@ void dmlib_hook::UnhookThemeColor()
 	{
 		::CloseThemeData(g_hDarkTheme);
 		g_hDarkTheme = nullptr;
+	}
 
+	if (g_hBrushBg != nullptr)
+	{
 		::DeleteObject(g_hBrushBg);
 		g_hBrushBg = nullptr;
+	}
 
+	if (g_hBrushBgFooter != nullptr)
+	{
 		::DeleteObject(g_hBrushBgFooter);
 		g_hBrushBgFooter = nullptr;
 	}

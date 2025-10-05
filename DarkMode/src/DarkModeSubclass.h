@@ -141,7 +141,6 @@ namespace DarkMode
 		verMajor,         ///< Major version number of the library.
 		verMinor,         ///< Minor version number of the library.
 		verRevision,      ///< Revision/patch number of the library.
-		iathookExternal,  ///< Indicates if external IAT hooking is used.
 		iniConfigUsed,    ///< True if `.ini` file configuration is supported.
 		allowOldOS,       ///< '1' if older Windows 10 versions are allowed, '2' if all older Windows are allowed.
 		useDlgProcCtl,    ///< True if WM_CTLCOLORxxx can be handled directly in dialog procedure.
@@ -229,7 +228,7 @@ namespace DarkMode
 	DMLIB_API void initDarkMode();
 
 	/// Checks if there is config INI file.
-	DMLIB_API bool doesConfigFileExist();
+	[[nodiscard]] DMLIB_API bool doesConfigFileExist();
 
 	// ========================================================================
 	// Basic checks
@@ -271,16 +270,16 @@ namespace DarkMode
 	// ========================================================================
 
 	/**
-		* @brief Overrides a specific system color with a custom color.
-		*
-		* Currently supports:
-		* - `COLOR_WINDOW`: Background of ComboBoxEx list.
-		* - `COLOR_WINDOWTEXT`: Text color of ComboBoxEx list.
-		* - `COLOR_BTNFACE`: Gridline color in ListView (when applicable).
-		*
-		* @param nIndex One of the supported system color indices.
-		* @param color Custom `COLORREF` value to apply.
-		*/
+	 * @brief Overrides a specific system color with a custom color.
+	 *
+	 * Currently supports:
+	 * - `COLOR_WINDOW`: Background of ComboBoxEx list.
+	 * - `COLOR_WINDOWTEXT`: Text color of ComboBoxEx list.
+	 * - `COLOR_BTNFACE`: Gridline color in ListView (when applicable).
+	 *
+	 * @param[in]   nIndex  One of the supported system color indices.
+	 * @param[in]   color   Custom `COLORREF` value to apply.
+	 */
 	DMLIB_API void setSysColor(int nIndex, COLORREF color);
 
 	// ========================================================================
@@ -381,19 +380,6 @@ namespace DarkMode
 	DMLIB_API void setDefaultColors(bool updateBrushesAndOther);
 
 	// ========================================================================
-	// Paint Helpers
-	// ========================================================================
-
-	/// Paints a rounded rectangle using the specified pen and brush.
-	DMLIB_API void paintRoundRect(HDC hdc, const RECT& rect, HPEN hpen, HBRUSH hBrush, int width, int height);
-	/// Paints a rectangle using the specified pen and brush.
-	DMLIB_API void paintRect(HDC hdc, const RECT& rect, HPEN hpen, HBRUSH hBrush);
-	/// Paints an unfilled rounded rectangle (frame only).
-	DMLIB_API void paintRoundFrameRect(HDC hdc, const RECT& rect, HPEN hpen, int width, int height);
-	/// Paints an unfilled rounded rectangle (frame only).
-	DMLIB_API void paintFrameRect(HDC hdc, const RECT& rect, HPEN hpen);
-
-	// ========================================================================
 	// Control Subclassing
 	// ========================================================================
 
@@ -460,6 +446,11 @@ namespace DarkMode
 	DMLIB_API void setStaticTextCtrlSubclass(HWND hWnd);
 	/// Removes the workaround subclass from a static control.
 	DMLIB_API void removeStaticTextCtrlSubclass(HWND hWnd);
+
+	/// Applies owner drawn subclassing to a IP address control.
+	DMLIB_API void setIPAddressCtrlSubclass(HWND hWnd);
+	/// Removes the owner drawn subclass from a IP address control.
+	DMLIB_API void removeIPAddressCtrlSubclass(HWND hWnd);
 
 	// ========================================================================
 	// Child Subclassing
@@ -699,11 +690,11 @@ namespace DarkMode
 	 * cf.lpTemplateName = MAKEINTRESOURCE(IDD_DARK_FONT_DIALOG);
 	 * ```
 	 *
-	 * @param hWnd      Handle to the dialog window.
-	 * @param uMsg      Message identifier.
-	 * @param wParam    First message parameter (unused).
-	 * @param lParam    Second message parameter (unused).
-	 * @return A value defined by the hook procedure.
+	 * @param[in]   hWnd        Handle to the dialog window.
+	 * @param[in]   uMsg        Message identifier.
+	 * @param[in]   wParam      First message parameter (unused).
+	 * @param[in]   lParam      Second message parameter (unused).
+	 * @return UINT_PTR A value defined by the hook procedure.
 	 */
 	DMLIB_API UINT_PTR CALLBACK HookDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
