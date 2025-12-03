@@ -7,6 +7,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+// This file is part of darkmodelib library.
+
 
 #pragma once
 
@@ -15,7 +17,7 @@
 namespace dmlib_module
 {
 	template <typename P>
-	inline auto LoadFn(HMODULE handle, P& pointer, const char* name) -> bool
+	inline auto LoadFn(HMODULE handle, P& pointer, const char* name) noexcept -> bool
 	{
 		if (auto proc = ::GetProcAddress(handle, name); proc != nullptr)
 		{
@@ -26,13 +28,13 @@ namespace dmlib_module
 	}
 
 	template <typename P>
-	inline auto LoadFn(HMODULE handle, P& pointer, WORD index) -> bool
+	inline auto LoadFn(HMODULE handle, P& pointer, WORD index) noexcept -> bool
 	{
 		return dmlib_module::LoadFn(handle, pointer, MAKEINTRESOURCEA(index));
 	}
 
 	template <typename P, typename D>
-	inline auto LoadFn(HMODULE handle, P& pointer, const char* name, D& dummy) -> bool
+	inline auto LoadFn(HMODULE handle, P& pointer, const char* name, D& dummy) noexcept -> bool
 	{
 		const bool retVal = dmlib_module::LoadFn(handle, pointer, name);
 		if (!retVal)
@@ -47,7 +49,7 @@ namespace dmlib_module
 	public:
 		ModuleHandle() = delete;
 
-		explicit ModuleHandle(const wchar_t* moduleName)
+		explicit ModuleHandle(const wchar_t* moduleName) noexcept
 			: m_hModule(::LoadLibraryExW(moduleName, nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32))
 		{}
 

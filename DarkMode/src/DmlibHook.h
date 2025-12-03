@@ -7,6 +7,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+// This file is part of darkmodelib library.
+
 
 #pragma once
 
@@ -15,14 +17,14 @@
 namespace dmlib_hook
 {
 #if defined(_DARKMODELIB_USE_SCROLLBAR_FIX) && (_DARKMODELIB_USE_SCROLLBAR_FIX > 0)
-	bool loadOpenNcThemeData(const HMODULE& hUxtheme);
+	bool loadOpenNcThemeData(const HMODULE& hUxtheme) noexcept;
 	/// Makes scroll bars on the specified window and all its children consistent.
 	void enableDarkScrollBarForWindowAndChildren(HWND hWnd);
 	void fixDarkScrollBar();
 #endif
 
 	/// Overrides a specific system color with a custom color.
-	void setMySysColor(int nIndex, COLORREF clr);
+	void setMySysColor(int nIndex, COLORREF clr) noexcept;
 	/// Hooks system color to support runtime customization.
 	bool hookSysColor();
 	/// Unhooks system color overrides and restores default color behavior.

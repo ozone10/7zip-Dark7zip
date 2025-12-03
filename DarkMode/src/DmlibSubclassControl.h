@@ -7,6 +7,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+// This file is part of darkmodelib library.
+
 
 #pragma once
 
@@ -24,7 +26,7 @@
 namespace DarkMode
 {
 	/// Checks if current mode is dark type.
-	[[nodiscard]] bool isDarkDmTypeUsed();
+	[[nodiscard]] bool isDarkDmTypeUsed() noexcept;
 }
 
 namespace dmlib_subclass
@@ -243,12 +245,12 @@ namespace dmlib_subclass
 
 		BorderMetricsData() = delete;
 
-		explicit BorderMetricsData(HWND hWnd)
+		explicit BorderMetricsData(HWND hWnd) noexcept
 		{
 			setMetricsForDpi(dmlib_dpi::GetDpiForParent(hWnd));
 		}
 
-		void setMetricsForDpi(UINT dpi)
+		void setMetricsForDpi(UINT dpi) noexcept
 		{
 			m_dpi = dpi;
 			m_xEdge = dmlib_dpi::GetSystemMetricsForDpi(SM_CXEDGE, m_dpi);
@@ -439,4 +441,5 @@ namespace dmlib_subclass
 	LRESULT CALLBACK ProgressBarSubclass(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 	LRESULT CALLBACK StaticTextSubclass(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 	LRESULT CALLBACK IPAddressSubclass(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+	LRESULT CALLBACK HotKeySubclass(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 } // namespace dmlib_subclass

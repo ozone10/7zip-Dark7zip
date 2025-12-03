@@ -7,6 +7,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+// This file is part of darkmodelib library.
+
 
 #pragma once
 
@@ -39,6 +41,7 @@ namespace dmlib_subclass
 		progressBar,
 		staticText,
 		ipAddress,
+		hotKey,
 		windowEraseBg,
 		windowCtlColor,
 		windowNotify,
@@ -64,11 +67,11 @@ namespace dmlib_subclass
 	template <typename T, typename Param>
 	inline auto SetSubclass(HWND hWnd, SUBCLASSPROC subclassProc, SubclassID subID, const Param& param) -> int
 	{
-		const auto subclassID = static_cast<UINT_PTR>(subID);
-		if (::GetWindowSubclass(hWnd, subclassProc, subclassID, nullptr) == FALSE)
+		if (const auto subclassID = static_cast<UINT_PTR>(subID);
+			::GetWindowSubclass(hWnd, subclassProc, subclassID, nullptr) == FALSE)
 		{
-			auto pData = std::make_unique<T>(param);
-			if (::SetWindowSubclass(hWnd, subclassProc, subclassID, reinterpret_cast<DWORD_PTR>(pData.get())) == TRUE)
+			if (auto pData = std::make_unique<T>(param);
+				::SetWindowSubclass(hWnd, subclassProc, subclassID, reinterpret_cast<DWORD_PTR>(pData.get())) == TRUE)
 			{
 				pData.release();
 				return TRUE;
@@ -92,11 +95,11 @@ namespace dmlib_subclass
 	template <typename T>
 	inline auto SetSubclass(HWND hWnd, SUBCLASSPROC subclassProc, SubclassID subID) -> int
 	{
-		const auto subclassID = static_cast<UINT_PTR>(subID);
-		if (::GetWindowSubclass(hWnd, subclassProc, subclassID, nullptr) == FALSE)
+		if (const auto subclassID = static_cast<UINT_PTR>(subID);
+			::GetWindowSubclass(hWnd, subclassProc, subclassID, nullptr) == FALSE)
 		{
-			auto pData = std::make_unique<T>();
-			if (::SetWindowSubclass(hWnd, subclassProc, subclassID, reinterpret_cast<DWORD_PTR>(pData.get())) == TRUE)
+			if (auto pData = std::make_unique<T>();
+				::SetWindowSubclass(hWnd, subclassProc, subclassID, reinterpret_cast<DWORD_PTR>(pData.get())) == TRUE)
 			{
 				pData.release();
 				return TRUE;
@@ -116,10 +119,10 @@ namespace dmlib_subclass
 	 * @param[in]   subID           Identifier for the subclass instance.
 	 * @return TRUE on success, FALSE on failure, -1 if already subclassed.
 	 */
-	inline int SetSubclass(HWND hWnd, SUBCLASSPROC subclassProc, SubclassID subID)
+	inline int SetSubclass(HWND hWnd, SUBCLASSPROC subclassProc, SubclassID subID) noexcept
 	{
-		const auto subclassID = static_cast<UINT_PTR>(subID);
-		if (::GetWindowSubclass(hWnd, subclassProc, subclassID, nullptr) == FALSE)
+		if (const auto subclassID = static_cast<UINT_PTR>(subID);
+			::GetWindowSubclass(hWnd, subclassProc, subclassID, nullptr) == FALSE)
 		{
 			return ::SetWindowSubclass(hWnd, subclassProc, subclassID, 0);
 		}
@@ -139,18 +142,17 @@ namespace dmlib_subclass
 	 * @return TRUE on success, FALSE on failure, -1 if not present.
 	 */
 	template <typename T = void>
-	inline auto RemoveSubclass(HWND hWnd, SUBCLASSPROC subclassProc, SubclassID subID) -> int
+	inline auto RemoveSubclass(HWND hWnd, SUBCLASSPROC subclassProc, SubclassID subID) noexcept -> int
 	{
 		T* pData = nullptr;
-		const auto subclassID = static_cast<UINT_PTR>(subID);
-		if (::GetWindowSubclass(hWnd, subclassProc, subclassID, reinterpret_cast<DWORD_PTR*>(&pData)) == TRUE)
+		if (const auto subclassID = static_cast<UINT_PTR>(subID);
+			::GetWindowSubclass(hWnd, subclassProc, subclassID, reinterpret_cast<DWORD_PTR*>(&pData)) == TRUE)
 		{
 			if constexpr (!std::is_void_v<T>)
 			{
 				if (pData != nullptr)
 				{
-					delete pData;
-					pData = nullptr;
+					std::unique_ptr<T> ptrData(pData);
 				}
 			}
 			return ::RemoveWindowSubclass(hWnd, subclassProc, subclassID);
@@ -398,5 +400,5 @@ namespace dmlib_subclass
 	}
 
 	/// Determines if themed styling should be preferred over subclassing.
-	[[nodiscard]] bool isThemePrefered();
+	[[nodiscard]] bool isThemePrefered() noexcept;
 } // namespace dmlib_subclass

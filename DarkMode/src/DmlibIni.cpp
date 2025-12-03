@@ -7,6 +7,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+// This file is part of darkmodelib library.
+
 
 #include "StdAfx.h"
 
@@ -18,7 +20,7 @@
 #include <array>
 #include <cwchar>
 #include <cwctype>
-#include <exception>
+#include <stdexcept>
 #include <string>
 
 #include "DmlibColor.h"
@@ -37,8 +39,7 @@
 std::wstring dmlib_ini::getIniPath(const std::wstring& iniFilename)
 {
 	std::array<wchar_t, MAX_PATH> buffer{};
-	const auto strLen = static_cast<size_t>(::GetModuleFileNameW(nullptr, buffer.data(), MAX_PATH));
-	if (strLen == 0)
+	if (::GetModuleFileNameW(nullptr, buffer.data(), MAX_PATH) == 0)
 	{
 		return L"";
 	}
@@ -63,7 +64,7 @@ std::wstring dmlib_ini::getIniPath(const std::wstring& iniFilename)
  * @param[in] filePath Path to the file to check.
  * @return `true` if the file exists and is not a directory, otherwise `false`.
  */
-bool dmlib_ini::fileExists(const std::wstring& filePath)
+bool dmlib_ini::fileExists(const std::wstring& filePath) noexcept
 {
 	const DWORD dwAttrib = ::GetFileAttributesW(filePath.c_str());
 	return (dwAttrib != INVALID_FILE_ATTRIBUTES && ((dwAttrib & FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY));
@@ -113,7 +114,7 @@ bool dmlib_ini::setClrFromIni(
 
 	buffer.resize(len); // remove extra '\0'
 
-	if (!std::all_of(buffer.begin(), buffer.end(), std::iswxdigit))
+	if (!std::all_of(buffer.begin(), buffer.end(), [](wchar_t ch) { return std::iswxdigit(ch); }))
 	{
 		return false;
 	}
@@ -123,7 +124,11 @@ bool dmlib_ini::setClrFromIni(
 		static constexpr int baseHex = 16;
 		*clr = dmlib_color::HEXRGB(std::stoul(buffer, nullptr, baseHex));
 	}
-	catch (const std::exception&)
+	catch (const std::invalid_argument&)
+	{
+		return false;
+	}
+	catch (const std::out_of_range&)
 	{
 		return false;
 	}
