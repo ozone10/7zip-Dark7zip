@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build ${{ matrix.arch }}
         shell: cmd
@@ -29,14 +29,14 @@ jobs:
           build.cmd ${{ matrix.platform }}
 
       - name: Archive artifact ${{ matrix.platform }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: 7z-dark-${{ matrix.platform }}
           path: ${{ matrix.platform }}-bin
 
       - name: Archive artifact ${{ matrix.platform }} with fluent icons
         if: ${{ matrix.platform == 'x64' || matrix.platform == 'arm64' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: 7z-dark-${{ matrix.platform }}-fluent-toolbar-icons
           path: ${{ matrix.platform }}-fluent-bin
