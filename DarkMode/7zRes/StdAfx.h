@@ -7,8 +7,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#ifndef ZIP7_INC_STDAFX_H
-#define ZIP7_INC_STDAFX_H
+// This file is part of darkmodelib library, with modification for 7z.
+
+
+#pragma once
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -23,6 +25,4 @@
 #if defined(_MSC_VER) && _MSC_VER >= 1800
 #pragma warning(disable : 4464) // relative include path contains '..'
 #endif
-#include "../CPP/Common/Common.h"
-
-#endif
+#include "../../../CPP/Common/Common.h"

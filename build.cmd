@@ -37,6 +37,10 @@ if not "%2" == "fluent" (
   )
 )
 
+if not exist "tmp\" mkdir "tmp"
+move "DarkMode\lib\src\StdAfx.h" "tmp" >nul
+xcopy "DarkMode\7zRes\StdAfx.h" "DarkMode\lib\src" /y >nul
+
 if "%2" == "all" (
   echo Compiling all
   pushd CPP\7zip
@@ -75,7 +79,7 @@ rem Build the fluent version only for x64 or arm64
 if not "%PLATFORM%" == "x86" (
   if not exist "tmp\" mkdir "tmp"
   move "CPP\7zip\UI\FileManager\*.bmp" "tmp" >nul
-  xcopy "DarkMode\7zRes\icons\*.bmp" "CPP\7zip\UI\FileManager" /Y >nul
+  xcopy "DarkMode\7zRes\icons\*.bmp" "CPP\7zip\UI\FileManager" /y >nul
 
   if not "%2" == "fluent" (
     if exist "CPP\7zip\UI\FileManager\%PLATFORM%\resource.res" (
@@ -95,9 +99,11 @@ if not "%PLATFORM%" == "x86" (
   copy "DarkMode\7zRes\7zDark.ini" "%PLATFORM%-fluent-bin"
   copy "LICENSE.md" "%PLATFORM%-fluent-bin"
 
-  xcopy "tmp\*.bmp" "CPP\7zip\UI\FileManager" /Y >nul
-  rmdir /S /Q "tmp"
+  xcopy "tmp\*.bmp" "CPP\7zip\UI\FileManager" /y >nul
 )
+
+xcopy "tmp\StdAfx.h" "DarkMode\lib\src" /y >nul
+rmdir /S /Q "tmp"
 
 rem pause
 
