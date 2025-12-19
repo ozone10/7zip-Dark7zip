@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - dev
   workflow_dispatch:
 
 jobs:
@@ -29,14 +30,14 @@ jobs:
           build.cmd ${{ matrix.platform }}
 
       - name: Archive artifact ${{ matrix.platform }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: 7z-dark-${{ matrix.platform }}
           path: ${{ matrix.platform }}-bin
 
       - name: Archive artifact ${{ matrix.platform }} with fluent icons
         if: ${{ matrix.platform == 'x64' || matrix.platform == 'arm64' }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: 7z-dark-${{ matrix.platform }}-fluent-toolbar-icons
           path: ${{ matrix.platform }}-fluent-bin
