@@ -248,7 +248,7 @@ bool CSettingsPage::OnInit()
   }
 
   {
-    const bool isININotUsed = !DarkMode::doesConfigFileExist();
+    const bool isININotUsed = !DarkMode::doesConfigFileExist() && DarkMode::isAtLeastWindows10();
     EnableItem(IDC_COLOR_MODE, isININotUsed);
 
     _clrModeCombo.Attach(GetItem(IDC_COLOR_MODE));
@@ -265,7 +265,7 @@ bool CSettingsPage::OnInit()
     }
     else
     {
-      const wchar_t* mode = L"INI used";
+      const wchar_t* mode = DarkMode::isAtLeastWindows10() ? L"INI used" : L"Old OS";
       _clrModeCombo.AddString(mode);
       _clrModeCombo.SetCurSel(0);
     }
