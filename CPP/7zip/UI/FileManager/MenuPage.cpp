@@ -295,7 +295,7 @@ bool CMenuPage::OnInit()
 
 static void ShowMenuErrorMessage(const wchar_t *m, HWND hwnd)
 {
-  MessageBoxW(hwnd, m, L"7-Zip", MB_ICONERROR);
+  DarkMode::darkMessageBoxW(hwnd, m, L"7-Zip", MB_ICONERROR);
 }
 
 #endif
