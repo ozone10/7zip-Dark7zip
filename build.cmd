@@ -13,6 +13,9 @@ if not exist "%InstallDir%\VC\Auxiliary\Build\vcvarsall.bat" (
 
 setlocal
 
+set VERSION=2600
+SET URL=https://www.7-zip.org/a/7z2600.exe
+
 set PLATFORM=%1
 
 if "%PLATFORM%" == "x64" (
@@ -68,11 +71,13 @@ if "%2" == "all" (
 
 if not "%2" == "fluent" (
   if not exist "%PLATFORM%-bin\" mkdir "%PLATFORM%-bin"
-  copy "CPP\7zip\Bundles\SFXWin\%PLATFORM%\7z.sfx" "%PLATFORM%-bin"
-  copy "CPP\7zip\UI\FileManager\%PLATFORM%\7zFM.exe" "%PLATFORM%-bin"
-  copy "CPP\7zip\UI\GUI\%PLATFORM%\7zG.exe" "%PLATFORM%-bin"
-  copy "DarkMode\7zRes\7zDark.ini" "%PLATFORM%-bin"
-  copy "LICENSE.md" "%PLATFORM%-bin"
+  for %%A in (
+    "CPP\7zip\Bundles\SFXWin\%PLATFORM%\7z.sfx"
+    "CPP\7zip\UI\FileManager\%PLATFORM%\7zFM.exe"
+    "CPP\7zip\UI\GUI\%PLATFORM%\7zG.exe"
+    "DarkMode\7zRes\7zDark.ini"
+    "LICENSE.md"
+  ) do copy "%%~A" "%PLATFORM%-bin" >nul
 )
 
 rem Build the fluent version only for x64 or arm64
@@ -93,15 +98,103 @@ if not "%PLATFORM%" == "x86" (
   popd
 
   if not exist "%PLATFORM%-fluent-bin\" mkdir "%PLATFORM%-fluent-bin"
-  copy "CPP\7zip\Bundles\SFXWin\%PLATFORM%\7z.sfx" "%PLATFORM%-fluent-bin"
-  copy "CPP\7zip\UI\FileManager\%PLATFORM%\7zFM.exe" "%PLATFORM%-fluent-bin"
-  copy "CPP\7zip\UI\GUI\%PLATFORM%\7zG.exe" "%PLATFORM%-fluent-bin"
-  copy "DarkMode\7zRes\7zDark.ini" "%PLATFORM%-fluent-bin"
-  copy "LICENSE.md" "%PLATFORM%-fluent-bin"
+  for %%A in (
+    "CPP\7zip\Bundles\SFXWin\%PLATFORM%\7z.sfx"
+    "CPP\7zip\UI\FileManager\%PLATFORM%\7zFM.exe"
+    "CPP\7zip\UI\GUI\%PLATFORM%\7zG.exe"
+    "DarkMode\7zRes\7zDark.ini"
+    "LICENSE.md"
+  ) do copy "%%~A" "%PLATFORM%-fluent-bin" >nul
 
+  rem Installer part
+  if not "%2" == "all" (
+    echo Compiling 7z.dll
+    pushd CPP\7zip\Bundles\Format7zF
+    nmake
+    popd
+
+    echo Compiling 7z.exe
+    pushd CPP\7zip\UI\Console
+    nmake
+    popd
+
+    echo Compiling 7zCon.sfx
+    pushd CPP\7zip\Bundles\SFXCon
+    nmake
+    popd
+
+    echo Compiling 7-zip.dll
+    pushd CPP\7zip\UI\Explorer
+    nmake
+    popd
+
+    echo Compiling 7zipInstall.exe
+    pushd C\Util\7zipInstall
+    nmake
+    popd
+
+    echo Compiling 7zipUninstall.exe
+    pushd C\Util\7zipUninstall
+    nmake
+    popd
+  )
+
+  if not exist "%PLATFORM%-fluent-installer\" mkdir "%PLATFORM%-fluent-installer"
+  if not exist "%PLATFORM%-fluent-installer-bin\" mkdir "%PLATFORM%-fluent-installer-bin"
+
+  for %%A in (
+    "CPP\7zip\Bundles\SFXWin\%PLATFORM%\7z.sfx"
+    "CPP\7zip\UI\FileManager\%PLATFORM%\7zFM.exe"
+    "CPP\7zip\UI\GUI\%PLATFORM%\7zG.exe"
+    "CPP\7zip\Bundles\Format7zF\%PLATFORM%\7z.dll"
+    "CPP\7zip\UI\Console\%PLATFORM%\7z.exe"
+    "CPP\7zip\Bundles\SFXCon\%PLATFORM%\7zCon.sfx"
+    "CPP\7zip\UI\Explorer\%PLATFORM%\7-zip.dll"
+  ) do copy "%%~A" "%PLATFORM%-fluent-installer" >nul
+
+  copy "C\Util\7zipUninstall\%PLATFORM%\7zipUninstall.exe" "%PLATFORM%-fluent-installer\Uninstall.exe"
+
+  if not exist "docs-installer\" mkdir "docs-installer"
+
+  pushd "docs-installer"
+  curl %URL% -L -o 7-Zip.exe
+  "..\%PLATFORM%-fluent-installer\7z.exe" x 7-Zip.exe
+  del /F /Q *.exe *.dll *.sfx
+  popd
+
+  robocopy "docs-installer" "%PLATFORM%-fluent-installer" /E >nul
+  rmdir /S /Q "docs-installer"
+
+  if "%PLATFORM%" == "x64" (
+    call "%InstallDir%\VC\Auxiliary\Build\vcvarsall.bat" x64_x86
+
+    echo Compiling 7-zip.dll
+    pushd CPP\7zip\UI\Explorer
+    nmake
+    popd
+
+    copy "CPP\7zip\UI\Explorer\x86\7-zip.dll" "%PLATFORM%-fluent-installer\7-zip32.dll"
+  )
+
+  pushd "%PLATFORM%-fluent-installer"
+  "7z.exe" a "..\%PLATFORM%-fluent-installer-bin\%PLATFORM%-fluent-installer.7z" -m0=lzma -mx9 -ms=on -mf=bcj2
+  popd
+  rmdir /S /Q "%PLATFORM%-fluent-installer"
+
+  rem Make installer
+  copy /b ".\C\Util\7zipInstall\%PLATFORM%\7zipInstall.exe" /b + ".\%PLATFORM%-fluent-installer-bin\%PLATFORM%-fluent-installer.7z" /b ".\%PLATFORM%-fluent-installer-bin\7z%VERSION%-dark-%PLATFORM%.exe"
+  del  /F /Q "%PLATFORM%-fluent-installer-bin\%PLATFORM%-fluent-installer.7z"
+
+  for %%A in (
+    "DarkMode\7zRes\7zDark.ini"
+    "LICENSE.md"
+  ) do copy "%%~A" "%PLATFORM%-fluent-installer-bin" >nul
+
+  rem Restore icons
   xcopy "tmp\*.bmp" "CPP\7zip\UI\FileManager" /y >nul
 )
 
+rem Restore original non-7z darkmodelib StdAfx.h
 xcopy "tmp\StdAfx.h" "DarkMode\lib\src" /y >nul
 rmdir /S /Q "tmp"
 
