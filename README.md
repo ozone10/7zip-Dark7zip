@@ -43,7 +43,8 @@ It is mainly for Windows 10 builds 19044+ and Windows 11. Some controls might, m
 
 ## Installation
 
-Replace 7z original files (e.g. `C:\Program Files\7-Zip\`) with files from downloaded zip file.  
+Use installer (zip file with installer in name), which will replace all 7z original files or
+replace only relevant 7z original files (e.g. `C:\Program Files\7-Zip\`) with files from downloaded zip file without installer in name.  
 
 - `7zFM.exe` - file manager, "main exe"
 - `7zG.exe` - mainly extraction, compression dialogs
@@ -52,10 +53,12 @@ Replace 7z original files (e.g. `C:\Program Files\7-Zip\`) with files from downl
 
 > [!IMPORTANT]  
 > 7z-zstd fork has already merged dark mode. There is no need to use binaries from this repo.  
-> ~~Ensure that you have downloaded the correct version. If the zip file name contains "zstd" (e.g. `7z-zstd-v25.01-v1.5.7-R1-v0.12.0-x64.zip`), it is intended for the zstd fork. If you are using the wrong version, a message box titled "7‑Zip ZS" will appear when attempting to extract the archive.~~
 
 > [!NOTE]  
-> Currently files are released only for x64 and arm64 platforms. You can get files for x86 platform for original 7-Zip and testing artifacts from Github Actions. Ensure that you get correct version - [main](https://github.com/ozone10/7zip-Dark7zip/actions?query=branch%3Amain) for original 7-Zip, ~~[7z-zstd](https://github.com/ozone10/7zip-Dark7zip/actions?query=branch%3A7z-zstd) for 7-Zip-zstd.~~
+> Currently files are released only for x64 and arm64 platforms. You can get files for x86 platform for original 7-Zip and testing artifacts from Github Actions. Ensure that you get correct version - [main](https://github.com/ozone10/7zip-Dark7zip/actions?query=branch%3Amain) for original 7-Zip.
+
+> [!NOTE]  
+> Installer is released only with fluent toolbar icons, to use original icons use manual non-installer installation.
 
 ## Config
 
@@ -210,7 +213,6 @@ gridlines =             "4F5F5F"
 ## 7-Zip-zstd
 
 7-Zip-zstd is popular 7-Zip fork which contains additional compression algorithms such as Zstandard and Brotli. Latest version of 7z-zstd fork has dark mode support.
-~~Source code for dark mode for it is in [7z-zstd](https://github.com/ozone10/7zip-Dark7zip/tree/7z-zstd) branch.~~
 
 For download and more information about 7-Zip-zstd fork check [7-Zip-zstd](https://github.com/mcmilk/7-Zip-zstd).
 
