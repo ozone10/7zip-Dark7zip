@@ -4,23 +4,25 @@ cd /d "%~dp0"
 
 setlocal EnableDelayedExpansion
 
-set VERSION=2600
+set VERSION=2601
+set VERSION_TAG=26.01
 
 rem Platform
 set PLATFORM=%1
-set URL=https://www.7-zip.org/a/7z%VERSION%-%PLATFORM%.exe
+rem set URL=https://www.7-zip.org/a/7z%VERSION%-%PLATFORM%.exe
+set URL=https://github.com/ip7z/7zip/releases/download/%VERSION_TAG%/7z%VERSION%-%PLATFORM%.exe
 
 if "%PLATFORM%" == "x64" (
   set ARCH=x64
 ) else if "%PLATFORM%" == "x86" (
   set ARCH=x64_x86
-  set URL=https://www.7-zip.org/a/7z%VERSION%.exe
+  set URL=https://github.com/ip7z/7zip/releases/download/%VERSION_TAG%/7z%VERSION%.exe
 ) else if "%PLATFORM%" == "arm64" (
   set ARCH=x64_arm64
 ) else (
   set ARCH=x64
   set PLATFORM=x64
-  set URL=https://www.7-zip.org/a/7z%VERSION%-%PLATFORM%.exe
+  set URL=https://github.com/ip7z/7zip/releases/download/%VERSION_TAG%/7z%VERSION%-%PLATFORM%.exe
 )
 
 rem VS Detection
