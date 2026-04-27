@@ -10,7 +10,7 @@
 #include "MemoryGlobal.h"
 #include "Shell.h"
 
-#include "../../DarkMode/lib/include/DarkModeSubclass.h"
+#include "../../DarkMode/lib/include/Darkmodelib.h"
 
 #ifndef _UNICODE
 extern bool g_IsNT;
@@ -685,7 +685,7 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /* lp */, LP
   {
     case BFFM_INITIALIZED:
     {
-      DarkMode::setDarkWndSafeEx(hwnd, false);
+      dmlib::setDarkWndSafeEx(hwnd, false);
       SendMessage(hwnd, BFFM_SETSELECTION, TRUE, data);
       break;
     }
