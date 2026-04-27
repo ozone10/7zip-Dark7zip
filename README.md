@@ -10,7 +10,7 @@
 [![ko-fi.com](https://img.shields.io/badge/Ko--fi-Buy_Me_a_Tea-F16061?logo=ko-fi&logoColor=white&maxAge=2592000)](https://ko-fi.com/ozone10/)
 ---
 
-Dark7zip is project to experiment with dark mode via [darkmodelib](https://github.com/ozone10/darkmodelib) library for [7-Zip](https://github.com/ip7z/7zip) and its fork [7-Zip-zstd](#7-zip-zstd).  
+Dark7zip is project to experiment with dark mode via [darkmodelib](https://github.com/ozone10/win32-darkmodelib) library for [7-Zip](https://github.com/ip7z/7zip) and its fork [7-Zip-zstd](#7-zip-zstd).  
 It is mainly for Windows 10 builds 19044+ and Windows 11. Some controls might, might not use dark/custom colors on older OS.
 
 * * *
