@@ -13,7 +13,7 @@
 #if !defined(Z7_SFX)
 #include "../../7zip/UI/FileManager/RegistryUtils.h"
 #endif
-#include "../../../DarkMode/lib/include/DarkModeSubclass.h"
+#include "../../../DarkMode/lib/include/Darkmodelib.h"
 
 extern HINSTANCE g_hInstance;
 #ifndef _UNICODE
@@ -42,22 +42,22 @@ DialogProcedure(HWND dialogHWND, UINT message, WPARAM wParam, LPARAM lParam)
     {
       dialog->Attach(dialogHWND);
 #if defined(Z7_LANG)
-      DarkMode::initDarkModeEx(L"7zDark");
+      dmlib::initDarkModeEx(L"7zDark");
 #endif
 #if !defined(Z7_SFX)
-      if (!DarkMode::doesConfigFileExist())
+      if (!dmlib::doesConfigFileExist())
       {
         switch (Read_ClrMode())
         {
           case 0:
           {
-            DarkMode::setDarkModeConfigEx(static_cast<UINT>(DarkMode::DarkModeType::classic));
+            dmlib::setDarkModeConfigEx(static_cast<UINT>(dmlib::DarkModeType::classic));
             break;
           }
 
           case 2:
           {
-            DarkMode::setDarkModeConfig();
+            dmlib::setDarkModeConfig();
             break;
           }
 
@@ -67,10 +67,10 @@ DialogProcedure(HWND dialogHWND, UINT message, WPARAM wParam, LPARAM lParam)
             break;
           }
         }
-        DarkMode::setDefaultColors(false);
+        dmlib::setDefaultColors(false);
       }
 #endif
-      DarkMode::setDarkWndNotifySafeEx(*dialog, true, true);
+      dmlib::setDarkWndNotifySafeEx(*dialog, true, true);
     }
 
   /* MSDN: The dialog box procedure should return
