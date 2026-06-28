@@ -4,8 +4,8 @@ cd /d "%~dp0"
 
 setlocal EnableDelayedExpansion
 
-set VERSION=2601
-set VERSION_TAG=26.01
+set VERSION=2602
+set VERSION_TAG=26.02
 
 rem Platform
 set PLATFORM=%1
