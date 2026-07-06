@@ -760,7 +760,7 @@ void CPanel::MessageBox_Warning(LPCWSTR message) const
 */
 
 void CPanel::MessageBox_Error_Caption(LPCWSTR message, LPCWSTR caption) const
-  { ::MessageBoxW((HWND)*this, message, caption, MB_OK | MB_ICONSTOP); }
+  { dmlib::darkMessageBoxW((HWND)*this, message, caption, MB_OK | MB_ICONSTOP); }
 
 void CPanel::MessageBox_Error(LPCWSTR message) const
   { MessageBox_Error_Caption(message, L"7-Zip"); }

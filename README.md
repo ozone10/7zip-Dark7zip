@@ -10,8 +10,11 @@
 [![ko-fi.com](https://img.shields.io/badge/Ko--fi-Buy_Me_a_Tea-F16061?logo=ko-fi&logoColor=white&maxAge=2592000)](https://ko-fi.com/ozone10/)
 ---
 
-Dark7zip is project to experiment with dark mode via [darkmodelib](https://github.com/ozone10/win32-darkmodelib) library for [7-Zip](https://github.com/ip7z/7zip) and its fork [7-Zip-zstd](#7-zip-zstd).  
+Dark7zip is project to experiment with dark mode via [darkmodelib](https://github.com/ozone10/win32-darkmodelib) library for [7-Zip](https://github.com/ip7z/7zip).  
 It is mainly for Windows 10 builds 19044+ and Windows 11. Some controls might, might not use dark/custom colors on older OS.
+
+> [!IMPORTANT]  
+> 7-Zip-zstd has already merged dark mode. There is no need to use binaries for 7-Zip-zstd version from this repo.  
 
 * * *
 
@@ -51,14 +54,12 @@ replace only relevant 7z original files (e.g. `C:\Program Files\7-Zip\`) with fi
 - `7z.sfx`- optional, file needed for creating self-extracting archives
 - `7zDark.ini` - optional, more information below
 
-> [!IMPORTANT]  
-> 7z-zstd fork has already merged dark mode. There is no need to use binaries from this repo.  
-
 > [!NOTE]  
 > Currently files are released only for x64 and arm64 platforms. You can get files for x86 platform for original 7-Zip and testing artifacts from Github Actions. Ensure that you get correct version - [main](https://github.com/ozone10/7zip-Dark7zip/actions?query=branch%3Amain) for original 7-Zip.
 
 > [!NOTE]  
-> Installer is released only with fluent toolbar icons, to use original icons use manual non-installer installation.
+> Installer is released only with fluent toolbar icons, to use original icons use manual non-installer installation.  
+> It is intended as replacement to original 7-Zip so it will overwrite relevant 7-Zip files.
 
 ## Config
 
@@ -124,6 +125,7 @@ Values for custom colors are in RGB hex format - RRGGBB.
   - edge - for border
   - edgeHot - for hot border
   - edgeDisabled - for disabled border
+  - highlight - for some WIndows 11 UI elements (edit control, tab control)
 
 - [dark.colors.view]/[light.colors.view] - for listview and treeview
   - backgroundView
@@ -164,6 +166,7 @@ textDisabled =          "808080"
 edge =                  "646464"
 edgeHot =               "9B9B9B"
 edgeDisabled =          "484848"
+highlight =             "60CDFF"
 
 [dark.colors.view]
 backgroundView =        "3F3F3F"
@@ -191,6 +194,7 @@ textDisabled =          "6D6D6D"
 edge =                  "8D8D8D"
 edgeHot =               "0078D4"
 edgeDisabled =          "6D6D6D"
+highlight =             "005FB8"
 
 [light.colors.view]
 backgroundView =        "FFFFFF"
@@ -212,7 +216,7 @@ gridlines =             "4F5F5F"
 
 ## 7-Zip-zstd
 
-7-Zip-zstd is popular 7-Zip fork which contains additional compression algorithms such as Zstandard and Brotli. Latest version of 7z-zstd fork has dark mode support.
+7-Zip-zstd is popular 7-Zip fork which contains additional compression algorithms such as Zstandard and Brotli. Latest version of 7-Zip-zstd has dark mode support.
 
 For download and more information about 7-Zip-zstd fork check [7-Zip-zstd](https://github.com/mcmilk/7-Zip-zstd).
 
