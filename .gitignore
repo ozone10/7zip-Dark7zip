@@ -41,4 +41,7 @@
 **/arm64
 **/x86*-bin
 **/x64*-bin
+**/x64*-installer
 **/arm64*-bin
+**/arm64*-installer
+**/tmp
