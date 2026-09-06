@@ -61,6 +61,11 @@ replace only relevant 7z original files (e.g. `C:\Program Files\7-Zip\`) with fi
 > Installer is released only with fluent toolbar icons, to use original icons use manual non-installer installation.  
 > It is intended as replacement to original 7-Zip so it will overwrite relevant 7-Zip files.
 
+> [!IMPORTANT]  
+> Only release via [Github release page](https://github.com/ozone10/7zip-Dark7zip/releases) are official.
+And only ZIP files produced by [Github Actions](https://github.com/ozone10/7zip-Dark7zip/actions) are used for release.
+Release are also signed by GPG with fingerprint `9ED2D82C59663D49CBEB09C260E4ABAC5B4C51DC`.
+
 ## Config
 
 `7zDark.ini` is configuration file to allow to set custom colors and other visual features. It should be in same folder as `7zFM.exe` and `7zG.exe`.  
