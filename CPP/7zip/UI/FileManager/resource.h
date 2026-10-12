@@ -20,6 +20,10 @@
 #define IDB_DELETE2  155
 #define IDB_INFO2    156
 
+#ifdef DARKMODE_FLUENT_ICON
+#define IDB_VIEW_PARENTFOLDER    808
+#endif
+
 #define IDM_HASH_ALL             101
 #define IDM_CRC32                102
 #define IDM_CRC64                103
