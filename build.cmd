@@ -86,7 +86,7 @@ if not exist "DarkMode\lib\src\StdAfx.h" (
   exit /b 1
 )
 
-call :del_res
+call :del_fm
 
 if not exist "tmp\" mkdir "tmp"
 move "DarkMode\lib\src\StdAfx.h" "tmp" >nul
@@ -115,14 +115,10 @@ if not "%2" == "fluent" (
 rem Build the fluent version only for x64 or arm64
 if not "%PLATFORM%" == "x86" (
   if not exist "tmp\" mkdir "tmp"
-  move "%FM%\*.bmp" "tmp" >nul
-  xcopy "%DARK%\icons\*.bmp" "%FM%" /y >nul
 
-  call :del_res
+  call :del_fm
 
-  call :build "%FM%" "7zFM.exe with fluent icons"
-
-  call :del_res
+  call :build_fluent "%FM%" "7zFM.exe with fluent icons"
 
   call :copy_standalone_outputs "%PLATFORM%-fluent-bin"
   call :copy_docs "%PLATFORM%-fluent-bin"
@@ -180,9 +176,6 @@ if not "%PLATFORM%" == "x86" (
   del  /F /Q "%PLATFORM%-fluent-installer-bin\%PLATFORM%-fluent-installer.7z"
 
   call :copy_docs "%PLATFORM%-fluent-installer-bin"
-
-  rem Restore icons
-  xcopy "tmp\*.bmp" "%FM%" /Y >nul
 )
 
 rem Restore original non-7z darkmodelib StdAfx.h
@@ -213,12 +206,14 @@ for %%A in (
 ) do xcopy "%%~A" "%DEST%" /Y >nul
 exit /b
 
-:del_res
+:del_fm
 if not "%2" == "fluent" (
-  rem Delete resource.res only if x64 or arm64 is used, due to fluent version
+  rem Delete FM output only if x64 or arm64 is used, due to fluent version
   if not "%PLATFORM%"=="x86" (
-    if exist "%FM%\%PLATFORM%\resource.res" (
-      del /F /Q "%FM%\%PLATFORM%\resource.res"
+    for %%D in (
+      "%FM%\%PLATFORM%"
+    ) do (
+      if exist %%D rmdir /S /Q %%D
     )
   )
 )
@@ -228,6 +223,17 @@ exit /b
 echo Compiling %2
 pushd %1
 nmake
+popd
+if errorlevel 1 (
+  echo Build failed with %2
+  exit /b 1
+)
+exit /b
+
+:build_fluent
+echo Compiling %2
+pushd %1
+nmake DARKMODE_FLUENT_ICON=1
 popd
 if errorlevel 1 (
   echo Build failed with %2

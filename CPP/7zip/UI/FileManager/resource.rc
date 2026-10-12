@@ -167,6 +167,7 @@ IDI_ICON  ICON  "../../UI/FileManager/FM.ico"
 1  24  MOVEABLE PURE   "../../UI/FileManager/7zFM.exe.manifest"
 #endif
 
+#ifndef IDB_VIEW_PARENTFOLDER
 IDB_ADD        BITMAP  "../../UI/FileManager/Add.bmp"
 IDB_EXTRACT    BITMAP  "../../UI/FileManager/Extract.bmp"
 IDB_TEST       BITMAP  "../../UI/FileManager/Test.bmp"
@@ -181,7 +182,24 @@ IDB_COPY2      BITMAP  "../../UI/FileManager/Copy2.bmp"
 IDB_MOVE2      BITMAP  "../../UI/FileManager/Move2.bmp"
 IDB_DELETE2    BITMAP  "../../UI/FileManager/Delete2.bmp"
 IDB_INFO2      BITMAP  "../../UI/FileManager/Info2.bmp"
+#else
+IDB_ADD        BITMAP  "../../../../DarkMode/7zRes/Icons/Add.bmp"
+IDB_EXTRACT    BITMAP  "../../../../DarkMode/7zRes/Icons/Extract.bmp"
+IDB_TEST       BITMAP  "../../../../DarkMode/7zRes/Icons/Test.bmp"
+IDB_COPY       BITMAP  "../../../../DarkMode/7zRes/Icons/Copy.bmp"
+IDB_MOVE       BITMAP  "../../../../DarkMode/7zRes/Icons/Move.bmp"
+IDB_DELETE     BITMAP  "../../../../DarkMode/7zRes/Icons/Delete.bmp"
+IDB_INFO       BITMAP  "../../../../DarkMode/7zRes/Icons/Info.bmp"
+IDB_ADD2       BITMAP  "../../../../DarkMode/7zRes/Icons/Add2.bmp"
+IDB_EXTRACT2   BITMAP  "../../../../DarkMode/7zRes/Icons/Extract2.bmp"
+IDB_TEST2      BITMAP  "../../../../DarkMode/7zRes/Icons/Test2.bmp"
+IDB_COPY2      BITMAP  "../../../../DarkMode/7zRes/Icons/Copy2.bmp"
+IDB_MOVE2      BITMAP  "../../../../DarkMode/7zRes/Icons/Move2.bmp"
+IDB_DELETE2    BITMAP  "../../../../DarkMode/7zRes/Icons/Delete2.bmp"
+IDB_INFO2      BITMAP  "../../../../DarkMode/7zRes/Icons/Info2.bmp"
 
+IDB_VIEW_PARENTFOLDER  BITMAP "../../../../DarkMode/7zRes/Icons/ViewParentFolder.bmp"
+#endif
 
 STRINGTABLE
 BEGIN

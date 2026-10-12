@@ -446,7 +446,11 @@ bool CPanel::OnCreate(CREATESTRUCT * /* createStruct */)
   const TBBUTTON tbb[] =
   {
     // {0, 0, TBSTATE_ENABLED, BTNS_SEP, 0L, 0},
+#ifdef IDB_VIEW_PARENTFOLDER
+    {0, kParentFolderID, TBSTATE_ENABLED, BTNS_BUTTON, { 0, 0 }, 0, 0 },
+#else
     {VIEW_PARENTFOLDER, kParentFolderID, TBSTATE_ENABLED, BTNS_BUTTON, { 0, 0 }, 0, 0 },
+#endif
     // {0, 0, TBSTATE_ENABLED, BTNS_SEP, 0L, 0},
     // {VIEW_NEWFOLDER, kCreateFolderID, TBSTATE_ENABLED, BTNS_BUTTON, 0L, 0},
   };
@@ -488,11 +492,22 @@ bool CPanel::OnCreate(CREATESTRUCT * /* createStruct */)
   }
 
   _headerToolBar.Attach(::CreateToolbarEx ((*this), toolbarStyle,
+#ifdef IDB_VIEW_PARENTFOLDER
+      _baseID + 2, 1,
+      g_hInstance,
+      IDB_VIEW_PARENTFOLDER,
+#else
       _baseID + 2, 11,
       (HINSTANCE)HINST_COMMCTRL,
       IDB_VIEW_SMALL_COLOR,
+#endif
       (LPCTBBUTTON)&tbb, Z7_ARRAY_SIZE(tbb),
       0, 0, 0, 0, sizeof (TBBUTTON)));
+
+#ifdef IDB_VIEW_PARENTFOLDER
+ // default button is 23x22, this will make icon off center, increase size to 24x22 to fix it
+  SendMessage(_headerToolBar, TB_SETBUTTONSIZE, 0, MAKELPARAM(24, 22));
+#endif
 
   #ifndef UNDER_CE
   // Load ComboBoxEx class
